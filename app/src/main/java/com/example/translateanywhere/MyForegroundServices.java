@@ -819,4 +819,27 @@ public class MyForegroundServices extends Service {
 
         return connectionState == BluetoothProfile.STATE_CONNECTED;
     }
+    private void translate(String response){
+        translationHelper.downloadModel(MyForegroundServices.this, "en", "ta", new TranslationHelper.TranslationCallback() {
+            @Override
+            public void onTranslationSuccess(String translatedText) {
+                translationHelper.translateText(MyForegroundServices.this, response, new TranslationHelper.TranslationCallback() {
+                    @Override
+                    public void onTranslationSuccess(String translatedText) {
+                        toSpeech.speak(translatedText,TextToSpeech.QUEUE_FLUSH,null,"TranslatedResponse");
+                    }
+
+                    @Override
+                    public void onTranslationFailure(Exception e) {
+                        toSpeech.speak("Failed to translate",TextToSpeech.QUEUE_FLUSH,null,"TranslatedResponse");
+                    }
+                });
+            }
+
+            @Override
+            public void onTranslationFailure(Exception e) {
+                toSpeech.speak("Download module failed",TextToSpeech.QUEUE_FLUSH,null,"TranslatedResponse");
+            }
+        });
+    }
 }
