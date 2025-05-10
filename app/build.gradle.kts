@@ -27,6 +27,13 @@ android {
             )
         }
     }
+
+    packaging {
+        resources {
+            pickFirsts += setOf("**/*.so")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -48,7 +55,7 @@ dependencies {
     implementation(libs.play.services.mlkit.language.id)
     implementation(libs.translate)
     implementation(libs.firebase.database)
-    implementation(libs.porcupine.android)
+    implementation (libs.porcupine.android)
     implementation(libs.okhttp)
     implementation(libs.generativeai)
     implementation(libs.retrofit)
@@ -58,6 +65,11 @@ dependencies {
     implementation(libs.reactive.streams)
     implementation(libs.firebase.auth)
     implementation(libs.play.services.auth)
-
-
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation(libs.biometric)
+    implementation (libs.porcupine.android.v301)
+    implementation (libs.core)
+    implementation (libs.play.services.location)
+    implementation (libs.play.services.nearby)
 }

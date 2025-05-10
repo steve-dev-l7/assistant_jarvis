@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">TranslateAnyWhere</string>
     <string name="hey_jarvis">hey jarvis</string>
+    <string name="accessibility_service_description">Jarvis Call Auto Answer Service</string>
 </resources>
