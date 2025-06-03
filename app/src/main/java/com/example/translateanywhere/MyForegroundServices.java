@@ -2,7 +2,7 @@ package com.example.translateanywhere;
 
 
 
-import static com.example.translateanywhere.R.drawable.notify_icon;
+
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -313,7 +313,7 @@ public class MyForegroundServices extends Service  {
     public int onStartCommand(Intent intent, int flags, int startId) {
         CreateNotification();
         PorcupineManager.Builder builder = new PorcupineManager.Builder();
-        builder.setAccessKey("UTV+MBoJQG3CJKBAZDMLy0Bw7nFEWPGRLB4LKTO/jFBoxGdqpKWuYw==");
+        builder.setAccessKey("RVIVj3j7iV8kxELsndoSpFObV/S8vXJOqOGSmmsvlo3TyykuWpyJBA==");
         builder.setKeyword(Porcupine.BuiltInKeyword.JARVIS);
         builder.setSensitivity(0.70f);
         Log.d("Picovoice ","created");
@@ -1036,7 +1036,6 @@ public class MyForegroundServices extends Service  {
             notification1 = new NotificationCompat.Builder(MyForegroundServices.this, CHANNEL_ID)
                     .setContentTitle("Jarvis is Listening")
                     .setContentTitle("Say 'Jarvis' to activate.")
-                    .setSmallIcon(notify_icon)
                     .setOngoing(true)
                     .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
                     .setPriority(NotificationCompat.PRIORITY_LOW)
