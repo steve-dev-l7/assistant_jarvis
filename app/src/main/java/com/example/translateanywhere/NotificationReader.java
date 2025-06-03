@@ -52,8 +52,7 @@ public class NotificationReader extends NotificationListenerService {
     boolean isFeatureEnabled;
     List<String> key=new ArrayList<>();
     Set<String> repliedKeys = new HashSet<>();
-    private BroadcastReceiver unlockReceiver;
-    private String pendingTTSMessage = null;
+
     List<String> conversationHistory;
 
     private static final String GemeniApikey2="AIzaSyDUTc4_Dyar05pFn7c5dvtJ3Mvoeszxg_M";
@@ -85,10 +84,14 @@ public class NotificationReader extends NotificationListenerService {
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         super.onNotificationPosted(sbn);
+        if(previousMessage.equals(message)){
+            Log.d("Previous Message detected","Skipped::"+message);
+            return;
+        }
         SharedPreferences sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
         isFeatureEnabled = sharedPreferences.getBoolean("isFeatureEnabled", false);
         if(!isFeatureEnabled){
-            Log.d("Auto reply","False");
+            Log.d("Notification Reader","Auto reply is disabled");
             return;
         }
         Log.d("DEBUG", "Notification received from: " + sbn.getPackageName());
@@ -120,7 +123,7 @@ public class NotificationReader extends NotificationListenerService {
                         Log.d("Already replied", "Skipping duplicate notification");
                         return;
                     }if(message.contains("emergency") || message.contains("important")){
-                        Log.d("Important ","Notifiying to steve");
+                        Log.d("Important ","Notifying to steve");
                         notifyImportance(sender);
                     }
                         repliedKeys.add(notifKey);
@@ -149,9 +152,10 @@ public class NotificationReader extends NotificationListenerService {
 
     private void createJarvisReply(String sender,String Message,StatusBarNotification sbn1){
         if(previousMessage.equals(message)){
-            Log.d("Previous Message detected","Skipped");
+            Log.d("Previous Message detected","Skipped::"+message);
             return;
         }
+
         if (Name == null || DOB == null || UserId == null) {
             Log.d("GeminiReply", "User info not ready");
             Log.d("User info",Name+":"+DOB+":"+UserId);
@@ -187,11 +191,11 @@ public class NotificationReader extends NotificationListenerService {
 
 
         historyContext.append("\nYou're Jarvis, Steve's chill and sarcastic personal assistant.\n")
-                .append("if its first time introduce yourself to sender")
                 .append("Reply to this message casually and short use some emoji (2–4 lines max).\n")
                 .append("Sometimes tease Steve a little bit. No formal or robotic tone.\n")
-                .append("If the message sounds important or urgent, just say 'I'll let Steve know once he unlocks his phone.'\n")
-                .append("If the conversation is wrapping up, slightly try to end it with something like 'I'll tell Steve' or 'Goodbye!'\n")
+                .append("If the message sounds important or urgent, just say 'I'll let Steve.'\n")
+                .append("If the sender ask any doubt clear it.'\n")
+                .append("If the conversation is warping up slightly try to finish the conversation using goodbye or i tell to steve like that")
                 .append("Message from ")
                 .append(sender)
                 .append(": \"")
@@ -263,6 +267,7 @@ public class NotificationReader extends NotificationListenerService {
             Intent replyIntent = new Intent();
             androidx.core.app.RemoteInput.addResultsToIntent(compatInputs, replyIntent, replyBundle);
             previousMessage=message;
+            message=null;
             Log.d("Previous Message",previousMessage);
 
             try{
@@ -326,30 +331,15 @@ public class NotificationReader extends NotificationListenerService {
         previousResponse=altered;
     }
     private void notifyImportance(String sender){
-        KeyguardManager keyguardManager= (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
-        boolean isUnlocked=keyguardManager != null && !keyguardManager.isKeyguardLocked();
+
 
         String speakText = "Hey Steve, you might want to call or message "
                 + sender.replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "")
                 + ". They mentioned something important.";
-        if(isUnlocked){
-            speakNow(speakText);
-        }else {
-            pendingTTSMessage = speakText;
-            unlockReceiver=new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    speakNow(pendingTTSMessage);
-                    unlockReceiver = null;
-                    pendingTTSMessage = null;
-                }
-            };
-            IntentFilter filter = new IntentFilter(Intent.ACTION_USER_PRESENT);
-            registerReceiver(unlockReceiver, filter);
-        }
+
+            toSpeech.speak(speakText, TextToSpeech.QUEUE_FLUSH, null, null);
+
     }
-    private void speakNow(String msg){
-        toSpeech.speak(msg, TextToSpeech.QUEUE_FLUSH, null, null);
-    }
+
 }
 

@@ -192,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (hasAllPermissions()) {
             ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
-            Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+
         }else {
             Toast.makeText(this, "Permission needed", Toast.LENGTH_SHORT).show();
         }

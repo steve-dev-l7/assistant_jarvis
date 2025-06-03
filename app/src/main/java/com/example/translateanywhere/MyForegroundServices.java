@@ -72,6 +72,12 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -510,6 +516,8 @@ public class MyForegroundServices extends Service  {
             Reminder=true;
             generateResponse(recodedtext);
             startRemindChecker(time);
+        } else if (recodedtext.contains("weather") || recodedtext.contains("check")) {
+            checkWeather("chennai");
         } else {
             generateResponse(recodedtext);
         }
@@ -591,7 +599,7 @@ public class MyForegroundServices extends Service  {
         random = new Random();
         int rand = random.nextInt(6);
         if (getRiddle) {
-            content = new Content.Builder().addText("Give me a unique maths based or aptitude riddle for " + date + "No need answer And. No repeats.").build();
+            content = new Content.Builder().addText("Give me a aptitude riddle for " + date + "No need answer And. No repeats.").build();
             previousDate = date;
             Log.d("Riddle", "Generating Riddle");
         } else {
@@ -1110,6 +1118,49 @@ public class MyForegroundServices extends Service  {
             }
         };
         handler.post(checkerRunnableHolder[0]);
+    }
+
+    private void checkWeather(String cityName){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    String apiKey="79e8085e9ad24b29a7b162223250306";
+                    String urlString = "https://api.weatherapi.com/v1/current.json?key="+apiKey+"&q="+cityName;
+
+                    URL url = new URL(urlString);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(conn.getInputStream())
+                    );
+
+                    StringBuilder result = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        result.append(line);
+                    }
+                    JSONObject json = new JSONObject(result.toString());
+                    Log.d("WeatherJSON", result.toString());
+                    JSONObject location = json.getJSONObject("location");
+                    String city = location.getString("name");
+
+                    JSONObject current = json.getJSONObject("current");
+                    double temperature = current.getDouble("temp_c");
+
+                    JSONObject condition = current.getJSONObject("condition");
+                    String weather_desc = condition.getString("text");
+
+                    String weatherReport = "The current weather in " + city + " is " + weather_desc +
+                            " with a temperature of " + temperature + " degrees Celsius.";
+                        toSpeech.speak(weatherReport, TextToSpeech.QUEUE_FLUSH,null,"WEATHER");
+
+                }catch (Exception e){
+                    Log.d("Weather",e.getMessage());
+                }
+            }
+        }).start();
     }
 
 }
