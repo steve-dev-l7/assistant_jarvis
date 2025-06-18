@@ -176,6 +176,7 @@ public class MyForegroundServices extends Service  {
     DatabaseReference databaseReference;
     ArrayList<String> mobileNumbersList = new ArrayList<>();
     int i = 0;
+    String WakeWordAccessKey;
     BluetoothAdapter bluetoothAdapter;
     private static final String CHANNEL_ID = "JarvisServiceChannel";
     TelecomManager telecomManager;
@@ -209,6 +210,9 @@ public class MyForegroundServices extends Service  {
         modelFutures = GenerativeModelFutures.from(gm);
         generateResponse("Give me a riddle");
         riddleLiveData = new MutableLiveData<>();
+        SharedPreferences sharedPreferences=getSharedPreferences("AccessKey",MODE_PRIVATE);
+        WakeWordAccessKey=sharedPreferences.getString("Key",null);
+        Log.d("SavedAccessKey",WakeWordAccessKey);
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
                 audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL), 0);
@@ -319,7 +323,7 @@ public class MyForegroundServices extends Service  {
     public int onStartCommand(Intent intent, int flags, int startId) {
         CreateNotification();
         PorcupineManager.Builder builder = new PorcupineManager.Builder();
-        builder.setAccessKey("RVIVj3j7iV8kxELsndoSpFObV/S8vXJOqOGSmmsvlo3TyykuWpyJBA==");
+        builder.setAccessKey(WakeWordAccessKey);
         builder.setKeyword(Porcupine.BuiltInKeyword.JARVIS);
         builder.setSensitivity(0.70f);
         Log.d("Picovoice ","created");
@@ -358,12 +362,13 @@ public class MyForegroundServices extends Service  {
             });
             porcupineManager.start();
         } catch (PorcupineInvalidArgumentException e) {
+            toSpeech.speak("Invalid access key try another",TextToSpeech.QUEUE_FLUSH,null,"ACCESSKEYERROR");
             Log.d("Porcupine", Objects.requireNonNull(e.getMessage()));
-        } catch (PorcupineActivationException e) {
-            Log.d("Porcupine","AccessKey activation error");
-        } catch (PorcupineActivationLimitException e) {
+        }  catch (PorcupineActivationLimitException e) {
+            toSpeech.speak("Your access key reached its device limit",TextToSpeech.QUEUE_FLUSH,null,"ACCESSKEYERROR");
             Log.d("Porcupine","AccessKey reached its device limit");
         } catch (PorcupineActivationRefusedException e) {
+            toSpeech.speak("Your access key has been refused",TextToSpeech.QUEUE_FLUSH,null,"ACCESSKEYERROR");
             Log.d("Porcupine","AccessKey refused");
         } catch (PorcupineActivationThrottledException e) {
             Log.d("Porcupine","AccessKey has been throttled");
@@ -516,9 +521,7 @@ public class MyForegroundServices extends Service  {
             Reminder=true;
             generateResponse(recodedtext);
             startRemindChecker(time);
-        } else if (recodedtext.contains("weather") || recodedtext.contains("check")) {
-            checkWeather("chennai");
-        } else {
+        }  else {
             generateResponse(recodedtext);
         }
     }
@@ -599,7 +602,7 @@ public class MyForegroundServices extends Service  {
         random = new Random();
         int rand = random.nextInt(6);
         if (getRiddle) {
-            content = new Content.Builder().addText("Give me a aptitude riddle for " + date + "No need answer And. No repeats.").build();
+            content = new Content.Builder().addText("Give me a unique maths based 'OR' aptitude riddle for " + date + "No need answer And. No repeats.").build();
             previousDate = date;
             Log.d("Riddle", "Generating Riddle");
         } else {
@@ -982,52 +985,8 @@ public class MyForegroundServices extends Service  {
         }
     }
 
-    private void countPushUp(){
-        sensorManager= (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        Sensor gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
-        if(accelerometer !=null){
-            sensorManager.registerListener(new SensorEventCallback() {
-                @Override
-                public void onSensorChanged(SensorEvent event) {
-                    super.onSensorChanged(event);
-                    float z=event.values[2];
-                    float y=event.values[1];
-
-                    long currentTime=System.currentTimeMillis();
-
-                    if (Math.abs(z) < MIN_PUSHUP_RANGE && Math.abs(y) < MIN_PUSHUP_RANGE || Math.abs(gyroZ) > GYRO_THRESHOLD) {
-                        return;
-                    }
-
-                    if(z<4 && y>2 && !isGoingDown){
-                        isGoingDown=true;
-                    }
-                    if(z>9 && y<2 && isGoingDown){
-                        if (currentTime - lastPushUpTime > TIME_THRESHOLD) {
-                            pushUpCount++;
-                            lastPushUpTime = currentTime;
-                        }
-                        isGoingDown = false;
-                        if(pushUpCount==15){
-                            stopPushUpCounter();
-                        }
-                    }
-                    else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-                        gyroZ = event.values[2]; // Rotation detection
-                    }
 
 
-                }
-            }, accelerometer,SensorManager.SENSOR_DELAY_UI);
-        }
-    }
-    public void stopPushUpCounter() {
-        if (sensorManager != null) {
-            sensorManager.unregisterListener((SensorEventListener) null);
-        }
-    }
 
     private void CreateNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -1043,7 +1002,7 @@ public class MyForegroundServices extends Service  {
 
             notification1 = new NotificationCompat.Builder(MyForegroundServices.this, CHANNEL_ID)
                     .setContentTitle("Jarvis is Listening")
-                    .setContentTitle("Say 'Jarvis' to activate.")
+                    .setContentText("Say 'Jarvis' to activate.")
                     .setOngoing(true)
                     .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
                     .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -1105,7 +1064,7 @@ public class MyForegroundServices extends Service  {
                 int cHour=now.get(Calendar.HOUR);
                 int cMinute=now.get(Calendar.MINUTE);
                 int amOrPm=now.get(Calendar.AM_PM);
-                 String current = String.format("%02d:%02d %s", cHour == 0 ? 12 : cHour, cMinute, (amOrPm == Calendar.AM ? "a.m." : "p.m."));
+                 String current = String.format("%d:%02d %s", cHour == 0 ? 12 : cHour, cMinute, (amOrPm == Calendar.AM ? "a.m." : "p.m."));
                 Log.d("Current time",current);
                 if(extractedTime.equals(current)){
                     toSpeech.speak(reminderResponse.replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", ""), TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
@@ -1120,47 +1079,6 @@ public class MyForegroundServices extends Service  {
         handler.post(checkerRunnableHolder[0]);
     }
 
-    private void checkWeather(String cityName){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    String apiKey="79e8085e9ad24b29a7b162223250306";
-                    String urlString = "https://api.weatherapi.com/v1/current.json?key="+apiKey+"&q="+cityName;
 
-                    URL url = new URL(urlString);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-
-                    BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(conn.getInputStream())
-                    );
-
-                    StringBuilder result = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        result.append(line);
-                    }
-                    JSONObject json = new JSONObject(result.toString());
-                    Log.d("WeatherJSON", result.toString());
-                    JSONObject location = json.getJSONObject("location");
-                    String city = location.getString("name");
-
-                    JSONObject current = json.getJSONObject("current");
-                    double temperature = current.getDouble("temp_c");
-
-                    JSONObject condition = current.getJSONObject("condition");
-                    String weather_desc = condition.getString("text");
-
-                    String weatherReport = "The current weather in " + city + " is " + weather_desc +
-                            " with a temperature of " + temperature + " degrees Celsius.";
-                        toSpeech.speak(weatherReport, TextToSpeech.QUEUE_FLUSH,null,"WEATHER");
-
-                }catch (Exception e){
-                    Log.d("Weather",e.getMessage());
-                }
-            }
-        }).start();
-    }
 
 }

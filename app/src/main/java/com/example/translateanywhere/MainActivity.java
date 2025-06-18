@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
         CallRequest();
         chechProfile();
+        hideSystemUI();
         requestAnswerPhoneCallsPermission();
         TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
         if (!getPackageName().equals(telecomManager.getDefaultDialerPackage())) {
@@ -304,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
                 if (isServiceisRunning(MyForegroundServices.class)) {
                     Toast.makeText(MainActivity.this, "Deactivate Jarvis And access speak", Toast.LENGTH_SHORT).show();
                 } else {
-                    speechRecoder();
+                    saveAccessKey();
                 }
             }
         });
@@ -339,6 +340,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    private void saveAccessKey() {
+        String userAccessKey=editText.getText().toString();
+        SharedPreferences saveKey=getSharedPreferences("AccessKey",MODE_PRIVATE);
+        SharedPreferences.Editor editor=saveKey.edit();
+        editor.putString("Key",userAccessKey);
+        editor.apply();
+        Toast.makeText(this, "Key saved, Activate Jarvis and check your access key is valid", Toast.LENGTH_SHORT).show();
+        Log.d("Access key",userAccessKey);
     }
 
     private void chechProfile() {
@@ -495,65 +506,7 @@ public class MainActivity extends AppCompatActivity {
         RecodeAudioRequest();
     }
 
-    private void speechRecoder() {
-        Intent recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        speechRecognizer.setRecognitionListener(new RecognitionListener() {
-            @Override
-            public void onReadyForSpeech(Bundle bundle) {
 
-            }
-
-            @Override
-            public void onBeginningOfSpeech() {
-
-            }
-
-            @Override
-            public void onRmsChanged(float v) {
-
-            }
-
-            @Override
-            public void onBufferReceived(byte[] bytes) {
-
-            }
-
-            @Override
-            public void onEndOfSpeech() {
-
-                Toast.makeText(MainActivity.this, "Listening finished", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onError(int i) {
-                Toast.makeText(MainActivity.this, "Error" + i, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onResults(Bundle bundle) {
-                ArrayList<String> matches = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if (matches != null && !matches.isEmpty()) {
-                    recodedtext = matches.get(0);
-                    editText.setText(recodedtext);
-                    Identify(recodedtext);
-                }
-            }
-
-            @Override
-            public void onPartialResults(Bundle bundle) {
-
-            }
-
-            @Override
-            public void onEvent(int i, Bundle bundle) {
-
-            }
-        });
-        speechRecognizer.startListening(recognizerIntent);
-
-    }
 
     protected void onStart() {
         super.onStart();
@@ -600,6 +553,16 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("Permission", "Permission denied to answer phone calls");
             }
         }
+    }
+    private void hideSystemUI() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 
 }

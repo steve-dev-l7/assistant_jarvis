@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:background="@color/white"
+    android:background="#0F1A1A"
     tools:ignore="HardcodedText">
 
     <!-- Toolbar -->
@@ -27,33 +27,41 @@
             android:layout_gravity="center"
             android:fontFamily="serif-monospace"
             android:text="Steve Creations"
-            android:textColor="#E0E0E0"
+            android:textColor="@color/black"
             android:textSize="25sp"
             android:textStyle="bold" />
     </androidx.appcompat.widget.Toolbar>
 
     <!-- EditText & Button for Speech -->
+
     <EditText
         android:id="@+id/edittext"
         android:layout_width="0dp"
         android:layout_height="50dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/edit_text"
         android:gravity="center"
-        app:layout_constraintStart_toStartOf="parent"
+        android:hint="Enter text here"
+        android:inputType="textPassword"
+        android:textColor="#00FFFF"
+        android:textColorHint="#00FFFF"
         app:layout_constraintEnd_toStartOf="@+id/btnSpeak"
-        app:layout_constraintTop_toBottomOf="@id/my_toolbar"
-        android:hint="Enter text here" />
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/my_toolbar" />
+
+
 
     <Button
         android:id="@+id/btnSpeak"
-        android:layout_width="50dp"
+        android:layout_width="45dp"
         android:layout_height="50dp"
-        android:background="@android:drawable/ic_btn_speak_now"
+        android:layout_marginTop="24dp"
+        android:background="#0F1A1A"
+        android:foreground="@drawable/tick"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/my_toolbar" />
 
-    <!-- ScrollView for Translation Output -->
-
-    <!-- Riddle Section Header -->
     <ScrollView
         android:id="@+id/scrollView2"
         android:layout_width="match_parent"
@@ -81,7 +89,7 @@
                 android:gravity="center"
                 android:paddingTop="5dp"
                 android:text="Translated text will appear here"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="20sp" />
         </LinearLayout>
     </ScrollView>
@@ -97,7 +105,7 @@
         android:background="@drawable/costum_text"
         android:fontFamily="serif-monospace"
         android:text="DAILY RIDDLE"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -109,19 +117,19 @@
 
     <ScrollView
         android:id="@+id/scrollView3"
-        android:layout_width="match_parent"
+        android:layout_width="350dp"
         android:layout_height="230dp"
-        android:layout_marginTop="12dp"
-        android:fillViewport="true"
+        android:layout_marginTop="8dp"
         android:background="@drawable/coustum_scroll"
+        android:fillViewport="true"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.491"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/txttask">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/Task"
-            android:layout_width="match_parent"
+            android:layout_width="350dp"
             android:layout_height="220dp"
 
             android:padding="16dp">
@@ -131,11 +139,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="8dp"
                 android:fontFamily="serif-monospace"
                 android:text="1."
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
@@ -149,11 +157,11 @@
                 android:fontFamily="serif-monospace"
                 android:gravity="center"
                 android:text="Tap me to get riddle"
-                android:textColor="@color/black"
+                android:textColor="#9CA3AF"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintHorizontal_bias="0.285"
                 app:layout_constraintStart_toEndOf="@id/StepsCount"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -166,7 +174,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/btnshape"
         android:text="Wake Up Jarvis"
-        android:textColor="@color/white"
+        android:textColor="#00FFA6"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
