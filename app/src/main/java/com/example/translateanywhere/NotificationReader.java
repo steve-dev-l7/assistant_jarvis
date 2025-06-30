@@ -55,15 +55,13 @@ public class NotificationReader extends NotificationListenerService {
 
     List<String> conversationHistory;
 
-    private static final String GemeniApikey2="AIzaSyDUTc4_Dyar05pFn7c5dvtJ3Mvoeszxg_M";
+    String GemeniApikey2;
     TextToSpeech toSpeech;
 
     @Override
     public void onCreate() {
         super.onCreate();
         db = FirebaseFirestore.getInstance();
-        gm = new GenerativeModel("gemini-1.5-flash", GemeniApikey2);
-        modelFutures = GenerativeModelFutures.from(gm);
         toSpeech=new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int i) {
@@ -78,22 +76,36 @@ public class NotificationReader extends NotificationListenerService {
                 }
             }
         });
+        SharedPreferences sharedPreferencess=getSharedPreferences("AccessKeys",MODE_PRIVATE);
+        GemeniApikey2= sharedPreferencess.getString("Key1",null);
+        if(GemeniApikey2!=null){
+            gm = new GenerativeModel("gemini-1.5-flash", GemeniApikey2);
+            modelFutures = GenerativeModelFutures.from(gm);
+        }else {
+            toSpeech.speak("Your Second Access key is empty",TextToSpeech.QUEUE_FLUSH,null,null);
+
+        }
         fetchUser();
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         super.onNotificationPosted(sbn);
+        SharedPreferences sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
+        isFeatureEnabled = sharedPreferences.getBoolean("isFeatureEnabled", false);
+        if(!isFeatureEnabled || GemeniApikey2==null){
+            Log.d("Notification Reader","Auto reply is disabled");
+            return;
+        }
+        if(GemeniApikey2==null){
+            toSpeech.speak("Your second AI key is empty",TextToSpeech.QUEUE_FLUSH,null,null);
+        }
         if(previousMessage.equals(message)){
             Log.d("Previous Message detected","Skipped::"+message);
             return;
         }
-        SharedPreferences sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
-        isFeatureEnabled = sharedPreferences.getBoolean("isFeatureEnabled", false);
-        if(!isFeatureEnabled){
-            Log.d("Notification Reader","Auto reply is disabled");
-            return;
-        }
+
+
         Log.d("DEBUG", "Notification received from: " + sbn.getPackageName());
         if (sbn.getNotification().extras != null) {
 
@@ -245,7 +257,9 @@ public class NotificationReader extends NotificationListenerService {
     private void sendAutoReply(Notification notification,String Jarvisresponse,StatusBarNotification sbn){
         if(notification==null || notification.actions==null ) return;
 
-
+        if (previousMessage.equals(message)){
+            return;
+        }
         for (Notification.Action action: notification.actions){
             RemoteInput[] remoteInputs = action.getRemoteInputs();
             if (remoteInputs == null || remoteInputs.length == 0) continue;
@@ -264,6 +278,9 @@ public class NotificationReader extends NotificationListenerService {
             for (androidx.core.app.RemoteInput input : compatInputs) {
                 replyBundle.putCharSequence(input.getResultKey(), Jarvisresponse);
             }
+            if (previousMessage.equals(message)){
+                return;
+            }
             Intent replyIntent = new Intent();
             androidx.core.app.RemoteInput.addResultsToIntent(compatInputs, replyIntent, replyBundle);
             previousMessage=message;
@@ -274,7 +291,7 @@ public class NotificationReader extends NotificationListenerService {
                 action.actionIntent.send(this, 0, replyIntent);
                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 if (notificationManager != null) {
-                    notificationManager.cancel((sbn.getId()));
+                    notificationManager.cancel(sbn.getPackageName(), sbn.getId());
                     Log.d("NotificationRemoved", "Notification removed: " + sbn.getKey());
                     cancelNotification(sbn.getKey());
                     }

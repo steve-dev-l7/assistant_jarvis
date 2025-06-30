@@ -36,6 +36,7 @@ public class CallListener extends PhoneStateListener {
             break;
 
             case TelephonyManager.CALL_STATE_OFFHOOK:
+
                 lastIncomingNumber=null;
                 break;
 

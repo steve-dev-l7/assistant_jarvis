@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:background="#0F1A1A"
+    android:background="@drawable/fadesbg"
     tools:ignore="HardcodedText">
 
     <!-- Toolbar -->
@@ -27,40 +27,11 @@
             android:layout_gravity="center"
             android:fontFamily="serif-monospace"
             android:text="Steve Creations"
-            android:textColor="@color/black"
+            android:textColor="#202124"
             android:textSize="25sp"
             android:textStyle="bold" />
     </androidx.appcompat.widget.Toolbar>
 
-    <!-- EditText & Button for Speech -->
-
-    <EditText
-        android:id="@+id/edittext"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/edit_text"
-        android:gravity="center"
-        android:hint="Enter text here"
-        android:inputType="textPassword"
-        android:textColor="#00FFFF"
-        android:textColorHint="#00FFFF"
-        app:layout_constraintEnd_toStartOf="@+id/btnSpeak"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/my_toolbar" />
-
-
-
-    <Button
-        android:id="@+id/btnSpeak"
-        android:layout_width="45dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="24dp"
-        android:background="#0F1A1A"
-        android:foreground="@drawable/tick"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/my_toolbar" />
 
     <ScrollView
         android:id="@+id/scrollView2"
@@ -68,13 +39,11 @@
         android:layout_height="200dp"
         android:background="@drawable/coustum_scroll"
         android:padding="14dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edittext"
-        app:layout_constraintVertical_bias="0.068"
-        android:visibility="gone">
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -94,32 +63,31 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- ScrollView for Riddle Section -->
 
-    <!-- Wake Up Jarvis Button -->
 
     <TextView
         android:id="@+id/txttask"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:background="@drawable/costum_text"
         android:fontFamily="serif-monospace"
         android:text="DAILY RIDDLE"
-        android:textColor="@color/white"
-        android:textSize="20sp"
+        android:gravity="center"
+        android:textColor="#202124"
+        android:textSize="15sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/scrollView2"
-        app:layout_constraintVertical_bias="0.167" />
+        app:layout_constraintTop_toBottomOf="@+id/my_toolbar"
+        app:layout_constraintVertical_bias="0.235" />
 
     <ScrollView
         android:id="@+id/scrollView3"
         android:layout_width="350dp"
         android:layout_height="230dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="44dp"
         android:background="@drawable/coustum_scroll"
         android:fillViewport="true"
         app:layout_constraintEnd_toEndOf="parent"
@@ -139,29 +107,30 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginStart="24dp"
                 android:fontFamily="serif-monospace"
                 android:text="1."
-                android:textColor="@color/white"
+                android:textColor="#4E342E"
                 android:textSize="20sp"
                 android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.051" />
 
             <TextView
                 android:id="@+id/txtRiddle1"
                 android:layout_width="270dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
                 android:fontFamily="serif-monospace"
                 android:gravity="center"
                 android:text="Tap me to get riddle"
-                android:textColor="#9CA3AF"
+                android:textColor="#4E342E"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.285"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@id/StepsCount"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -170,15 +139,16 @@
 
     <Button
         android:id="@+id/btnWakeJarvis"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:background="@drawable/btnshape"
         android:text="Wake Up Jarvis"
-        android:textColor="#00FFA6"
+        android:textColor="#00FFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.891" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

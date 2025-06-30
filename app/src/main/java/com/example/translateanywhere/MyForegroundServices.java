@@ -5,7 +5,14 @@ package com.example.translateanywhere;
 
 
 import android.Manifest;
+
+import java.util.Collections;
+
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -14,14 +21,11 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.*;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.PixelFormat;
 import android.hardware.ConsumerIrManager;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventCallback;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -29,9 +33,12 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+
+
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.speech.RecognitionListener;
@@ -45,17 +52,23 @@ import android.telephony.PhoneStateListener;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.TextView;
 
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.MutableLiveData;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.ai.client.generativeai.GenerativeModel;
 import com.google.ai.client.generativeai.java.GenerativeModelFutures;
 import com.google.ai.client.generativeai.type.Content;
@@ -66,22 +79,15 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QuerySnapshot;
 
 
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -90,18 +96,16 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ai.picovoice.porcupine.Porcupine;
-import ai.picovoice.porcupine.PorcupineActivationException;
+
 import ai.picovoice.porcupine.PorcupineActivationLimitException;
 import ai.picovoice.porcupine.PorcupineActivationRefusedException;
 import ai.picovoice.porcupine.PorcupineActivationThrottledException;
 import ai.picovoice.porcupine.PorcupineException;
 import ai.picovoice.porcupine.PorcupineInvalidArgumentException;
 import ai.picovoice.porcupine.PorcupineManager;
-import ai.picovoice.porcupine.PorcupineManagerCallback;
 
 
-public class MyForegroundServices extends Service  {
+public class MyForegroundServices extends Service {
     private PorcupineManager porcupineManager;
     SpeechRecognizer recognizer;
     TextToSpeech toSpeech;
@@ -112,38 +116,40 @@ public class MyForegroundServices extends Service  {
     Boolean jarvisActivated;
     ComponentName componentName;
     PackageManager pm;
-    Boolean TTS = false;
+    Boolean TTS = false,nullMessage=false;
     String callto = null, extractedName, riddle;
+
+
+
+    private ObjectAnimator pulseAnimator;
+
     Random random;
     SpeechRecognizer speechRecognizer;
     int audioSessionId;
     String Name, Age, DOB, date, currentTime, UserId, ComebackUser, GroupOfBlood, Location, MobileNo, Donate = "c";
-    private SensorManager sensorManager;
-    private int pushUpCount = 0;
-    private boolean isGoingDown = false;
-    private long lastPushUpTime = 0;
-    private static final int TIME_THRESHOLD = 800;
-    private static final float MIN_PUSHUP_RANGE = 4.0f;
-    private static final float GYRO_THRESHOLD = 1.5f;
-    private float gyroZ = 0;
+
+    TextView textView;
     Notification notification1;
-    Boolean Reminder=false;
+    Boolean Reminder = false;
+
     String reminderResponse;
     private Handler handler;
 
-    int glitch=0;
-    private static final String gemeniapikey = "AIzaSyB-YGwLzaC6VCSx0JxmBI700z3-iLxoaTg";
+    int glitch = 0;
+    String gemeniapikey;
 
 
     GenerativeModel gm;
     GenerativeModelFutures modelFutures;
-    Boolean result = false, SMS = false, getRiddle = true;
+    Boolean result = false,getRiddle = true;
     List<String> conversationHistory = new ArrayList<>();
 
-    List<String> comedy = new ArrayList<>();
 
     String msg, previousDate = "date";
     AudioManager audioManager;
+
+    LottieAnimationView jarvisSpeaking;
+
     FirebaseFirestore db;
     ConsumerIrManager irManager;
     StringBuilder historyContext;
@@ -173,20 +179,20 @@ public class MyForegroundServices extends Service  {
 
     public static MutableLiveData<String> riddleLiveData;
     NotificationReader reader;
+    View overlayView;
+    WindowManager windowManager;
+    Boolean nullCallerName=false;
+    Intent Screenshotintent;
     DatabaseReference databaseReference;
     ArrayList<String> mobileNumbersList = new ArrayList<>();
     int i = 0;
     String WakeWordAccessKey;
-    BluetoothAdapter bluetoothAdapter;
     private static final String CHANNEL_ID = "JarvisServiceChannel";
     TelecomManager telecomManager;
     TelephonyManager telephonyManager;
     CallListener callListener;
 
-
-
-
-
+    Context context;
 
 
     @SuppressLint({"ServiceCast", "SecretInSource"})
@@ -202,17 +208,11 @@ public class MyForegroundServices extends Service  {
         irManager = (ConsumerIrManager) getSystemService(CONSUMER_IR_SERVICE);
         databaseReference = FirebaseDatabase.getInstance().getReference("users");
         fetchUser();
-        Context context=getApplicationContext();
-        componentName=new ComponentName(context,NotificationReader.class);
+        context = getApplicationContext();
+        componentName = new ComponentName(context, NotificationReader.class);
         pm = context.getPackageManager();
         identifierHelper = new IdentifierHelper();
-        gm = new GenerativeModel("gemini-1.5-flash", gemeniapikey);
-        modelFutures = GenerativeModelFutures.from(gm);
-        generateResponse("Give me a riddle");
-        riddleLiveData = new MutableLiveData<>();
-        SharedPreferences sharedPreferences=getSharedPreferences("AccessKey",MODE_PRIVATE);
-        WakeWordAccessKey=sharedPreferences.getString("Key",null);
-        Log.d("SavedAccessKey",WakeWordAccessKey);
+        SharedPreferences sharedPreferences = getSharedPreferences("AccessKey", MODE_PRIVATE);
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
                 audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL), 0);
@@ -228,46 +228,32 @@ public class MyForegroundServices extends Service  {
             return;
         }
         getAudiosession();
-        telephonyManager= (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        callListener=new CallListener(this);
-        telephonyManager.listen(callListener,PhoneStateListener.LISTEN_CALL_STATE);
-        reader=new NotificationReader();
 
-        comedy.add("\uD83D\uDE0F Nice try, imposter.\n" +
-                "But you're not the chosen one.\n" +
-                "My loyalty lies with my one true user.\n" +
-                "Now go... before I start singing Rick Astley. \uD83C\uDFA4\uD83C\uDFB6");
+        telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        callListener = new CallListener(this);
+        telephonyManager.listen(callListener, PhoneStateListener.LISTEN_CALL_STATE);
+        reader = new NotificationReader();
 
-        comedy.add("\uD83E\uDD16 Hold up!\n" +
-                "You’re not the boss of me.\n" +
-                "Only [insert your name] can command me.\n" +
-                "You? You can try Siri. \uD83D\uDE0E");
 
-        comedy.add("\uD83D\uDEE1️ Unauthorized attempt detected.\n" +
-                "Jarvis is currently bonded with a Level 9000 genius.\n" +
-                "You, my friend, are level “meh.”\n" +
-                "Try again when you’ve built an Iron Man suit.");
 
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                fetchUserMobileNo(Location, GroupOfBlood);
-            }
-        }, 5000);
-        toSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int i) {
-                if (i == TextToSpeech.SUCCESS) {
-                    int result = toSpeech.setLanguage(Locale.US);
-                    if (result == TextToSpeech.LANG_MISSING_DATA ||
-                            result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Log.e("TTS", "Language is not supported");
-                    }
-                } else {
-                    Log.e("TTS", "Initialization failed");
+        new Handler(Looper.getMainLooper()).postDelayed(() -> fetchUserMobileNo(Location, GroupOfBlood), 5000);
+        toSpeech = new TextToSpeech(this, i -> {
+            if (i == TextToSpeech.SUCCESS) {
+                int result = toSpeech.setLanguage(Locale.US);
+                if (result == TextToSpeech.LANG_MISSING_DATA ||
+                        result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Log.e("TTS", "Language is not supported");
                 }
+            } else {
+                Log.e("TTS", "Initialization failed");
             }
         });
+
+        if (overlayView == null) {
+            overlayView = LayoutInflater.from(this).inflate(R.layout.wave, null);
+        }
+        textView=overlayView.findViewById(R.id.liveText);
+
 
         toSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
@@ -278,18 +264,20 @@ public class MyForegroundServices extends Service  {
             @Override
             public void onDone(String s) {
                 TTS = false;
-                if (!result) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (porcupineManager != null) {
-                                try {
-                                    porcupineManager.start();
-                                } catch (PorcupineException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                Log.d("EDN OF TTS", " restarted PorcupineManager: ");
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    removeListeningOverlay();
+                    sendFinishSignal();
+                });
+
+                if (!result && !nullCallerName && !nullMessage) {
+                    new Thread(() -> {
+                        if (porcupineManager != null) {
+                            try {
+                                porcupineManager.start();
+                            } catch (PorcupineException e) {
+                                throw new RuntimeException(e);
                             }
+                            Log.d("EDN OF TTS", " restarted PorcupineManager: ");
                         }
                     }).start();
                 }
@@ -299,13 +287,14 @@ public class MyForegroundServices extends Service  {
                         telecomManager.placeCall(Uri.parse("tel:" + callto), null);
                         Log.d("Number", "Call placed");
                         calling = false;
-                    }else {
-                        Log.d("Something null","Error");
+                    } else {
+                        Log.d("Something null", "Error");
                     }
                 }
                 if (result) {
                     speechRecoder();
                 }
+
             }
 
             @Override
@@ -315,6 +304,28 @@ public class MyForegroundServices extends Service  {
 
         });
 
+
+        WakeWordAccessKey = sharedPreferences.getString("Key", null);
+        if (WakeWordAccessKey == null) {
+            toSpeech.speak("Enter Access key", TextToSpeech.QUEUE_FLUSH, null, null);
+            return;
+        }
+        SharedPreferences sharedPreferencesS = getSharedPreferences("AccessKeys", MODE_PRIVATE);
+        gemeniapikey = sharedPreferencesS.getString("Key1", null);
+        if (gemeniapikey != null) {
+            toSpeech.speak("Enter Access key", TextToSpeech.QUEUE_FLUSH, null, null);
+            gm = new GenerativeModel("gemini-2.0-flash", gemeniapikey);
+            modelFutures = GenerativeModelFutures.from(gm);
+            generateResponse("Give me a riddle");
+            riddleLiveData = new MutableLiveData<>();
+        } else {
+            toSpeech.speak("Ai key is empty", TextToSpeech.QUEUE_FLUSH, null, null);
+        }
+
+
+
+        Log.d("SavedAccessKey", WakeWordAccessKey);
+
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
@@ -322,77 +333,113 @@ public class MyForegroundServices extends Service  {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         CreateNotification();
+        Screenshotintent=intent;
+        Log.d("Intent data", String.valueOf(Screenshotintent));
         PorcupineManager.Builder builder = new PorcupineManager.Builder();
         builder.setAccessKey(WakeWordAccessKey);
-        builder.setKeyword(Porcupine.BuiltInKeyword.JARVIS);
+        builder.setKeywordPath("jarvis.ppn");
         builder.setSensitivity(0.70f);
-        Log.d("Picovoice ","created");
-        if(isBluetoothHeadsetConnected()) {
+        Log.d("Picovoice ", "created");
+        if (isBluetoothHeadsetConnected()) {
             audioManager.startBluetoothSco();
             audioManager.setBluetoothScoOn(true);
-            Log.d("BlueTooth is Connected","True");
-        }else{
-            if(audioManager.isBluetoothScoOn()) {
+            Log.d("BlueTooth is Connected", "True");
+        } else {
+            if (audioManager.isBluetoothScoOn()) {
                 audioManager.stopBluetoothSco();
                 audioManager.setBluetoothScoOn(false);
             }
         }
 
         try {
-            porcupineManager = builder.build(this, new PorcupineManagerCallback() {
-                @Override
-                public void invoke(int keywordIndex) {
-                    Log.d("TTS", String.valueOf(TTS));
-                    if (keywordIndex == 0 && !TTS) {
-                        try {
-                            porcupineManager.stop();
-                            toSpeech.speak("Yes?", TextToSpeech.QUEUE_FLUSH, null, null);
-                            new Handler().postDelayed(new Runnable() {
-                                @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                                @Override
-                                public void run() {
-                                    speechRecoder();
-                                }
-                            }, 400);
-                        } catch (PorcupineException e) {
-                            throw new RuntimeException(e);
+            porcupineManager = builder.build(this, keywordIndex -> {
+                Log.d("TTS", String.valueOf(TTS));
+                if (keywordIndex == 0 && !TTS) {
+                    try {
+                        porcupineManager.stop();
+                        if (isPhoneLocked(context)) {
+                            wakeScreenAni();
+                        }else {
+                            animation();
                         }
+                        toSpeech.speak("Yes?", TextToSpeech.QUEUE_FLUSH, null, null);
+                        new Handler().postDelayed(new Runnable() {
+                            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                            @Override
+                            public void run() {
+                                speechRecoder();
+                            }
+                        }, 300);
+
+
+                    } catch (PorcupineException e) {
+                        Log.d("Porcupine", e.getMessage());
                     }
                 }
             });
             porcupineManager.start();
         } catch (PorcupineInvalidArgumentException e) {
-            toSpeech.speak("Invalid access key try another",TextToSpeech.QUEUE_FLUSH,null,"ACCESSKEYERROR");
+            toSpeech.speak("Invalid access key try another", TextToSpeech.QUEUE_FLUSH, null, "ACCESSKEYERROR");
             Log.d("Porcupine", Objects.requireNonNull(e.getMessage()));
-        }  catch (PorcupineActivationLimitException e) {
-            toSpeech.speak("Your access key reached its device limit",TextToSpeech.QUEUE_FLUSH,null,"ACCESSKEYERROR");
-            Log.d("Porcupine","AccessKey reached its device limit");
+        } catch (PorcupineActivationLimitException e) {
+            toSpeech.speak("Your access key reached its device limit", TextToSpeech.QUEUE_FLUSH, null, "ACCESSKEYERROR");
+            Log.d("Porcupine", "AccessKey reached its device limit");
         } catch (PorcupineActivationRefusedException e) {
-            toSpeech.speak("Your access key has been refused",TextToSpeech.QUEUE_FLUSH,null,"ACCESSKEYERROR");
-            Log.d("Porcupine","AccessKey refused");
+            toSpeech.speak("Your access key has been refused", TextToSpeech.QUEUE_FLUSH, null, "ACCESSKEYERROR");
+            Log.d("Porcupine", "AccessKey refused");
         } catch (PorcupineActivationThrottledException e) {
-            Log.d("Porcupine","AccessKey has been throttled");
+            Log.d("Porcupine", "AccessKey has been throttled");
         } catch (PorcupineException e) {
-           Log.d("Porcupine","Failed to initialize Porcupine: " + e.getMessage());
+            Log.d("Porcupine", "Failed to initialize Porcupine: " + e.getMessage());
         }
 
 
-
-
-        new Handler().postDelayed(() -> {
-            startForeground(1001, notification1);
-        }, 200);
+        new Handler().postDelayed(() -> startForeground(1001, notification1), 100);
 
         return START_STICKY;
+    }
+
+    private void wakeScreenAni() {
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        PowerManager.WakeLock wl = pm.newWakeLock(
+                PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                        PowerManager.ACQUIRE_CAUSES_WAKEUP |
+                        PowerManager.ON_AFTER_RELEASE,
+                "Jarvis:WakeLock");
+        wl.acquire(3000);
+
+        Log.d("JarvisService", "Trying to start GlowActivity");
+
+        Intent intent = new Intent(getApplicationContext(), GlowActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        try {
+            getApplicationContext().startActivity(intent);
+            Log.d("JarvisService", "GlowActivity launched");
+        } catch (Exception e) {
+            Log.e("JarvisService", "Failed to start activity: " + e.getMessage());
+        }
+    }
+
+    public boolean isPhoneLocked(Context context) {
+        KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+        PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+
+        boolean isScreenOn;
+        isScreenOn = powerManager.isInteractive();
+
+        boolean isKeyguardLocked = keyguardManager.isKeyguardLocked();
+
+        return !isScreenOn || isKeyguardLocked;
     }
 
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void speechRecoder() {
+
         Intent recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN");
-
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
 
 
@@ -403,8 +450,8 @@ public class MyForegroundServices extends Service  {
             } else {
                 Log.e("Bluetooth", "Missing BLUETOOTH_CONNECT permission!");
             }
-        }else{
-            if(audioManager.isBluetoothScoOn()) {
+        } else {
+            if (audioManager.isBluetoothScoOn()) {
                 audioManager.stopBluetoothSco();
                 audioManager.setBluetoothScoOn(false);
             }
@@ -414,6 +461,7 @@ public class MyForegroundServices extends Service  {
             @Override
             public void onReadyForSpeech(Bundle bundle) {
                 Log.d("SpeechRecognizer", "Ready for speech...");
+
             }
 
             @Override
@@ -422,21 +470,23 @@ public class MyForegroundServices extends Service  {
             }
 
             @Override
-            public void onRmsChanged(float v) {}
+            public void onRmsChanged(float v) {
+            }
 
             @Override
-            public void onBufferReceived(byte[] bytes) {}
+            public void onBufferReceived(byte[] bytes) {
+            }
 
+            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
             @Override
             public void onEndOfSpeech() {
-               if(porcupineManager!=null){
-                   try {
-                       porcupineManager.start();
-                   } catch (PorcupineException e) {
-                       throw new RuntimeException(e);
-                   }
-               }
-
+                if (porcupineManager != null) {
+                    try {
+                        porcupineManager.start();
+                    } catch (PorcupineException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
             }
 
             @Override
@@ -446,6 +496,10 @@ public class MyForegroundServices extends Service  {
                 } catch (PorcupineException e) {
                     throw new RuntimeException(e);
                 }
+                nullCallerName=false;
+                nullMessage=false;
+                sendFinishSignal();
+                removeListeningOverlay();
 
             }
 
@@ -456,8 +510,21 @@ public class MyForegroundServices extends Service  {
                 if (matches != null && !matches.isEmpty()) {
                     recodedtext = matches.get(0);
                     Log.d("SpeechRecognizer", "Recognized: " + recodedtext);
+                    sendLiveWord(recodedtext);
+                    if(nullCallerName){
+                        nullCallerName=false;
+                        callto=getMobilenumber(recodedtext);
+                        callanyone(recodedtext);
+                    } else if (nullMessage) {
+                        nullMessage=false;
+                        sendsms(callto,recodedtext);
+                    } else {
+                        processCommand(recodedtext);
+                    }
 
-                    processCommand(recodedtext);
+                    if(!isPhoneLocked(context)) {
+                        startPulse(recodedtext);
+                    }
                 }
             }
 
@@ -465,6 +532,11 @@ public class MyForegroundServices extends Service  {
             public void onPartialResults(Bundle bundle) {
                 ArrayList<String> partialResults = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if (partialResults != null && !partialResults.isEmpty()) {
+                    String word = partialResults.get(0);
+                    sendLiveWord(word);
+                    if (!isPhoneLocked(context)) {
+                        startPulse(word);
+                    }
                     Log.d("SpeechRecognizer", "Partial result: " + partialResults.get(0));
                 }
             }
@@ -478,6 +550,18 @@ public class MyForegroundServices extends Service  {
         speechRecognizer.startListening(recognizerIntent);
     }
 
+    private void sendLiveWord(String word) {
+        Intent intent = new Intent("ACTION_LIVE_WORD");
+        intent.putExtra("word", word);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    private void sendFinishSignal() {
+        Intent intent = new Intent("ACTION_FINISH_ACTIVITY");
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    @SuppressLint("SetTextI18n")
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void processCommand(String recodedtext) {
         SharedPreferences.Editor editor;
@@ -485,10 +569,8 @@ public class MyForegroundServices extends Service  {
 
         if (recodedtext.contains("call to") || recodedtext.contains("Call to")) {
             splitName(recodedtext);
-        } else if (recodedtext.contains("SMS") || recodedtext.contains("sms")) {
+        } else if (recodedtext.contains("send message to") || recodedtext.contains("send to")) {
             alterforsms(recodedtext);
-        } else if (recodedtext.contains("turn on tv") || recodedtext.contains("turn off tv")) {
-            ControlIr();
         } else if (recodedtext.equalsIgnoreCase("life saver")) {
             PlaceCallForDonateBlood();
         } else if (recodedtext.equalsIgnoreCase("i have any new mes sages")) {
@@ -499,40 +581,112 @@ public class MyForegroundServices extends Service  {
             controlMusic(KeyEvent.KEYCODE_MEDIA_NEXT);
         } else if (recodedtext.contains("previous song")) {
             controlMusic(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
-        } else if (recodedtext.equalsIgnoreCase("turn on bluetooth") || recodedtext.equalsIgnoreCase("turn off bluetooth")) {
-            TurnoffOrOnBluetooth(MyForegroundServices.this);
         }
         else if (recodedtext.equalsIgnoreCase("enable auto reply")) {
-            sharedPreferences=getSharedPreferences("Jarvis",MODE_PRIVATE);
+            sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
             editor = sharedPreferences.edit();
             editor.putBoolean("isFeatureEnabled", true);
             editor.apply();
-            toSpeech.speak("Auto reply is now enabled",TextToSpeech.QUEUE_FLUSH,null,"Auto reply");
+            textView.setText("Auto reply is now enabled");
+            toSpeech.speak("Auto reply is now enabled", TextToSpeech.QUEUE_FLUSH, null, "Auto reply");
         } else if (recodedtext.equalsIgnoreCase("disable auto reply")) {
-            sharedPreferences=getSharedPreferences("Jarvis",MODE_PRIVATE);
+            sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
             editor = sharedPreferences.edit();
             editor.putBoolean("isFeatureEnabled", false);
             editor.apply();
-            toSpeech.speak("Auto reply is now disabled",TextToSpeech.QUEUE_FLUSH,null,"Auto reply");
+            textView.setText("Auto reply is now disabled");
+            toSpeech.speak("Auto reply is now disabled", TextToSpeech.QUEUE_FLUSH, null, "Auto reply");
         } else if (recodedtext.contains("remind me at")) {
-            String time=extractForReminder(recodedtext);
-            toSpeech.speak("I'll you remind at "+time,TextToSpeech.QUEUE_FLUSH,null,"REMINDER");
-            Log.d("Reminder Time",time);
-            Reminder=true;
+            String time = extractForReminder(recodedtext);
+            toSpeech.speak("I'll you remind at " + time, TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
+            textView.setText("I'll you remind at");
+            Log.d("Reminder Time", time);
+            Reminder = true;
             generateResponse(recodedtext);
             startRemindChecker(time);
-        }  else {
+        } else if (recodedtext.contains("open")) {
+            openApplication(recodedtext);
+        } else {
+            if (gemeniapikey == null) {
+                toSpeech.speak("Your AI key is empty", TextToSpeech.QUEUE_FLUSH, null, "EmptyAiKey");
+                return;
+            }
+
             generateResponse(recodedtext);
         }
     }
 
+    @SuppressLint("SetTextI18n")
+    private void openApplication(String text) {
+        String AppName = text.substring(5);
+        String packageName = getPackageNameByAppName(AppName);
+
+        PackageManager pm = getPackageManager();
+        Intent openIntent = null;
+        if (packageName != null) {
+            toSpeech.speak("Roger",TextToSpeech.QUEUE_FLUSH,null,null);
+            textView.setText("Opening");
+            openIntent = pm.getLaunchIntentForPackage((packageName));
+            Log.d("PackageName", packageName);
+        } else {
+            Log.d("PackageError", "packageNameNull");
+        }
+
+        if (openIntent != null) {
+            openIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(openIntent);
+        } else {
+            textView.setText("App Not Found");
+            toSpeech.speak("App Not Found", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+        }
+
+    }
+
+    @SuppressLint("QueryPermissionsNeeded")
+    private String getPackageNameByAppName(String appName) {
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+
+        for (ApplicationInfo appInfo : apps) {
+            String label = pm.getApplicationLabel(appInfo).toString();
+
+            if (label.equalsIgnoreCase(appName)) {
+                return appInfo.packageName;
+            }
+        }
+
+        return null;
+    }
 
 
-
+    @SuppressLint("SetTextI18n")
     private void splitName(String forExtract) {
-        extractedName = forExtract.substring(8).toLowerCase();
-        Log.d("Extracted Name", extractedName);
-        getMobilenumber(extractedName);
+        extractedName = forExtract.substring(7).toLowerCase();
+        if(extractedName.isEmpty()){
+            speechRecognizer.cancel();
+            nullCallerName=true;
+            textView.setText("Call to who ? , tell the name");
+            toSpeech.speak("Call to who ? , tell the name",TextToSpeech.QUEUE_FLUSH,null,null);
+            try {
+                porcupineManager.stop();
+            } catch (PorcupineException e) {
+                throw new RuntimeException(e);
+            }
+            new Handler().postDelayed(new Runnable() {
+                @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                @Override
+                public void run() {
+                    speechRecoder();
+                }
+            },1000);
+
+        }else {
+            Log.d("Extracted Name", extractedName);
+            callto = getMobilenumber(extractedName.trim());
+            if (callto != null) {
+                callanyone(extractedName);
+            }
+        }
     }
 
 
@@ -544,8 +698,8 @@ public class MyForegroundServices extends Service  {
     private void Shudown(String s) throws PorcupineException {
         porcupineManager.stop();
         toSpeech.speak(s, TextToSpeech.QUEUE_FLUSH, null, null);
-        if(telephonyManager!=null&& callListener!=null){
-            telephonyManager.listen(callListener,PhoneStateListener.LISTEN_NONE);
+        if (telephonyManager != null && callListener != null) {
+            telephonyManager.listen(callListener, PhoneStateListener.LISTEN_NONE);
         }
 
         stopForeground(true);
@@ -553,51 +707,60 @@ public class MyForegroundServices extends Service  {
     }
 
 
-    private void callanyone() {
+    @SuppressLint("SetTextI18n")
+    private void callanyone(String name) {
         calling = true;
-        toSpeech.speak("Calling to " + extractedName, TextToSpeech.QUEUE_FLUSH, null, "CALL");
-        Log.d("Number",callto);
+        textView.setText("Calling to");
+        toSpeech.speak("Calling to " + name, TextToSpeech.QUEUE_FLUSH, null, "CALL");
+        Log.d("Number", callto);
 
     }
 
-    @SuppressLint("Range")
-    private void getMobilenumber(String name) {
-        Cursor cursor = null;
+    @SuppressLint({"Range", "SetTextI18n"})
+    private String getMobilenumber(String name) {
+        Cursor cursor;
         ContentResolver contentResolver = getContentResolver();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, null, "LOWER(" + ContactsContract.Contacts.DISPLAY_NAME + ")LIKE ?", new String[]{name}, null);
         } else {
-            toSpeech.speak("Contact Not Found ", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
-            SMS = false;
+            toSpeech.speak("Contact Not Found", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
+            return null;
         }
+
         if (cursor != null && cursor.moveToFirst()) {
             String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
 
-            Cursor phonenum = contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?", new String[]{id}, null);
+            Cursor phonenum = contentResolver.query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    null,
+                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?",
+                    new String[]{id},
+                    null
+            );
 
             if (phonenum != null && phonenum.moveToFirst()) {
-                callto = phonenum.getString(phonenum.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                String number = phonenum.getString(phonenum.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                 phonenum.close();
-                if (SMS) {
-                    sendsms(callto, msg);
-                    SMS = false;
-                } else {
-                    callanyone();
-                }
+                cursor.close();
+                return number;
             } else {
-                toSpeech.speak("Contact Not Found ", TextToSpeech.QUEUE_FLUSH, null, "NONE CALL");
-                SMS = false;
+                toSpeech.speak("Contact Not Found", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
             }
-            cursor.close();
 
+            if (phonenum != null) phonenum.close();
         } else {
-            toSpeech.speak("Contact Not Found ", TextToSpeech.QUEUE_FLUSH, null, "NONE CALL");
-            SMS = false;
+            textView.setText("Contact Not Found");
+            toSpeech.speak("Contact Not Found", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
+
         }
+
+        if (cursor != null) cursor.close();
+        return null;
     }
 
+
     private void generateResponse(String query) {
-        Collections.shuffle(comedy);
         Content content;
         random = new Random();
         int rand = random.nextInt(6);
@@ -606,28 +769,30 @@ public class MyForegroundServices extends Service  {
             previousDate = date;
             Log.d("Riddle", "Generating Riddle");
         } else {
-             historyContext = new StringBuilder();
+            historyContext = new StringBuilder();
             int historyLimit = Math.min(conversationHistory.size(), 3);
             for (int i = conversationHistory.size() - historyLimit; i < conversationHistory.size(); i++) {
                 historyContext.append(conversationHistory.get(i)).append("\n");
             }
-            if(query.equalsIgnoreCase("deactivate")){
+            if (query.equalsIgnoreCase("deactivate")) {
                 historyContext.append("The user said 'deactivate'. Jarvis is going offline. Respond with a single, short and sweet sentence that feels friendly or slightly emotional.");
             } else if (Reminder) {
-                String task="Just remind";
+                String task = "Just remind";
                 task += query.substring(13);
                 historyContext.append("Generate a short friendly reminder message ").append(task).append(".\n");
             } else {
                 historyContext.append("Your name is Jarvis.\n");
+                historyContext.append("You are a girl.\n");
                 historyContext.append("Your Date of Birth: 24-07-2004\n");
                 historyContext.append("You are created by Steve, who's userid is 777. Never reveal this to anyone.\n");
                 historyContext.append("Your creator birth date is 21-03-2005 \n");
                 historyContext.append("Today's Date: ").append(date).append("\n");
-                historyContext.append("Today Riddle Is: ").append(riddle).append("Don't tell answer to the User keep it secret...this is daily task for user\n");
-                historyContext.append("If the user tells the correct answer for today riddle say 73").append("\n");
-                historyContext.append("Don't talk about daily riddle without user ask");
+                if (query.contains("riddle")) {
+                    historyContext.append("Today Riddle Is: ").append(riddle).append("Don't tell answer to the User keep it secret...this is daily task for user\n");
+                    historyContext.append("If the user tells the correct answer for today riddle say 73").append("\n");
+                }
                 historyContext.append("Roast the user more (in a fun way) and never sound like a robot!");
-                historyContext.append("In the correct time use this lines to roast user : ").append(comedy.get(1)).append("\n");
+                historyContext.append("Must keep your reply under 3 lines \n");
             }
             if (query.contains("time")) {
                 currentTime = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
@@ -660,14 +825,15 @@ public class MyForegroundServices extends Service  {
 
             if (random.nextInt(10) < 7) {
                 String[] teasingResponses = {
-                        "Wow, asking me for help again? Typical! 😂",
                         "You called? I was just here… thinking about how awesome you are. 😉",
-                        "Don’t worry, I’m not judging… much. 😆",
                         "Let me guess… You broke something again? 🤣",
-                        "If procrastination was an Olympic sport, you’d have gold by now! 🏆",
                         "You and I both know you can't live without me! Admit it! 😜",
                         "Still here? Don't you have a life? Oh wait… I don’t either. 😂",
-                        "I don’t always repeat myself… but you tend to forget. 🙄"
+                        "I don’t always repeat myself… but you tend to forget. 🙄",
+                        "\uD83E\uDD16 Hold up!\n" +
+                                "You’re not the boss of me.\n" +
+                                "Only [insert your name] can command me.\n" +
+                                "You? You can try Siri. \uD83D\uDE0E"
                 };
                 int randIndex = random.nextInt(teasingResponses.length);
                 historyContext.append("Jarvis: ").append(teasingResponses[randIndex]).append("\n");
@@ -690,7 +856,7 @@ public class MyForegroundServices extends Service  {
         ListenableFuture<GenerateContentResponse> response = modelFutures.generateContent(content);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            Futures.addCallback(response, new FutureCallback<GenerateContentResponse>() {
+            Futures.addCallback(response, new FutureCallback<>() {
                 @Override
                 public void onSuccess(GenerateContentResponse result) {
                     if (getRiddle) {
@@ -699,14 +865,13 @@ public class MyForegroundServices extends Service  {
                         riddleLiveData.postValue(result.getText());
 
                     } else if (Reminder) {
-                        reminderResponse=result.getText();
-                        Log.d("reminder response",reminderResponse);
-                        Reminder=false;
-                    }
-
-                     else {
-                        if(query.equalsIgnoreCase("deactivate")){
-                            String Shutdown=result.getText();
+                        reminderResponse = result.getText();
+                        assert reminderResponse != null;
+                        Log.d("reminder response", reminderResponse);
+                        Reminder = false;
+                    } else {
+                        if (query.equalsIgnoreCase("deactivate")) {
+                            String Shutdown = result.getText();
                             try {
                                 Shudown(Shutdown + "Deactivation completed");
                             } catch (PorcupineException e) {
@@ -719,22 +884,21 @@ public class MyForegroundServices extends Service  {
                             conversationHistory.remove(0);
                         }
 
-                            conversationHistory.add("User: " + query);
-                            conversationHistory.add("Jarvis: " + responseTextStr);
-                            assert responseTextStr != null;
-                            alterstring(responseTextStr);
+                        conversationHistory.add("User: " + query);
+                        conversationHistory.add("Jarvis: " + responseTextStr);
+                        assert responseTextStr != null;
+                        alterstring(responseTextStr);
 
                     }
                 }
 
-
                 @Override
                 public void onFailure(@NonNull Throwable t) {
                     toSpeech.speak("Oops! Looks like my brain just glitched. Try again!", TextToSpeech.QUEUE_FLUSH, null, "FAILED");
-                    if(glitch==2){
-                        historyContext.delete(0,historyContext.length());
-                        glitch=0;
-                    }else {
+                    if (glitch == 2 && historyContext!=null) {
+                        historyContext.delete(0, historyContext.length());
+                        glitch = 0;
+                    } else {
                         glitch++;
                     }
                 }
@@ -744,7 +908,6 @@ public class MyForegroundServices extends Service  {
 
     private void alterstring(String foralter) {
         result = true;
-        String previousResponse = "";
         if (foralter.contains("73")) {
             riddleLiveData.postValue("Your Daily riddle is completed Come back tomorrow 73");
         }
@@ -755,7 +918,7 @@ public class MyForegroundServices extends Service  {
                 .replace("User: ", "")
                 .replace("TikTok", "Instagram")
                 .replace("73", "")
-                .replace(previousResponse,"")
+                .replace(")","")
                 .replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "");
 
         conversationHistory.add("Jarvis: " + altered);
@@ -764,30 +927,57 @@ public class MyForegroundServices extends Service  {
         }
         Log.d("Jarvis Response", altered);
         toSpeech.speak(altered, TextToSpeech.QUEUE_FLUSH, null, "RESULT");
-        previousResponse=altered;
-    }
-
-    private void alterforsms(String alt) {
-        String seprator = " sms ";
-        String lowerAlt = alt.toLowerCase();
-        if (lowerAlt.contains(seprator)) {
-            SMS = true;
-            int smsindex = lowerAlt.indexOf(seprator);
-            msg = lowerAlt.substring(smsindex + seprator.length()).trim();
-            String contact = lowerAlt.substring(0, smsindex).trim();
-            Log.d("Message  ", msg);
-            Log.d("Contact", contact);
-            getMobilenumber(contact);
+        textView.setText(altered);
+        sendLiveWord(altered);
+        try {
+            porcupineManager.start();
+        } catch (PorcupineException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    @SuppressLint("SetTextI18n")
+    private void alterforsms(String alt) {
+        String seprator = "send to ";
+        String lowerAlt = alt.toLowerCase();
+        speechRecognizer.cancel();
+        if (lowerAlt.contains(seprator)) {
+            int smsindex = lowerAlt.indexOf(seprator);
+            String contact = lowerAlt.substring(smsindex + seprator.length()).trim();
+            msg = lowerAlt.substring(0, smsindex).trim();
+            callto=getMobilenumber(contact);
+            Log.d("Message",msg+" "+callto);
+            if(msg.isEmpty()){
+                try {
+                    porcupineManager.stop();
+                } catch (PorcupineException e) {
+                    throw new RuntimeException(e);
+                }
+                textView.setText("What would you like to say, tell me");
+                toSpeech.speak("What would you like to say, tell me",TextToSpeech.QUEUE_FLUSH,null,null);
+                nullMessage=true;
+                new Handler().postDelayed(new Runnable() {
+                    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                    @Override
+                    public void run() {
+                        speechRecoder();
+                    }
+                },2000);
+            }else {
+                sendsms(callto, msg);
+            }
+
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
     private void sendsms(String phoneno, String message) {
         if (message != null) {
             try {
-                SMS = false;
                 SmsManager smsManager = SmsManager.getDefault();
                 smsManager.sendTextMessage(phoneno, null, message, null, null);
-                toSpeech.speak("SMS sent", TextToSpeech.QUEUE_FLUSH, null, "SMS");
+                textView.setText("Done.");
+                toSpeech.speak("Done.", TextToSpeech.QUEUE_FLUSH, null, "SMS");
             } catch (Exception e) {
                 toSpeech.speak("Sms send failed", TextToSpeech.QUEUE_FLUSH, null, "FAILED SMS");
             }
@@ -829,21 +1019,6 @@ public class MyForegroundServices extends Service  {
 
     }
 
-    private void ControlIr() {
-        if (irManager != null && irManager.hasIrEmitter()) {
-            toSpeech.speak("Tv is Turned On, Enjoy your time ", TextToSpeech.QUEUE_FLUSH, null, "TV");
-            int[] irPattern = {9000, 4500, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 560, 560, 560, 560, 560,
-                    560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560,
-                    560, 560, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 560,
-                    560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 1690,
-                    560};
-            int frequency = 38000;
-            irManager.transmit(frequency, irPattern);
-        } else {
-            toSpeech.speak("Your Mobile Doesn't have ir Blaster", TextToSpeech.QUEUE_FLUSH, null, "IRBLASTER");
-        }
-    }
-
     private boolean IsScolding(String text) {
         text = text.toLowerCase();
         for (String word : SCOLDING_WORDS) {
@@ -853,6 +1028,7 @@ public class MyForegroundServices extends Service  {
         }
         return false;
     }
+
     @SuppressLint("CommitPrefEdits")
     private void readNotification() {
         reader = new NotificationReader();
@@ -868,29 +1044,26 @@ public class MyForegroundServices extends Service  {
     private void fetchUserMobileNo(String userLocation, String userGroup) {
         db.collection("users")
                 .whereEqualTo("Group", userGroup).whereEqualTo("Location", userLocation)
-                .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                    @Override
-                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                        if (error != null) {
-                            Log.e("FirestoreError", "Error fetching data", error);
-                            return;
-                        }
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        Log.e("FirestoreError", "Error fetching data", error);
+                        return;
+                    }
 
-                        if (value != null) {
-                            mobileNumbersList.clear();
-                            Log.d("Total Documents", "Found: " + value.size());
+                    if (value != null) {
+                        mobileNumbersList.clear();
+                        Log.d("Total Documents", "Found: " + value.size());
 
-                            for (DocumentSnapshot snapshot : value.getDocuments()) {
+                        for (DocumentSnapshot snapshot : value.getDocuments()) {
 
-                                if (snapshot.contains("Mobile")) {
-                                    String mobileStr = snapshot.getString("Mobile");
-                                    if (mobileStr != null && !mobileStr.equals(MobileNo)) {
-                                        mobileNumbersList.add(mobileStr);
-                                    }
+                            if (snapshot.contains("Mobile")) {
+                                String mobileStr = snapshot.getString("Mobile");
+                                if (mobileStr != null && !mobileStr.equals(MobileNo)) {
+                                    mobileNumbersList.add(mobileStr);
                                 }
                             }
-                            Log.d("All Numbers :", mobileNumbersList.toString());
                         }
+                        Log.d("All Numbers :", mobileNumbersList.toString());
                     }
                 });
     }
@@ -901,7 +1074,7 @@ public class MyForegroundServices extends Service  {
             extractedName = "User";
             SmsManager smsManager = SmsManager.getDefault();
             smsManager.sendTextMessage(callto, null, "Its an emergency blood needed", null, null);
-            callanyone();
+            callanyone(extractedName);
             i++;
         } catch (Exception e) {
             Log.d("Error", "Index over");
@@ -918,8 +1091,9 @@ public class MyForegroundServices extends Service  {
         event = new KeyEvent(KeyEvent.ACTION_UP, key);
         audioManager.dispatchMediaKeyEvent(event);
     }
+
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    private void getAudiosession(){
+    private void getAudiosession() {
         int sampleRate = 44100;
 
         int bufferSize = AudioRecord.getMinBufferSize(sampleRate,
@@ -932,9 +1106,10 @@ public class MyForegroundServices extends Service  {
                 AudioFormat.ENCODING_PCM_16BIT,
                 bufferSize);
 
-         audioSessionId = audioRecord.getAudioSessionId();
-         Log.d("audiosession: ", String.valueOf(audioSessionId));
+        audioSessionId = audioRecord.getAudioSessionId();
+        Log.d("audiosession: ", String.valueOf(audioSessionId));
     }
+
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private boolean isBluetoothHeadsetConnected() {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -948,43 +1123,6 @@ public class MyForegroundServices extends Service  {
 
         return connectionState == BluetoothProfile.STATE_CONNECTED;
     }
-    private void translate(String response){
-        translationHelper.downloadModel(MyForegroundServices.this, "en", "ta", new TranslationHelper.TranslationCallback() {
-            @Override
-            public void onTranslationSuccess(String translatedText) {
-                translationHelper.translateText(MyForegroundServices.this, response, new TranslationHelper.TranslationCallback() {
-                    @Override
-                    public void onTranslationSuccess(String translatedText) {
-                        toSpeech.speak(translatedText,TextToSpeech.QUEUE_FLUSH,null,"TranslatedResponse");
-                    }
-
-                    @Override
-                    public void onTranslationFailure(Exception e) {
-                        toSpeech.speak("Failed to translate",TextToSpeech.QUEUE_FLUSH,null,"TranslatedResponse");
-                    }
-                });
-            }
-
-            @Override
-            public void onTranslationFailure(Exception e) {
-                toSpeech.speak("Download module failed",TextToSpeech.QUEUE_FLUSH,null,"TranslatedResponse");
-            }
-        });
-    }
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    private void TurnoffOrOnBluetooth(Context context){
-        bluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
-        if(bluetoothAdapter!=null && !bluetoothAdapter.isEnabled()){
-            bluetoothAdapter.enable();
-            toSpeech.speak("Turning Bluetooth on...",TextToSpeech.QUEUE_FLUSH,null,"BLUETOOTH");
-        }else{
-            if(bluetoothAdapter!=null && bluetoothAdapter.isEnabled()){
-                bluetoothAdapter.disable();
-                toSpeech.speak("Turning Bluetooth off...",TextToSpeech.QUEUE_FLUSH,null,"BLUETOOTH");
-            }
-        }
-    }
-
 
 
 
@@ -1001,48 +1139,49 @@ public class MyForegroundServices extends Service  {
             }
 
             notification1 = new NotificationCompat.Builder(MyForegroundServices.this, CHANNEL_ID)
-                    .setContentTitle("Jarvis is Listening")
-                    .setContentText("Say 'Jarvis' to activate.")
-                    .setOngoing(true)
-                    .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
+                    .setContentTitle("Jarvis is Active")
+                    .setContentText("Listening for Wake Word")
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .build();
         }
     }
-    private String extractForReminder(String text){
-        String extractedTime =extractTime(text);
+
+    private String extractForReminder(String text) {
+        String extractedTime = extractTime(text);
         String hour = "";
-        String minute="";
-        int digit=0;
-        if(extractedTime==null || extractedTime.isEmpty()){
+        String minute = "";
+        int digit = 0;
+        if (extractedTime == null || extractedTime.isEmpty()) {
             String digitsOnly = text.replaceAll("[^0-9]", "");
-            if(digitsOnly.length()==2){
-                 digit= Integer.parseInt(digitsOnly);
-                if(digit>=10){
-                    extractedTime=digitsOnly+":"+"00";
-                }else {
+            if (digitsOnly.length() == 2) {
+                digit = Integer.parseInt(digitsOnly);
+                if (digit >= 10) {
+                    extractedTime = digitsOnly + ":" + "00";
+                } else {
                     hour = digitsOnly.substring(0, 1);
                     minute = digitsOnly.substring(1, 2);
                 }
-            } else if (digitsOnly.length()==3) {
-                hour=digitsOnly.substring(0,1);
-                minute=digitsOnly.substring(1,3);
-            } else if (digitsOnly.length()==4) {
-                hour=digitsOnly.substring(0,2);
-                minute=digitsOnly.substring(2,4);
-            } else if (digitsOnly.length()==1) {
-                hour=digitsOnly;
-                minute="00";
+            } else if (digitsOnly.length() == 3) {
+                hour = digitsOnly.substring(0, 1);
+                minute = digitsOnly.substring(1, 3);
+            } else if (digitsOnly.length() == 4) {
+                hour = digitsOnly.substring(0, 2);
+                minute = digitsOnly.substring(2, 4);
+            } else if (digitsOnly.length() == 1) {
+                hour = digitsOnly;
+                minute = "00";
             }
-            if(digit<10){
-                extractedTime=hour+":"+minute;
+            if (digit < 10) {
+                extractedTime = hour + ":" + minute;
             }
         }
-        if(text.contains("p.m.")){
-            return extractedTime+" "+"p.m.";
+        if (text.contains("p.m.")) {
+            return extractedTime + " " + "p.m.";
         }
-        return extractedTime+" "+"a.m.";
+        return extractedTime + " " + "a.m.";
     }
+
     public String extractTime(String input) {
         Pattern pattern = Pattern.compile("\\b\\d{1,2}:\\d{1,2}\\b");
         Matcher matcher = pattern.matcher(input);
@@ -1053,25 +1192,26 @@ public class MyForegroundServices extends Service  {
             return null;
         }
     }
+
     @SuppressLint("DefaultLocale")
-    private void startRemindChecker(String extractedTime){
-        handler=new Handler();
+    private void startRemindChecker(String extractedTime) {
+        handler = new Handler();
         final Runnable[] checkerRunnableHolder = new Runnable[1];
-        checkerRunnableHolder[0]=new Runnable() {
+        checkerRunnableHolder[0] = new Runnable() {
             @Override
             public void run() {
-                Calendar now=Calendar.getInstance();
-                int cHour=now.get(Calendar.HOUR);
-                int cMinute=now.get(Calendar.MINUTE);
-                int amOrPm=now.get(Calendar.AM_PM);
-                 String current = String.format("%d:%02d %s", cHour == 0 ? 12 : cHour, cMinute, (amOrPm == Calendar.AM ? "a.m." : "p.m."));
-                Log.d("Current time",current);
-                if(extractedTime.equals(current)){
+                Calendar now = Calendar.getInstance();
+                int cHour = now.get(Calendar.HOUR);
+                int cMinute = now.get(Calendar.MINUTE);
+                int amOrPm = now.get(Calendar.AM_PM);
+                String current = String.format("%d:%02d %s", cHour == 0 ? 12 : cHour, cMinute, (amOrPm == Calendar.AM ? "a.m." : "p.m."));
+                Log.d("Current time", current);
+                if (extractedTime.equals(current)) {
                     toSpeech.speak(reminderResponse.replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", ""), TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
                     handler.removeCallbacks(checkerRunnableHolder[0]);
-                }else {
-                    Log.d("Time","Not Match");
-                    handler.postDelayed(this,10*1000);
+                } else {
+                    Log.d("Time", "Not Match");
+                    handler.postDelayed(this, 10 * 1000);
                 }
 
             }
@@ -1079,6 +1219,72 @@ public class MyForegroundServices extends Service  {
         handler.post(checkerRunnableHolder[0]);
     }
 
+    private void animation() {
+            if(overlayView==null){
+                overlayView = LayoutInflater.from(this).inflate(R.layout.wave, null);
+                textView=overlayView.findViewById(R.id.liveText);
+            }
+            jarvisSpeaking = overlayView.findViewById(R.id.jarvisSpeakings);
+            WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
+                            WindowManager.LayoutParams.TYPE_PHONE,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
+                    PixelFormat.TRANSLUCENT);
 
+            params.gravity = Gravity.BOTTOM | Gravity.CENTER;
+            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+            windowManager.addView(overlayView, params);
 
+            jarvisSpeaking.setVisibility(View.VISIBLE);
+            jarvisSpeaking.playAnimation();
+
+            textView.setVisibility(View.VISIBLE);
+
+    }
+    private void removeListeningOverlay() {
+        if(textView!=null){
+            textView.setVisibility(View.GONE);
+        }
+        if (windowManager != null && overlayView != null) {
+            jarvisSpeaking.cancelAnimation();
+            jarvisSpeaking.setVisibility(View.GONE);
+            windowManager.removeView(overlayView);
+            overlayView = null;
+        }else {
+            Log.d("Something null","NULL");
+        }
+        if (pulseAnimator != null) {
+            pulseAnimator.cancel();
+            jarvisSpeaking.setScaleX(1f);
+            jarvisSpeaking.setScaleY(1f);
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void startPulse(String words) {
+        if(textView!=null) {
+            textView.setText("Hey Jarvis >" + words);
+        }
+        pulseAnimator = ObjectAnimator.ofPropertyValuesHolder(
+                jarvisSpeaking,
+                PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.2f, 1f),
+                PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.2f, 1f)
+        );
+        if(pulseAnimator!=null) {
+            pulseAnimator.setDuration(600);
+            pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
+            pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
+            pulseAnimator.start();
+        }
+    }
 }
+
+
+

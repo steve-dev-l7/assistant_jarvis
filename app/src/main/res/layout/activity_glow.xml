@@ -1,0 +1,44 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="bottom"
+    android:background="@drawable/livebg"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/liveText1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hey Jarvis >"
+        android:textSize="15sp"
+        android:textColor="#FFFFFF"
+        android:shadowColor="#000000"
+        android:background="@drawable/livebg"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:layout_gravity="top"
+        android:shadowRadius="2"
+        android:visibility="invisible"
+        android:textStyle="bold"
+        android:paddingStart="15dp"
+        android:gravity="start|center_vertical"
+        android:layout_marginBottom="12dp" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="8dp"
+        android:background="#888888" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/jarvisSpeaking"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_gravity="bottom"
+        app:lottie_autoPlay="true"
+        app:lottie_enableMergePathsForKitKatAndAbove="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/jarvisani11" />
+</LinearLayout>

@@ -17,9 +17,14 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Icon;
 import android.hardware.ConsumerIrManager;
 
+import android.media.ImageReader;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -29,6 +34,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -49,6 +55,7 @@ import android.speech.tts.UtteranceProgressListener;
 import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -57,6 +64,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -82,14 +90,12 @@ public class MainActivity extends AppCompatActivity {
     Intent intent, intent1;
     TextToSpeech toSpeech;
     TextView textView, Riddle, txttask;
-    Button speakbtn,wakeJarvis;
-
+    Button wakeJarvis;
     private boolean isTextToSpeechInitialized = false;
     IdentifierHelper helper;
     Toolbar toolbar1;
     TranslationHelper translationHelper;
     String identifiedLanguage, targetlanguage = "ta", selectedtexts, recodedtext, step;
-    EditText editText;
     SpeechRecognizer speechRecognizer;
     Boolean wakeup = false;
     ConsumerIrManager irManager;
@@ -211,6 +217,12 @@ public class MainActivity extends AppCompatActivity {
             updateprofile();
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.BLUETOOTH_CONNECT},
+                    1);
+        }
 
         helper = new IdentifierHelper();
         translationHelper = new TranslationHelper();
@@ -255,10 +267,8 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        
 
-
-        editText = findViewById(R.id.edittext);
-        speakbtn = findViewById(R.id.btnSpeak);
         toolbar1 = findViewById(R.id.my_toolbar);
         textView = findViewById(R.id.textview);
         setSupportActionBar(toolbar1);
@@ -268,6 +278,7 @@ public class MainActivity extends AppCompatActivity {
         txttask = findViewById(R.id.txttask);
         scrollView1 = findViewById(R.id.scrollView3);
         wakeJarvis=findViewById(R.id.btnWakeJarvis);
+
 
 
         if (getSupportActionBar() != null) {
@@ -297,18 +308,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
-
-        speakbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (isServiceisRunning(MyForegroundServices.class)) {
-                    Toast.makeText(MainActivity.this, "Deactivate Jarvis And access speak", Toast.LENGTH_SHORT).show();
-                } else {
-                    saveAccessKey();
-                }
-            }
-        });
         Riddle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -334,23 +333,15 @@ public class MainActivity extends AppCompatActivity {
         wakeJarvis.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if (isServiceisRunning(MyForegroundServices.class)) {
+                    Toast.makeText(MainActivity.this, "Jarvis already running", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 wakeupjarvis();
             }
         });
-
-
     }
 
-    private void saveAccessKey() {
-        String userAccessKey=editText.getText().toString();
-        SharedPreferences saveKey=getSharedPreferences("AccessKey",MODE_PRIVATE);
-        SharedPreferences.Editor editor=saveKey.edit();
-        editor.putString("Key",userAccessKey);
-        editor.apply();
-        Toast.makeText(this, "Key saved, Activate Jarvis and check your access key is valid", Toast.LENGTH_SHORT).show();
-        Log.d("Access key",userAccessKey);
-    }
 
     private void chechProfile() {
         SharedPreferences preferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
@@ -458,11 +449,102 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.WakeJarvis) {
+        if (id == R.id.EnterKey) {
 
-            wakeupjarvis();
+                getAccessKey();
+
+        }
+        if(id==R.id.help){
+            if(isServiceisRunning(MyForegroundServices.class)){
+                Toast.makeText(this, "Deactivate Jarvis to paste key", Toast.LENGTH_SHORT).show();
+
+            }else {
+                getAiApiKeys();
+            }
         }
         return true;
+    }
+
+    private void getAccessKey() {
+        AlertDialog.Builder builder=new AlertDialog.Builder(this);
+        builder.setTitle("Paste Your AccessKey");
+        final EditText input = new EditText(getApplicationContext());
+        input.setHint("Type here...");
+        input.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        input.setPadding(50, 40, 50, 40);
+
+        builder.setView(input);
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (isServiceisRunning(MyForegroundServices.class)) {
+                    Toast.makeText(MainActivity.this, "Deactivate Jarvis and change your key", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String userAccessKey = input.getText().toString();
+                SharedPreferences saveKey=getSharedPreferences("AccessKey",MODE_PRIVATE);
+                SharedPreferences.Editor editor=saveKey.edit();
+                editor.putString("Key",userAccessKey);
+                editor.apply();
+                Toast.makeText(MainActivity.this, "Key saved, Activate Jarvis and check your access key is valid", Toast.LENGTH_SHORT).show();
+                Log.d("Access key",userAccessKey);
+            }
+        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.show();
+    }
+    private void getAiApiKeys(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Enter AI Keys");
+
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 10); // You can tweak this
+
+
+        final EditText input = new EditText(this);
+        input.setHint("Enter first key...");
+        input.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        layout.addView(input);
+
+
+
+
+
+        builder.setView(layout);
+
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String key1 = input.getText().toString();
+
+
+                SharedPreferences saveKey=getSharedPreferences("AccessKeys",MODE_PRIVATE);
+                SharedPreferences.Editor editor=saveKey.edit();
+                editor.putString("Key1",key1);
+
+                editor.apply();
+                Toast.makeText(MainActivity.this, "Key saved, Activate Jarvis and check your access key is valid", Toast.LENGTH_SHORT).show();
+
+
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+
+        builder.show();
     }
 
     private void wakeupjarvis() {
@@ -564,5 +646,6 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
+
 
 }

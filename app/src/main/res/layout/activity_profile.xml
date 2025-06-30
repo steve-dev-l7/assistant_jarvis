@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/fadesbg"
     tools:context=".Profile"
-    android:background="#0F1A1A">
+    tools:ignore="Hardcodedtext">
 
+    <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/my_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/heading"
         android:elevation="4dp"
-        android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -26,305 +29,142 @@
             android:text="Steve Creations"
             android:textColor="@color/black"
             android:textSize="25sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
     </androidx.appcompat.widget.Toolbar>
 
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="100dp"
-        android:background="#00FFFF"
-        android:layout_height="100dp"
-        android:src="@drawable/logo2"
+    <!-- Scrollable content -->
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/my_toolbar"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.076" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <TextView
-        android:id="@+id/txt1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Your Name:"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.16"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.063" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center_horizontal">
 
-    <EditText
-        android:id="@+id/name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/edit_text"
-        android:textColorHint="#00FFFF"
-        android:textColor="#00FFFF"
-        android:hint="Type your full name"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.705"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.049" />
-
-    <TextView
-        android:id="@+id/txt2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Age:"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.14"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.174" />
-
-    <EditText
-        android:id="@+id/age"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Type your age"
-        android:inputType="number"
-        android:background="@drawable/edit_text"
-        android:textColorHint="#00FFFF"
-        android:textColor="#00FFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.599"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.163" />
-
-    <TextView
-        android:id="@+id/txt3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="User Id:"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.152"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.296" />
-
-    <EditText
-        android:id="@+id/id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Set User Id"
-        android:inputType="number"
-        android:background="@drawable/edit_text"
-        android:textColorHint="#00FFFF"
-        android:textColor="#00FFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.552"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.286" />
-
-    <TextView
-        android:id="@+id/change"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="DOB:"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.134"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.413" />
-
-    <EditText
-        android:id="@+id/dob"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="e.g 21-03-2005"
-        android:background="@drawable/edit_text"
-        android:textColorHint="#00FFFF"
-        android:textColor="#00FFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.615"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.408" />
-
-    <TextView
-        android:id="@+id/txt4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Mobile:"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.139"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.519" />
-
-    <EditText
-        android:id="@+id/mobile"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Mobile number"
-        android:inputType="number"
-        android:background="@drawable/edit_text"
-        android:textColorHint="#00FFFF"
-        android:textColor="#00FFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.616"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.52" />
-
-    <Button
-        android:id="@+id/save"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/btnshape"
-        android:text="Get otp"
-        android:textColor="#00FFA6"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.896" />
-
-    <TextView
-        android:id="@+id/gologin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Already Have An Account 'Log in' "
-        android:textColor="@color/white"
-        android:textSize="15dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.429"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.943" />
-
-    <CheckBox
-        android:id="@+id/bloodDonate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Agree to donate"
-        android:background="@drawable/checkbox"
-        android:textColor="#00FFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.913"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.165"
-        />
-
-    <TextView
-        android:id="@+id/txt5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Location:"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.147"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.647" />
-
-    <EditText
-        android:id="@+id/location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Your city name"
-        android:background="@drawable/edit_text"
-        android:textColorHint="#00FFFF"
-        android:textColor="#00FFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.614"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.65" />
-
-    <TextView
-        android:id="@+id/txt6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Blood group:"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.149"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.739" />
-
-    <EditText
-        android:id="@+id/BloodGroup"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Enter Blood group"
-        android:background="@drawable/edit_text"
-        android:textColorHint="#00FFFF"
-        android:textColor="#00FFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.67"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.749" />
-
-    <Button
-        android:id="@+id/saveUser"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/btnshape"
-        android:text="Save"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.896" />
-
-    <EditText
-        android:id="@+id/CheckOtp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Enter otp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.615"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.408" />
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:background="@drawable/fadesbg"
+                android:src="@drawable/logo2"
+                android:layout_marginBottom="24dp"/>
 
 
+            <EditText android:id="@+id/name"
+                android:autofillHints="Enter full name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Type your full name"
+                android:inputType="text"
+                android:textColorHint="#00FFFF"
+                android:textColor="#00FFFF"
+                style="@style/FormInput"
+                />
+
+
+            <EditText android:id="@+id/age"
+                android:autofillHints=""
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                style="@style/FormInput"
+                android:textColorHint="#00FFFF"
+                android:textColor="#00FFFF"
+                android:hint="Type your age" android:inputType="number" />
+
+
+            <EditText android:id="@+id/id"
+                android:autofillHints=""
+                android:layout_height="wrap_content"
+                android:textColorHint="#00FFFF"
+                android:textColor="#00FFFF"
+                style="@style/FormInput"
+                android:layout_width="match_parent"
+                android:hint="Set User Id" android:inputType="number" />
+
+
+            <EditText android:id="@+id/dob"
+                android:autofillHints=""
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:hint="e.g 21-03-2005"
+                style="@style/FormInput"
+                android:textColorHint="#00FFFF"
+                android:textColor="#00FFFF"
+                android:inputType="text" />
+
+
+            <EditText android:id="@+id/mobile"
+                android:autofillHints=""
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                style="@style/FormInput"
+                android:textColorHint="#00FFFF"
+                android:textColor="#00FFFF"
+                android:hint="Mobile number" android:inputType="phone" />
+
+
+            <EditText android:id="@+id/location"
+                android:autofillHints=""
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:hint="Your city name"
+                style="@style/FormInput"
+                android:textColorHint="#00FFFF"
+                android:textColor="#00FFFF"
+                android:inputType="text" />
+
+
+            <EditText android:id="@+id/BloodGroup"
+                android:autofillHints=""
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                style="@style/FormInput"
+                android:textColorHint="#00FFFF"
+                android:textColor="#00FFFF"
+                android:hint="Enter Blood group"
+                android:inputType="text" />
+
+            <CheckBox
+                android:id="@+id/bloodDonate"
+                android:text="Agree to donate"
+                android:textColor="@color/black"
+                android:layout_marginTop="16dp" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+
+
+            <Button
+                android:id="@+id/save"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btnshape"
+                android:text="Save"
+                android:textColor="#00FFFF"
+                android:layout_marginTop="24dp"/>
+
+            <Button
+                android:id="@+id/saveUser"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btnshape"
+                android:text="Save"
+                android:visibility="gone"
+                android:layout_marginTop="16dp"/>
+
+            <TextView
+                android:id="@+id/gologin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Already Have An Account? Log in"
+                android:textColor="#4E342E"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

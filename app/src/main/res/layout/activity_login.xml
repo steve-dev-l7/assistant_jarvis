@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Login"
-    android:background="#0F1A1A">
+    android:background="@drawable/fadesbg">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/my_toolbar"
@@ -35,7 +35,7 @@
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:src="@drawable/logo2"
-        android:background="#00FFFF"
+        android:background="@drawable/fadesbg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
@@ -50,7 +50,7 @@
         android:layout_marginBottom="192dp"
         android:background="@drawable/btnshape"
         android:text="Login"
-        android:textColor="#00FFA6"
+        android:textColor="#00FFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"

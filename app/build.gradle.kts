@@ -39,6 +39,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+
+
 }
 
 dependencies {
@@ -72,4 +74,8 @@ dependencies {
     implementation (libs.core)
     implementation (libs.play.services.location)
     implementation (libs.play.services.nearby)
+    implementation (libs.lottie.v640)
+    implementation (libs.localbroadcastmanager)
+
+    implementation (libs.rhino.android.v302)
 }

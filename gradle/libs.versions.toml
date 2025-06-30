@@ -1,8 +1,12 @@
 [versions]
 agp = "8.10.1"
+aiRhinoAndroid = "3.0.2"
+androidVoiceProcessor = "1.0.2"
 beTarsos = "dsp"
 biometric = "1.1.0"
+cobraAndroid = "2.0.2"
 core = "1.16.0"
+eagleAndroid = "1.0.0"
 firebaseAuth = "23.2.0"
 firebaseBom = "33.13.0"
 firebaseDatabase = "21.0.0"
@@ -15,9 +19,13 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 appcompat = "1.7.0"
+localbroadcastmanager = "1.1.0"
+lottie = "6.1.0"
+lottieVersion = "6.4.0"
 material = "1.12.0"
 activity = "1.10.1"
 constraintlayout = "2.2.1"
+netJna = "5.13.0"
 okhttp = "4.12.0"
 picollmAndroid = "1.0.0"
 picovoiceAndroid = "2.0.0"
@@ -30,6 +38,7 @@ porcupineAndroidVersion = "3.0.1"
 reactiveStreams = "1.0.4"
 retrofit = "2.9.0"
 rhinoAndroid = "2.1.0"
+rhinoAndroidVersion = "3.0.1"
 speakerIdentificationAndroid = "3.0.1"
 speakerRecognitionAndroid = "3.0.1"
 speakerVerificationAndroid = "1.0.0"
@@ -42,13 +51,18 @@ firebaseStorage = "21.0.1"
 firebaseFirestore = "25.1.4"
 vadAndroid = "1.1.0"
 voiceAndroid = "1.1.0"
+voiceProcessorAndroid = "1.0.2"
+vosk = "0.3.50"
 voskAndroid = "0.3.32"
 voskAndroidVersion = "0.3.47"
 
 [libraries]
 ai-cobra-android = { module = "ai.picovoice:cobra-android" }
 ai-eagle-android = { module = "ai.picovoice:eagle-android" }
+ai-picovoice-cobra-android = { module = "ai.picovoice:cobra-android", version.ref = "cobraAndroid" }
 ai-picovoice-eagle-android = { module = "ai.picovoice:eagle-android" }
+ai-picovoice-eagle-android2 = { module = "ai.picovoice:eagle-android", version.ref = "eagleAndroid" }
+android-voice-processor = { module = "ai.picovoice:android-voice-processor", version.ref = "androidVoiceProcessor" }
 be-tarsos = { module = "com.github.JorenSix:be.tarsos", version.ref = "beTarsos" }
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 cobra-android = { module = "ai.picovoice:cobra-android" }
@@ -67,9 +81,13 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+localbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "localbroadcastmanager" }
+lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
+lottie-v640 = { module = "com.airbnb.android:lottie", version.ref = "lottieVersion" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+net-jna = { module = "net.java.dev.jna:jna", version.ref = "netJna" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 picollm-android = { module = "ai.picovoice:picollm-android", version.ref = "picollmAndroid" }
 picovoice-android = { module = "ai.picovoice:picovoice-android", version.ref = "picovoiceAndroid" }
@@ -85,6 +103,8 @@ porcupine-android-v301 = { module = "ai.picovoice:porcupine-android", version.re
 reactive-streams = { module = "org.reactivestreams:reactive-streams", version.ref = "reactiveStreams" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 rhino-android = { module = "ai.picovoice:rhino-android", version.ref = "rhinoAndroid" }
+rhino-android-v301 = { module = "ai.picovoice:rhino-android", version.ref = "rhinoAndroidVersion" }
+rhino-android-v302 = { module = "ai.picovoice:rhino-android", version.ref = "aiRhinoAndroid" }
 speaker-identification-android = { module = "ai.picovoice:speaker-identification-android", version.ref = "speakerIdentificationAndroid" }
 speaker-recognition-android = { module = "ai.picovoice:speaker-recognition-android", version.ref = "speakerRecognitionAndroid" }
 speaker-verification-android = { module = "ai.picovoice:speaker-verification-android", version.ref = "speakerVerificationAndroid" }
@@ -97,6 +117,8 @@ firebase-storage = { group = "com.google.firebase", name = "firebase-storage", v
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
 vad-android = { module = "ai.picovoice:vad-android", version.ref = "vadAndroid" }
 voice-android = { module = "ai.picovoice:voice-android", version.ref = "voiceAndroid" }
+voice-processor-android = { module = "ai.picovoice:voice-processor-android", version.ref = "voiceProcessorAndroid" }
+vosk = { module = "com.alphacephei:vosk", version.ref = "vosk" }
 vosk-android = { module = "com.alphacephei:vosk-android", version.ref = "voskAndroid" }
 vosk-android-v0347 = { module = "com.alphacephei:vosk-android", version.ref = "voskAndroidVersion" }
 

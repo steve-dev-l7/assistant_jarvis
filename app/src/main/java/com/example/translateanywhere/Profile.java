@@ -36,12 +36,12 @@ import java.util.Random;
 
 public class Profile extends AppCompatActivity {
     Button otp, save;
-    EditText name, age, id, dob, mobileNo, Location, GOB, Checkotp;
+    EditText name, age, id, dob, mobileNo, Location, GOB;
     FirebaseFirestore db;
     String Name, Age, Id, dateofbirth, mobile, Loc, Donate, Group, generatedOtp, sentOtp;
     ProgressDialog progressDialog;
     Toolbar toolbar1;
-    TextView GoToLogIn,txt1,txt2,txt3,txt4,txt5,txt6,change;
+    TextView GoToLogIn;
     CheckBox donate;
 
     Boolean testing=true;
@@ -69,16 +69,9 @@ public class Profile extends AppCompatActivity {
         Location = findViewById(R.id.location);
         donate = findViewById(R.id.bloodDonate);
         GOB = findViewById(R.id.BloodGroup);
-        Checkotp = findViewById(R.id.CheckOtp);
         save = findViewById(R.id.saveUser);
 
-        txt1 =findViewById(R.id.txt1);
-        txt2 =findViewById(R.id.txt2);
-        txt3 =findViewById(R.id.txt3);
-        txt4 =findViewById(R.id.txt4);
-        txt5 =findViewById(R.id.txt5);
-        txt6 =findViewById(R.id.txt6);
-        change =findViewById(R.id.change);
+
 
         toolbar1 = findViewById(R.id.my_toolbar);
         if (getSupportActionBar() != null) {
@@ -195,55 +188,7 @@ public class Profile extends AppCompatActivity {
                         Log.e("Firestore", "UserId already exists!");
                         Toast.makeText(Profile.this, "User ID already exists! If you have already account click login", Toast.LENGTH_LONG).show();
                     } else {
-                        if(!testing) {
-                            name.setVisibility(View.GONE);
-                            age.setVisibility(View.GONE);
-                            id.setVisibility(View.GONE);
-                            dob.setVisibility(View.GONE);
-                            mobileNo.setVisibility(View.GONE);
-                            Location.setVisibility(View.GONE);
-                            GOB.setVisibility(View.GONE);
-                            donate.setVisibility(View.GONE);
-                            save.setVisibility(View.VISIBLE);
-                            Checkotp.setVisibility(View.VISIBLE);
-
-                            txt1.setVisibility(View.GONE);
-                            txt2.setVisibility(View.GONE);
-                            txt3.setVisibility(View.GONE);
-                            txt4.setVisibility(View.GONE);
-                            txt5.setVisibility(View.GONE);
-                            txt6.setVisibility(View.GONE);
-                            change.setText("Enter Otp");
-
-                            sentOtp = String.valueOf(Checkotp.getText());
-                            generatedOtp = String.valueOf(new Random().nextInt(9000 - 1000 + 1) + 1000);
-                            Log.d("GeneratedOtp is :", generatedOtp);
-
-                            try {
-                                SmsManager smsManager = SmsManager.getDefault();
-                                generatedOtp = String.valueOf(new Random().nextInt(9000 - 1000 + 1) + 1000);
-                                Log.d("GeneratedOtp", "OTP Generated: " + generatedOtp);
-
-                                smsManager.sendTextMessage(mobile, null, "Here use this : " + generatedOtp, null, null);
-                                Toast.makeText(Profile.this, "OTP Sent Successfully!", Toast.LENGTH_LONG).show();
-                            } catch (Exception e) {
-                                Log.d("SMS Error", "Failed to send SMS", e);
-                                Toast.makeText(Profile.this, "Failed to send OTP. Check permissions or try again.", Toast.LENGTH_LONG).show();
-                            }
-
-                            save.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    if (!isValidInput(Checkotp)) {
-                                        return;
-                                    }
-                                    verifyOtp();
-                                }
-                            });
-                        }
-                        else {
                             StoretoFireStore(Name, Age, Id, dateofbirth, mobile, Loc, Donate, Group);
-                        }
 
                     }
                 })
@@ -255,20 +200,7 @@ public class Profile extends AppCompatActivity {
         return !input.isEmpty();
     }
 
-    private void verifyOtp() {
-        String enteredOtp = Checkotp.getText().toString().trim();
 
-        if (enteredOtp.isEmpty()) {
-            Checkotp.setError("Please enter the OTP sent to your mobile");
-            return;
-        }
-
-        if (enteredOtp.equals(generatedOtp)) {
-            StoretoFireStore(Name, Age, Id, dateofbirth, mobile, Loc, Donate, Group);
-        } else {
-            Checkotp.setError("Invalid OTP. Please check your mobile number.");
-        }
-    }
     private void hideSystemUI() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
