@@ -6,7 +6,7 @@ package com.example.translateanywhere;
 
 import android.Manifest;
 
-import java.util.Collections;
+
 
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
@@ -150,6 +150,7 @@ public class MyForegroundServices extends Service {
 
     LottieAnimationView jarvisSpeaking;
 
+    TranslationHelper helper;
     FirebaseFirestore db;
     ConsumerIrManager irManager;
     StringBuilder historyContext;
@@ -158,12 +159,7 @@ public class MyForegroundServices extends Service {
             "Use emojis and playful language to make it feel natural.",
             "Act like a bestie who’s got zero formality—just jokes, fun, and sarcasm!",
             "Forget the 'yes sir' stuff—talk like you would to your close friend.",
-            "Roast the user more (in a fun way) and never sound like a robot!"
-    };
-    private static final String[] SCOLDING_WORDS = {
-            "stupid", "idiot", "useless", "dumb", "fool", "lazy", "trash", "shut up", "mental", "i hate you"
-    };
-    String[] scoldingResponses = {
+            "Roast the user more (in a fun way) and never sound like a robot!",
             "Oh wow, someone's having a bad day! Need a hug? 😏",
             "Excuse me?! Who do you think you’re talking to? I’m the boss here! 😤",
             "Rude! I should just ignore you for the next 10 minutes! 🤨",
@@ -177,12 +173,13 @@ public class MyForegroundServices extends Service {
             "Oh really? Let’s see how you manage without me! 😏"
     };
 
+
+
     public static MutableLiveData<String> riddleLiveData;
     NotificationReader reader;
     View overlayView;
     WindowManager windowManager;
     Boolean nullCallerName=false;
-    Intent Screenshotintent;
     DatabaseReference databaseReference;
     ArrayList<String> mobileNumbersList = new ArrayList<>();
     int i = 0;
@@ -314,7 +311,7 @@ public class MyForegroundServices extends Service {
         gemeniapikey = sharedPreferencesS.getString("Key1", null);
         if (gemeniapikey != null) {
             toSpeech.speak("Enter Access key", TextToSpeech.QUEUE_FLUSH, null, null);
-            gm = new GenerativeModel("gemini-2.0-flash", gemeniapikey);
+            gm = new GenerativeModel("gemini-1.5-flash", gemeniapikey);
             modelFutures = GenerativeModelFutures.from(gm);
             generateResponse("Give me a riddle");
             riddleLiveData = new MutableLiveData<>();
@@ -333,8 +330,6 @@ public class MyForegroundServices extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         CreateNotification();
-        Screenshotintent=intent;
-        Log.d("Intent data", String.valueOf(Screenshotintent));
         PorcupineManager.Builder builder = new PorcupineManager.Builder();
         builder.setAccessKey(WakeWordAccessKey);
         builder.setKeywordPath("jarvis.ppn");
@@ -581,6 +576,8 @@ public class MyForegroundServices extends Service {
             controlMusic(KeyEvent.KEYCODE_MEDIA_NEXT);
         } else if (recodedtext.contains("previous song")) {
             controlMusic(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
+        }else if (recodedtext.contains("translate")) {
+            translateText(recodedtext);
         }
         else if (recodedtext.equalsIgnoreCase("enable auto reply")) {
             sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
@@ -845,12 +842,6 @@ public class MyForegroundServices extends Service {
                 historyContext.append("Jarvis: Hey buddy... I’m Jarvis. You forgot me? That’s really sad... 😔 I thought we were best friends. 💔\n");
             }
 
-            if (IsScolding(query)) {
-                historyContext.append("Jarvis: ").append(scoldingResponses[rand]).append("\n");
-            } else {
-                historyContext.append("Jarvis: ");
-            }
-
             content = new Content.Builder().addText(historyContext.toString()).build();
         }
         ListenableFuture<GenerateContentResponse> response = modelFutures.generateContent(content);
@@ -970,6 +961,32 @@ public class MyForegroundServices extends Service {
         }
     }
 
+    private void translateText(String text){
+        helper=new TranslationHelper();
+        helper.downloadModel(this, "en", "ta", new TranslationHelper.TranslationCallback() {
+            @Override
+            public void onTranslationSuccess(String translatedText) {
+                helper.translateText(getApplicationContext(), text, new TranslationHelper.TranslationCallback() {
+                    @Override
+                    public void onTranslationSuccess(String translatedText) {
+                        toSpeech.speak(translatedText,TextToSpeech.QUEUE_FLUSH,null,"TRANSLATOR");
+                    }
+
+                    @Override
+                    public void onTranslationFailure(Exception e) {
+                        toSpeech.speak(e.toString(),TextToSpeech.QUEUE_FLUSH,null,"TRANSLATOR");
+                    }
+                });
+            }
+
+            @Override
+            public void onTranslationFailure(Exception e) {
+                toSpeech.speak("Download failed",TextToSpeech.QUEUE_FLUSH,null,"TRANSLATOR");
+            }
+        });
+
+    }
+
     @SuppressLint("SetTextI18n")
     private void sendsms(String phoneno, String message) {
         if (message != null) {
@@ -1019,15 +1036,7 @@ public class MyForegroundServices extends Service {
 
     }
 
-    private boolean IsScolding(String text) {
-        text = text.toLowerCase();
-        for (String word : SCOLDING_WORDS) {
-            if (text.contains(word)) {
-                return true;
-            }
-        }
-        return false;
-    }
+
 
     @SuppressLint("CommitPrefEdits")
     private void readNotification() {
@@ -1140,8 +1149,7 @@ public class MyForegroundServices extends Service {
 
             notification1 = new NotificationCompat.Builder(MyForegroundServices.this, CHANNEL_ID)
                     .setContentTitle("Jarvis is Active")
-                    .setContentText("Listening for Wake Word")
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentText("Say 'Hey Jarvis' to Listen")
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .build();
         }

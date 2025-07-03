@@ -7,25 +7,18 @@ import android.annotation.SuppressLint;
 
 import android.app.ActivityManager;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
-import android.graphics.drawable.Icon;
 import android.hardware.ConsumerIrManager;
 
-import android.media.ImageReader;
-import android.media.projection.MediaProjection;
-import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
-import android.provider.Settings;
-import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
@@ -34,7 +27,6 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -52,8 +44,6 @@ import static com.example.translateanywhere.R.menu.menu_main;
 
 import android.speech.tts.UtteranceProgressListener;
 
-import android.telecom.PhoneAccount;
-import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.text.InputType;
 import android.util.Log;
@@ -75,19 +65,13 @@ import android.widget.Toast;
 
 import com.google.firebase.FirebaseApp;
 
-import ai.picovoice.porcupine.PorcupineManager;
 
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 
 
 public class MainActivity extends AppCompatActivity {
-    Intent intent, intent1;
+    Intent  intent1;
     TextToSpeech toSpeech;
     TextView textView, Riddle, txttask;
     Button wakeJarvis;
@@ -95,10 +79,10 @@ public class MainActivity extends AppCompatActivity {
     IdentifierHelper helper;
     Toolbar toolbar1;
     TranslationHelper translationHelper;
-    String identifiedLanguage, targetlanguage = "ta", selectedtexts, recodedtext, step;
     SpeechRecognizer speechRecognizer;
     Boolean wakeup = false;
-    ConsumerIrManager irManager;
+
+    int currentPermissionIndex = 0;
     ConstraintLayout constraintLayout;
     ScrollView scrollView, scrollView1;
     BiometricPrompt biometricPrompt;
@@ -107,57 +91,21 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 101;
 
 
-    private final String[] permissions = {
-            Manifest.permission.READ_PHONE_STATE,
+    @SuppressLint("InlinedApi")
+    String[] permissions = {
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.CALL_PHONE,
             Manifest.permission.SEND_SMS,
-            Manifest.permission.READ_CALL_LOG
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.FOREGROUND_SERVICE_MICROPHONE,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.WRITE_CALL_LOG,
+            Manifest.permission.POST_NOTIFICATIONS,
+            Manifest.permission.READ_PHONE_STATE
     };
 
-    private void RecodeAudioRequest(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // Android 14
-            requestPermissions(new String[]{
-                    Manifest.permission.FOREGROUND_SERVICE_MICROPHONE,
-                    Manifest.permission.RECORD_AUDIO
-            }, 101);
-        }else {
-            CallRequest();
-        }
-    }
-    private void CallRequest(){
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CALL_PHONE}, 7);
-        }else {
-            ReadContactRequest();
-        }
-    }
-    private void ReadContactRequest(){
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, 79);
-        }else {
-            ReadPhoneStateRequest();
-        }
-    }
-    private void ReadPhoneStateRequest(){
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, 778);
-        }else {
-            ModifyAudioRequest();
-        }
-    }
-    private void ModifyAudioRequest(){
-        if (checkSelfPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.MODIFY_AUDIO_SETTINGS}, 1);
-        }
-    }
-    private void requestAnswerPhoneCallsPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ANSWER_PHONE_CALLS)
-                != PackageManager.PERMISSION_GRANTED) {
-            
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ANSWER_PHONE_CALLS},
-                    1);
-        }
-    }
+
 
 
 
@@ -168,13 +116,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        irManager = (ConsumerIrManager) getSystemService(CONSUMER_IR_SERVICE);
+        requestNextPermission();
         intent1 = new Intent(getApplicationContext(), MyForegroundServices.class);
         FirebaseApp.initializeApp(this);
-        CallRequest();
+
         chechProfile();
         hideSystemUI();
-        requestAnswerPhoneCallsPermission();
+
         TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
         if (!getPackageName().equals(telecomManager.getDefaultDialerPackage())) {
             Intent intent = new Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER);
@@ -182,34 +130,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    99);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.NEARBY_WIFI_DEVICES) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.NEARBY_WIFI_DEVICES},
-                        999);
-            }
-        }
-
-        if (hasAllPermissions()) {
-            ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
-
-        }else {
-            Toast.makeText(this, "Permission needed", Toast.LENGTH_SHORT).show();
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.BLUETOOTH_CONNECT},7777);
-            }else {
-                smspermission();
-            }
-        }
         SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
         String UserId = sharedPreferences.getString("UserId", null);
 
@@ -217,12 +138,7 @@ public class MainActivity extends AppCompatActivity {
             updateprofile();
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.BLUETOOTH_CONNECT},
-                    1);
-        }
+
 
         helper = new IdentifierHelper();
         translationHelper = new TranslationHelper();
@@ -234,7 +150,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "TTS language not supported", Toast.LENGTH_SHORT).show();
                 } else {
                     isTextToSpeechInitialized = true;
-                    handleIncomingIntent();
                 }
             } else {
                 Toast.makeText(this, "Text-to-Speech initialization failed", Toast.LENGTH_SHORT).show();
@@ -250,8 +165,6 @@ public class MainActivity extends AppCompatActivity {
             public void onDone(String s) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && wakeup) {
                     startForegroundService(intent1);
-
-
                 }
             }
 
@@ -260,8 +173,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -284,10 +195,7 @@ public class MainActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
-        final Intent recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
+
 
         BiometricManager biometricManager=BiometricManager.from(this);
         switch (biometricManager.canAuthenticate()){
@@ -370,75 +278,6 @@ public class MainActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-    private void smspermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.SEND_SMS}, 1);
-        }
-        requestAudioPermission();
-    }
-
-    private void handleIncomingIntent() {
-        intent = getIntent();
-        if (Intent.ACTION_PROCESS_TEXT.equals(intent.getAction()) && intent.getType() != null) {
-            CharSequence selectedText = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT);
-            if (selectedText != null) {
-                scrollView1.setVisibility(View.GONE);
-                txttask.setVisibility(View.GONE);
-                constraintLayout.setVisibility(View.GONE);
-                scrollView.setVisibility(View.VISIBLE);
-                Identify(selectedText.toString());
-            }
-        }
-    }
-
-    private void Identify(String string) {
-        selectedtexts = string;
-        if (selectedtexts != null && isTextToSpeechInitialized) {
-            helper.identifyLanguage(MainActivity.this, string, new IdentifierHelper.Identifier() {
-                @Override
-                public void onSuccesListener(String language) {
-                    identifiedLanguage = language;
-                    translate();
-                }
-
-                @Override
-                public void onFailiuareListener(Exception e) {
-                    Toast.makeText(MainActivity.this, "Identification Failed", Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            Toast.makeText(this, "No text Detected", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void translate() {
-        String target = targetlanguage;
-        translationHelper.downloadModel(MainActivity.this, identifiedLanguage, target, new TranslationHelper.TranslationCallback() {
-            @Override
-            public void onTranslationSuccess(String translatedText) {
-                translationHelper.translateText(MainActivity.this, selectedtexts, new TranslationHelper.TranslationCallback() {
-                    @Override
-                    public void onTranslationSuccess(String translatedText) {
-                        textView.setText(translatedText);
-                        toSpeech.speak(translatedText, TextToSpeech.QUEUE_FLUSH, null, null);
-                    }
-
-                    @Override
-                    public void onTranslationFailure(Exception e) {
-                        Toast.makeText(MainActivity.this, "Translation Failed", Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-
-            @Override
-            public void onTranslationFailure(Exception e) {
-                Toast.makeText(MainActivity.this, "Language Identification Failed", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
     public boolean onCreatePanelMenu(int featureId, @NonNull Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(menu_main, menu);
@@ -461,6 +300,14 @@ public class MainActivity extends AppCompatActivity {
             }else {
                 getAiApiKeys();
             }
+        }
+
+        if(id==R.id.contact){
+            String url="https://steve-dev-l7.github.io/Jarvis_support/";
+
+            Intent intent2=new Intent(Intent.ACTION_VIEW);
+            intent2. setData(Uri.parse(url));
+            startActivity(intent2);
         }
         return true;
     }
@@ -523,8 +370,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String key1 = input.getText().toString();
-
-
                 SharedPreferences saveKey=getSharedPreferences("AccessKeys",MODE_PRIVATE);
                 SharedPreferences.Editor editor=saveKey.edit();
                 editor.putString("Key1",key1);
@@ -577,16 +422,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @SuppressLint("ObsoleteSdkInt")
-    private void requestAudioPermission() {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.RECORD_AUDIO},
-                    1);
-        }
-        RecodeAudioRequest();
-    }
+
+
 
 
 
@@ -610,30 +447,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private boolean hasAllPermissions() {
-        for (String permission : permissions) {
+    private void requestNextPermission() {
+
+        if (currentPermissionIndex < permissions.length) {
+            String permission = permissions[currentPermissionIndex];
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.READ_PHONE_STATE,
-                                Manifest.permission.SEND_SMS,
-                                Manifest.permission.READ_CALL_LOG
-                        },
-                        PERMISSION_REQUEST_CODE);
-            }
-        }
-        return true;
-    }
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, proceed with answering the call
-                Log.d("Permission", "Permission granted to answer phone calls");
+                ActivityCompat.requestPermissions(this, new String[]{permission}, 101);
             } else {
-                // Permission denied, inform the user
-                Log.e("Permission", "Permission denied to answer phone calls");
+                currentPermissionIndex++;
+                requestNextPermission();
             }
+        } else {
+
+            Toast.makeText(this, "All permissions granted or handled", Toast.LENGTH_SHORT).show();
+        }
+    }
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] requestedPermissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, requestedPermissions, grantResults);
+
+        if (requestCode == 101) {
+            // Move to next permission whether granted or denied
+            currentPermissionIndex++;
+            requestNextPermission();
         }
     }
     private void hideSystemUI() {
@@ -646,6 +483,4 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
-
-
 }

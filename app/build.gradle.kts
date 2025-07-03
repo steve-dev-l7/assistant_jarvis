@@ -70,7 +70,7 @@ dependencies {
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation(libs.biometric)
-    implementation (libs.porcupine.android.v301)
+    implementation(libs.porcupine.android.v302)
     implementation (libs.core)
     implementation (libs.play.services.location)
     implementation (libs.play.services.nearby)

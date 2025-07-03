@@ -1,5 +1,6 @@
 [versions]
-agp = "8.10.1"
+agp = "8.11.0"
+aiPorcupineAndroid = "3.0.2"
 aiRhinoAndroid = "3.0.2"
 androidVoiceProcessor = "1.0.2"
 beTarsos = "dsp"
@@ -100,6 +101,7 @@ play-services-mlkit-language-id = { module = "com.google.android.gms:play-servic
 play-services-nearby = { module = "com.google.android.gms:play-services-nearby", version.ref = "playServicesNearby" }
 porcupine-android = { module = "ai.picovoice:porcupine-android", version.ref = "porcupineAndroid" }
 porcupine-android-v301 = { module = "ai.picovoice:porcupine-android", version.ref = "porcupineAndroidVersion" }
+porcupine-android-v302 = { module = "ai.picovoice:porcupine-android", version.ref = "aiPorcupineAndroid" }
 reactive-streams = { module = "org.reactivestreams:reactive-streams", version.ref = "reactiveStreams" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 rhino-android = { module = "ai.picovoice:rhino-android", version.ref = "rhinoAndroid" }
