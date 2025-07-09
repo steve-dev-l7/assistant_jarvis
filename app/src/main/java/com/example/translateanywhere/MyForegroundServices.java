@@ -110,7 +110,6 @@ public class MyForegroundServices extends Service {
     SpeechRecognizer recognizer;
     TextToSpeech toSpeech;
     String recodedtext, NewUser, message, sender;
-    IdentifierHelper identifierHelper;
     Boolean calling = false;
     TranslationHelper translationHelper;
     Boolean jarvisActivated;
@@ -180,6 +179,9 @@ public class MyForegroundServices extends Service {
     View overlayView;
     WindowManager windowManager;
     Boolean nullCallerName=false;
+
+    SharedPreferences.Editor editor;
+    SharedPreferences forAutoReply;
     DatabaseReference databaseReference;
     ArrayList<String> mobileNumbersList = new ArrayList<>();
     int i = 0;
@@ -202,13 +204,12 @@ public class MyForegroundServices extends Service {
         date = new SimpleDateFormat("EEEE, MMM d, yyyy", Locale.getDefault()).format(new Date());
         recognizer = SpeechRecognizer.createSpeechRecognizer(this);
         db = FirebaseFirestore.getInstance();
-        irManager = (ConsumerIrManager) getSystemService(CONSUMER_IR_SERVICE);
         databaseReference = FirebaseDatabase.getInstance().getReference("users");
-        fetchUser();
+        //fetchUser();
+        NewFetchUser();
         context = getApplicationContext();
         componentName = new ComponentName(context, NotificationReader.class);
         pm = context.getPackageManager();
-        identifierHelper = new IdentifierHelper();
         SharedPreferences sharedPreferences = getSharedPreferences("AccessKey", MODE_PRIVATE);
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
@@ -236,7 +237,7 @@ public class MyForegroundServices extends Service {
         new Handler(Looper.getMainLooper()).postDelayed(() -> fetchUserMobileNo(Location, GroupOfBlood), 5000);
         toSpeech = new TextToSpeech(this, i -> {
             if (i == TextToSpeech.SUCCESS) {
-                int result = toSpeech.setLanguage(Locale.US);
+                int result = toSpeech.setLanguage(Locale.getDefault());
                 if (result == TextToSpeech.LANG_MISSING_DATA ||
                         result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Log.e("TTS", "Language is not supported");
@@ -245,6 +246,8 @@ public class MyForegroundServices extends Service {
                 Log.e("TTS", "Initialization failed");
             }
         });
+
+
 
         if (overlayView == null) {
             overlayView = LayoutInflater.from(this).inflate(R.layout.wave, null);
@@ -559,8 +562,7 @@ public class MyForegroundServices extends Service {
     @SuppressLint("SetTextI18n")
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void processCommand(String recodedtext) {
-        SharedPreferences.Editor editor;
-        SharedPreferences sharedPreferences;
+
 
         if (recodedtext.contains("call to") || recodedtext.contains("Call to")) {
             splitName(recodedtext);
@@ -577,25 +579,26 @@ public class MyForegroundServices extends Service {
         } else if (recodedtext.contains("previous song")) {
             controlMusic(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
         }else if (recodedtext.contains("translate")) {
-            translateText(recodedtext);
+            translateText(recodedtext.replace("translate",""));
         }
         else if (recodedtext.equalsIgnoreCase("enable auto reply")) {
-            sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
-            editor = sharedPreferences.edit();
+            forAutoReply = getSharedPreferences("Jarvis", MODE_PRIVATE);
+            editor = forAutoReply.edit();
             editor.putBoolean("isFeatureEnabled", true);
             editor.apply();
             textView.setText("Auto reply is now enabled");
             toSpeech.speak("Auto reply is now enabled", TextToSpeech.QUEUE_FLUSH, null, "Auto reply");
         } else if (recodedtext.equalsIgnoreCase("disable auto reply")) {
-            sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
-            editor = sharedPreferences.edit();
+            forAutoReply = getSharedPreferences("Jarvis", MODE_PRIVATE);
+            editor = forAutoReply.edit();
             editor.putBoolean("isFeatureEnabled", false);
             editor.apply();
             textView.setText("Auto reply is now disabled");
             toSpeech.speak("Auto reply is now disabled", TextToSpeech.QUEUE_FLUSH, null, "Auto reply");
+
         } else if (recodedtext.contains("remind me at")) {
             String time = extractForReminder(recodedtext);
-            toSpeech.speak("I'll you remind at " + time, TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
+            toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
             textView.setText("I'll you remind at");
             Log.d("Reminder Time", time);
             Reminder = true;
@@ -616,12 +619,12 @@ public class MyForegroundServices extends Service {
     @SuppressLint("SetTextI18n")
     private void openApplication(String text) {
         String AppName = text.substring(5);
-        String packageName = getPackageNameByAppName(AppName);
+        String packageName = getPackageNameByAppName(getApplicationContext(),AppName);
 
         PackageManager pm = getPackageManager();
         Intent openIntent = null;
         if (packageName != null) {
-            toSpeech.speak("Roger",TextToSpeech.QUEUE_FLUSH,null,null);
+            toSpeech.speak("Roger",TextToSpeech.QUEUE_FLUSH,null,"OpeningApplication");
             textView.setText("Opening");
             openIntent = pm.getLaunchIntentForPackage((packageName));
             Log.d("PackageName", packageName);
@@ -640,9 +643,9 @@ public class MyForegroundServices extends Service {
     }
 
     @SuppressLint("QueryPermissionsNeeded")
-    private String getPackageNameByAppName(String appName) {
-        PackageManager pm = getPackageManager();
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+    private String getPackageNameByAppName(Context context, String appName) {
+        PackageManager pm = context.getPackageManager();
+        List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
         for (ApplicationInfo appInfo : apps) {
             String label = pm.getApplicationLabel(appInfo).toString();
@@ -694,6 +697,10 @@ public class MyForegroundServices extends Service {
 
     private void Shudown(String s) throws PorcupineException {
         porcupineManager.stop();
+        forAutoReply = getSharedPreferences("Jarvis", MODE_PRIVATE);
+        editor = forAutoReply.edit();
+        editor.putBoolean("isFeatureEnabled", false);
+        editor.apply();
         toSpeech.speak(s, TextToSpeech.QUEUE_FLUSH, null, null);
         if (telephonyManager != null && callListener != null) {
             telephonyManager.listen(callListener, PhoneStateListener.LISTEN_NONE);
@@ -803,20 +810,7 @@ public class MyForegroundServices extends Service {
                 historyContext.append("Date of Birth: ").append(DOB).append("\n");
                 historyContext.append("UserId").append(UserId).append("\n");
                 historyContext.append(friend[rand]).append("\n");
-                if (ComebackUser != null) {
-                    historyContext.append(ComebackUser).append("\n");
-                    SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.remove("Comeback");
-                    editor.apply();
-                }
-                if (NewUser != null) {
-                    historyContext.append(NewUser).append("\n");
-                    SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.remove("NewUser");
-                    editor.apply();
-                }
+
 
             }
 
@@ -1003,37 +997,31 @@ public class MyForegroundServices extends Service {
         }
     }
 
-    private void fetchUser() {
+
+    private void NewFetchUser(){
         SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
         UserId = sharedPreferences.getString("UserId", null);
-        ComebackUser = sharedPreferences.getString("Comeback", null);
-        NewUser = sharedPreferences.getString("NewUser", null);
-        if (UserId == null || UserId.isEmpty()) {
-            Log.e("Firestore", "UserId is null or empty!");
-            return;
-        }
+        new FetchUser(UserId, new FetchUser.UserDataCallBack() {
+            @Override
+            public void onUserDataFetched(String[] data) {
+                Name = data[0];
+                Age = data[1];
+                DOB =  data[2];
+                Donate =  data[3];
+                MobileNo =  data[4];
+                if (Donate != null && Donate.equalsIgnoreCase("true")) {
+                    GroupOfBlood =  data[5];
+                    Location =  data[6];
+                }
+                Log.d("Firestore", "User Data: " + Name + ", " + Age + ", " + DOB + " " + GroupOfBlood + " " + Location);
+                Log.d("ReturnedData", java.util.Arrays.toString(data));
+            }
 
-        db.collection("users").document(UserId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        Name = documentSnapshot.getString("Name");
-                        Age = documentSnapshot.getString("Age");
-                        DOB = documentSnapshot.getString("DOB");
-                        Donate = documentSnapshot.getString("Donate");
-                        MobileNo = documentSnapshot.getString("Mobile");
-                        if (Donate != null && Donate.equalsIgnoreCase("true")) {
-                            GroupOfBlood = documentSnapshot.getString("Group");
-                            Location = documentSnapshot.getString("Location");
-                        }
-
-                        Log.d("Firestore", "User Data: " + Name + ", " + Age + ", " + DOB + " " + GroupOfBlood + " " + Location);
-                    } else {
-                        Log.e("Firestore", "User document does not exist!");
-                    }
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error fetching user data", e));
-
+            @Override
+            public void onError(Exception e) {
+                Log.e("FetchUser", "Error: " + e.getMessage());
+            }
+        });
     }
 
 
@@ -1133,26 +1121,29 @@ public class MyForegroundServices extends Service {
         return connectionState == BluetoothProfile.STATE_CONNECTED;
     }
 
-
-
     private void CreateNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Foreground Service",
+                    "Jarvis Foreground Service",
                     NotificationManager.IMPORTANCE_LOW
             );
+            channel.setDescription("Notification channel for Jarvis assistant");
+
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
             }
-
-            notification1 = new NotificationCompat.Builder(MyForegroundServices.this, CHANNEL_ID)
-                    .setContentTitle("Jarvis is Active")
-                    .setContentText("Say 'Hey Jarvis' to Listen")
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .build();
         }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Jarvis is Active")
+                .setContentText("Say 'Hey Jarvis' to listen")
+                .setSmallIcon(R.drawable.notification)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true);
+
+        notification1 = builder.build();
     }
 
     private String extractForReminder(String text) {

@@ -76,6 +76,9 @@ public class NotificationReader extends NotificationListenerService {
                 }
             }
         });
+        SharedPreferences sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
+        isFeatureEnabled = sharedPreferences.getBoolean("isFeatureEnabled", false);
+
         SharedPreferences sharedPreferencess=getSharedPreferences("AccessKeys",MODE_PRIVATE);
         GemeniApikey2= sharedPreferencess.getString("Key1",null);
         if(GemeniApikey2!=null){
@@ -85,20 +88,16 @@ public class NotificationReader extends NotificationListenerService {
             toSpeech.speak("Your Second Access key is empty",TextToSpeech.QUEUE_FLUSH,null,null);
 
         }
-        fetchUser();
+        NewFetchUser();
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         super.onNotificationPosted(sbn);
-        SharedPreferences sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
-        isFeatureEnabled = sharedPreferences.getBoolean("isFeatureEnabled", false);
+
         if(!isFeatureEnabled || GemeniApikey2==null){
             Log.d("Notification Reader","Auto reply is disabled");
             return;
-        }
-        if(GemeniApikey2==null){
-            toSpeech.speak("Your second AI key is empty",TextToSpeech.QUEUE_FLUSH,null,null);
         }
         if(previousMessage.equals(message)){
             Log.d("Previous Message detected","Skipped::"+message);
@@ -168,9 +167,8 @@ public class NotificationReader extends NotificationListenerService {
             return;
         }
 
-        if (Name == null || DOB == null || UserId == null) {
-            Log.d("GeminiReply", "User info not ready");
-            Log.d("User info",Name+":"+DOB+":"+UserId);
+        if(!isFeatureEnabled || GemeniApikey2==null){
+            Log.d("Notification Reader","Auto reply is disabled");
             return;
         }
         if(key.contains(sbn1.getKey())){
@@ -257,6 +255,11 @@ public class NotificationReader extends NotificationListenerService {
     private void sendAutoReply(Notification notification,String Jarvisresponse,StatusBarNotification sbn){
         if(notification==null || notification.actions==null ) return;
 
+        if(!isFeatureEnabled || GemeniApikey2==null){
+            Log.d("Notification Reader","Auto reply is disabled");
+            return;
+        }
+
         if (previousMessage.equals(message)){
             return;
         }
@@ -303,31 +306,25 @@ public class NotificationReader extends NotificationListenerService {
 
         }
     }
-    private void fetchUser() {
+    private void NewFetchUser(){
         SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
         UserId = sharedPreferences.getString("UserId", null);
-        if (UserId == null || UserId.isEmpty()) {
-            Log.e("Firestore", "UserId is null or empty!");
-            return;
-        }
+        new FetchUser(UserId, new FetchUser.UserDataCallBack() {
+            @Override
+            public void onUserDataFetched(String[] data) {
+                Name = data[0];
+                DOB =  data[2];
+                Log.d("ReturnedData", java.util.Arrays.toString(data));
+            }
 
-        db.collection("users").document(UserId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        Name = documentSnapshot.getString("Name");
-                        DOB = documentSnapshot.getString("DOB");
-                        Log.d("Firestore", "User Data: " + Name + ", " +  DOB );
-                    } else {
-                        Log.e("Firestore", "User document does not exist!");
-                    }
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error fetching user data", e));
-
+            @Override
+            public void onError(Exception e) {
+                Log.e("FetchUser", "Error: " + e.getMessage());
+            }
+        });
     }
     private void alterstring(String foralter,StatusBarNotification sbn) {
 
-        String previousResponse = "";
         String altered = foralter.replace("*", "")
                 .replace("As a large language model", "I am Jarvis, just an AI model")
                 .replace("As a language model", "I am Jarvis, just an AI model")
@@ -336,8 +333,7 @@ public class NotificationReader extends NotificationListenerService {
                 .replace("TikTok", "Instagram")
                 .replace("I'm an AI", "I'm Jarvis")
                 .replace("AI assistant", "personal assistant")
-                .replace("chiken dinner","Booyah")
-                .replace(previousResponse,"");
+                .replace("chiken dinner","Booyah");
 
         conversationHistory.add("Jarvis: " + altered);
         if (conversationHistory.size() > 10) {
@@ -345,17 +341,21 @@ public class NotificationReader extends NotificationListenerService {
         }
         Log.d("Jarvis Response", altered);
         sendAutoReply(sbn.getNotification(),altered,sbn);
-        previousResponse=altered;
+
     }
     private void notifyImportance(String sender){
 
 
-        String speakText = "Hey Steve, you might want to call or message "
+        String speakText = "Hey"+Name+", you might want to call or message "
                 + sender.replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "")
                 + ". They mentioned something important.";
 
             toSpeech.speak(speakText, TextToSpeech.QUEUE_FLUSH, null, null);
 
+    }
+
+    public void destroy(){
+        stopSelf();
     }
 
 }

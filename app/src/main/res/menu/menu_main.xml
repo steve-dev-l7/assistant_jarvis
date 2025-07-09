@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:tools="http://schemas.android.com/tools"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    tools:ignore="HardcodedText"
     >
-
     <item android:id="@+id/EnterKey"
-        android:title="Enter key"/>
+        android:title="WakeWord key"
+         />
 
     <item android:id="@+id/help"
-        android:title="Enter Ai keys"/>
+        android:title="Ai keys"/>
 
     <item android:id="@+id/contact"
         android:title="Contact us"/>

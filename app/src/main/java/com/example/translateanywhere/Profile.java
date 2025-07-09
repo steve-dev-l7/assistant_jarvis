@@ -38,13 +38,11 @@ public class Profile extends AppCompatActivity {
     Button otp, save;
     EditText name, age, id, dob, mobileNo, Location, GOB;
     FirebaseFirestore db;
-    String Name, Age, Id, dateofbirth, mobile, Loc, Donate, Group, generatedOtp, sentOtp;
+    String Name, Age, Id, dateofbirth, mobile, Loc, Donate, Group;
     ProgressDialog progressDialog;
     Toolbar toolbar1;
     TextView GoToLogIn;
     CheckBox donate;
-
-    Boolean testing=true;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -158,7 +156,7 @@ public class Profile extends AppCompatActivity {
                         SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putString("UserId", UserId);
-                        editor.putString("NewUser", "The User New For Our App Please Welcome The User And Introduce The User");
+                        editor.putString("UserName",Name);
                         editor.apply();
                         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                         intent.putExtra("UserId", UserId);

@@ -1,6 +1,11 @@
 package com.example.translateanywhere;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.os.Handler;
 import android.telephony.PhoneStateListener;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyCallback;
@@ -17,14 +22,25 @@ public class CallListener extends PhoneStateListener {
     private String lastIncomingNumber = null;
     private final Map<String, Integer> callCountMap = new HashMap<>();
 
-    String msg="Hello, this is Jarvis. Steve is currently unavailable. Your repeated call has been noted, and he’ll get back to you as soon as possible.";
+    String Name;
+
+    String msg;
     public CallListener(Context context) {
         this.context = context;
     }
 
+
+
+
+
     @Override
     public void onCallStateChanged(int state, String phoneNumber) {
         super.onCallStateChanged(state, phoneNumber);
+        SharedPreferences sharedPreferences= context.getSharedPreferences("UserData",MODE_PRIVATE);
+        Name= sharedPreferences.getString("UserName", null);
+
+        msg="Hello, this is Jarvis."+Name+"  is currently unavailable. Your repeated call has been noted, and he’ll get back to you as soon as possible.";
+
         switch (state) {
             case TelephonyManager.CALL_STATE_RINGING:
             lastIncomingNumber = phoneNumber;
@@ -36,6 +52,7 @@ public class CallListener extends PhoneStateListener {
             break;
 
             case TelephonyManager.CALL_STATE_OFFHOOK:
+                Context context1= context.getApplicationContext();
 
                 lastIncomingNumber=null;
                 break;
@@ -64,4 +81,6 @@ public class CallListener extends PhoneStateListener {
             Log.d("CallListener",e.getMessage());
         }
     }
-}
+
+    }
+

@@ -19,6 +19,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     TextView textView, Riddle, txttask;
     Button wakeJarvis;
     private boolean isTextToSpeechInitialized = false;
-    IdentifierHelper helper;
+
     Toolbar toolbar1;
     TranslationHelper translationHelper;
     SpeechRecognizer speechRecognizer;
@@ -102,7 +103,8 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.READ_CALL_LOG,
             Manifest.permission.WRITE_CALL_LOG,
             Manifest.permission.POST_NOTIFICATIONS,
-            Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.MODIFY_AUDIO_SETTINGS
     };
 
 
@@ -138,9 +140,13 @@ public class MainActivity extends AppCompatActivity {
             updateprofile();
         }
 
+        if (!Settings.canDrawOverlays(this)) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + this.getPackageName()));
+            startActivityForResult(intent, 1234); // or use ActivityResultLauncher on AndroidX
+        }
 
 
-        helper = new IdentifierHelper();
         translationHelper = new TranslationHelper();
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         toSpeech = new TextToSpeech(this, status -> {
