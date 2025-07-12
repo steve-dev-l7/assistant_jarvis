@@ -357,13 +357,19 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 10); // You can tweak this
+        layout.setPadding(50, 40, 50, 10);
 
 
         final EditText input = new EditText(this);
-        input.setHint("Enter first key...");
+        input.setHint("Enter first key");
         input.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
         layout.addView(input);
+
+
+        final EditText input1 = new EditText(this);
+        input1.setHint("Enter second key");
+        input1.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        layout.addView(input1);
 
 
 
@@ -376,9 +382,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String key1 = input.getText().toString();
+                String key2= input1.getText().toString();
                 SharedPreferences saveKey=getSharedPreferences("AccessKeys",MODE_PRIVATE);
                 SharedPreferences.Editor editor=saveKey.edit();
                 editor.putString("Key1",key1);
+                editor.putString("Key2",key2);
+
 
                 editor.apply();
                 Toast.makeText(MainActivity.this, "Key saved, Activate Jarvis and check your access key is valid", Toast.LENGTH_SHORT).show();

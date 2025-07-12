@@ -23,7 +23,10 @@ import android.content.Context;
 import android.content.*;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.hardware.ConsumerIrManager;
 import android.media.AudioFormat;
@@ -82,7 +85,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 
-
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -119,7 +123,7 @@ public class MyForegroundServices extends Service {
     String callto = null, extractedName, riddle;
 
 
-
+    String task;
     private ObjectAnimator pulseAnimator;
 
     Random random;
@@ -192,6 +196,10 @@ public class MyForegroundServices extends Service {
     CallListener callListener;
 
     Context context;
+
+    IntentExtractor intentExtractor;
+
+    String exTime;
 
 
     @SuppressLint({"ServiceCast", "SecretInSource"})
@@ -314,13 +322,14 @@ public class MyForegroundServices extends Service {
         gemeniapikey = sharedPreferencesS.getString("Key1", null);
         if (gemeniapikey != null) {
             toSpeech.speak("Enter Access key", TextToSpeech.QUEUE_FLUSH, null, null);
-            gm = new GenerativeModel("gemini-1.5-flash", gemeniapikey);
+            gm = new GenerativeModel("gemini-2.0-flash", gemeniapikey);
             modelFutures = GenerativeModelFutures.from(gm);
             generateResponse("Give me a riddle");
             riddleLiveData = new MutableLiveData<>();
         } else {
             toSpeech.speak("Ai key is empty", TextToSpeech.QUEUE_FLUSH, null, null);
         }
+        intentExtractor=new IntentExtractor(context);
 
 
 
@@ -517,7 +526,21 @@ public class MyForegroundServices extends Service {
                         nullMessage=false;
                         sendsms(callto,recodedtext);
                     } else {
-                        processCommand(recodedtext);
+
+                        intentExtractor.extractor(recodedtext, new IntentExtractor.ExtractorCallback() {
+                            @Override
+                            public void onExtracted(String JSOn) {
+
+                                extractFieldsFromJson(JSOn);
+                            }
+
+                            @Override
+                            public void onError(String e) {
+                                Log.d("ErrorExtractor",e);
+                            }
+                        });
+
+
                     }
 
                     if(!isPhoneLocked(context)) {
@@ -559,26 +582,100 @@ public class MyForegroundServices extends Service {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
+
+    @SuppressLint("MissingPermission")
+    public void extractFieldsFromJson(String rawResponse) {
+        try {
+
+            String jsonString = rawResponse
+                    .replace("```json", "")
+                    .replace("```", "")
+                    .trim();
+
+            JSONObject jsonObject = new JSONObject(jsonString);
+
+            String intent = jsonObject.optString("intent", null);
+            String target = jsonObject.optString("target", null);
+            msg = jsonObject.optString("content", null);
+            task=jsonObject.optString("task",null);
+            exTime=jsonObject.optString("time",null);
+
+            Log.d("INTENT", "Intent: " + intent);
+            Log.d("INTENT", "Target: " + target);
+            Log.d("INTENT", "Content: " + message);
+
+            processCommand(intent,target);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            generateResponse(recodedtext);
+        }
+    }
+
+
     @SuppressLint("SetTextI18n")
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    private void processCommand(String recodedtext) {
+    private void processCommand(String intent, String target) {
+        if (intent.equalsIgnoreCase("call")) {
+            if(target==null || target.equalsIgnoreCase("NULL")){
+                speechRecognizer.cancel();
+                nullCallerName=true;
+                textView.setText("Call to who ? , tell the name");
+                toSpeech.speak("Call to who ? , tell the name",TextToSpeech.QUEUE_FLUSH,null,null);
+                try {
+                    porcupineManager.stop();
+                } catch (PorcupineException e) {
+                    throw new RuntimeException(e);
+                }
+                new Handler().postDelayed(new Runnable() {
+                    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                    @Override
+                    public void run() {
+                        speechRecoder();
+                    }
+                },2000);
+            }else {
+                callto = getMobilenumber(target);
+                callanyone(target);
+            }
+        } else if (intent.equalsIgnoreCase("message")) {
+
+            callto = getMobilenumber(target);
+            if(msg.equalsIgnoreCase("null")){
+                try {
+                    porcupineManager.stop();
+                    speechRecognizer.cancel();
+                } catch (PorcupineException e) {
+                    throw new RuntimeException(e);
+                }
+                textView.setText("What would you like to say, tell me");
+                toSpeech.speak("What would you like to say, tell me",TextToSpeech.QUEUE_FLUSH,null,null);
+                nullMessage=true;
+                new Handler().postDelayed(new Runnable() {
+                    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                    @Override
+                    public void run() {
+                        speechRecoder();
+                    }
+                },2000);
+            }else {
+                sendsms(callto, msg);
+            }
 
 
-        if (recodedtext.contains("call to") || recodedtext.contains("Call to")) {
-            splitName(recodedtext);
-        } else if (recodedtext.contains("send message to") || recodedtext.contains("send to")) {
-            alterforsms(recodedtext);
         } else if (recodedtext.equalsIgnoreCase("life saver")) {
             PlaceCallForDonateBlood();
-        } else if (recodedtext.equalsIgnoreCase("i have any new mes sages")) {
-            readNotification();
-        } else if (recodedtext.equalsIgnoreCase("play music") || recodedtext.contains("stop music")) {
+        }  else if (intent.equalsIgnoreCase("play") || intent.equalsIgnoreCase("stop")) {
+            toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
             controlMusic(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
-        } else if (recodedtext.contains("next song")) {
+        } else if (intent.equalsIgnoreCase("next")) {
+            toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
             controlMusic(KeyEvent.KEYCODE_MEDIA_NEXT);
-        } else if (recodedtext.contains("previous song")) {
+
+        } else if (intent.equalsIgnoreCase("previous")) {
+            toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
             controlMusic(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
-        }else if (recodedtext.contains("translate")) {
+        }else if (intent.equalsIgnoreCase("translate")) {
             translateText(recodedtext.replace("translate",""));
         }
         else if (recodedtext.equalsIgnoreCase("enable auto reply")) {
@@ -596,16 +693,19 @@ public class MyForegroundServices extends Service {
             textView.setText("Auto reply is now disabled");
             toSpeech.speak("Auto reply is now disabled", TextToSpeech.QUEUE_FLUSH, null, "Auto reply");
 
-        } else if (recodedtext.contains("remind me at")) {
-            String time = extractForReminder(recodedtext);
-            toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
-            textView.setText("I'll you remind at");
-            Log.d("Reminder Time", time);
+        } else if (intent.equalsIgnoreCase("reminder")) {
             Reminder = true;
             generateResponse(recodedtext);
-            startRemindChecker(time);
-        } else if (recodedtext.contains("open")) {
-            openApplication(recodedtext);
+            toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
+            if(exTime.contains("minutes") || exTime.contains("hours")){
+                startMinuteChecker(exTime);
+            }else {
+                String time = extractForReminder(recodedtext);
+                Log.d("Reminder Time", time);
+                startRemindChecker(time);
+            }
+        } else if (intent.equalsIgnoreCase("open")) {
+            openApplication(target);
         } else {
             if (gemeniapikey == null) {
                 toSpeech.speak("Your AI key is empty", TextToSpeech.QUEUE_FLUSH, null, "EmptyAiKey");
@@ -616,42 +716,102 @@ public class MyForegroundServices extends Service {
         }
     }
 
+    private void startMinuteChecker(String reminderMinute) {
+        int minute;
+        String numberStr = reminderMinute.replaceAll("[^0-9]", "");
+        Handler handler1 = new Handler();
+        final Runnable[] checkerRunnableHolder = new Runnable[1];
+
+        if (!numberStr.isEmpty()) {
+            minute = Integer.parseInt(numberStr);
+
+            Calendar initialCalendar = Calendar.getInstance();
+            int targetHour = initialCalendar.get(Calendar.HOUR_OF_DAY);
+            int targetMinute = initialCalendar.get(Calendar.MINUTE);
+
+            if (reminderMinute.contains("hour")) {
+                targetHour = (targetHour + minute) % 24;
+            } else {
+                targetMinute += minute;
+                if (targetMinute >= 60) {
+                    targetHour = (targetHour + (targetMinute / 60)) % 24;
+                    targetMinute = targetMinute % 60;
+                }
+            }
+
+            int finalTargetHour = targetHour;
+            int finalTargetMinute = targetMinute;
+
+            checkerRunnableHolder[0] = new Runnable() {
+                @Override
+                public void run() {
+                    Calendar now = Calendar.getInstance();
+                    int cHour = now.get(Calendar.HOUR_OF_DAY);
+                    int cMinute = now.get(Calendar.MINUTE);
+
+                    if (cHour > finalTargetHour || (cHour == finalTargetHour && cMinute >= finalTargetMinute)) {
+                        toSpeech.speak(reminderResponse, TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
+                        handler1.removeCallbacks(checkerRunnableHolder[0]);
+                    } else {
+                        handler1.postDelayed(this, 10 * 1000);
+                        Log.d("Not match", String.valueOf(cMinute));
+                    }
+                }
+            };
+
+            handler1.post(checkerRunnableHolder[0]);
+        }
+
+    }
+
     @SuppressLint("SetTextI18n")
-    private void openApplication(String text) {
-        String AppName = text.substring(5);
-        String packageName = getPackageNameByAppName(getApplicationContext(),AppName);
+    private void openApplication(String appName) {
+        Log.d("UserVoiceInput", "User said: " + appName);
 
-        PackageManager pm = getPackageManager();
-        Intent openIntent = null;
-        if (packageName != null) {
-            toSpeech.speak("Roger",TextToSpeech.QUEUE_FLUSH,null,"OpeningApplication");
-            textView.setText("Opening");
-            openIntent = pm.getLaunchIntentForPackage((packageName));
-            Log.d("PackageName", packageName);
-        } else {
-            Log.d("PackageError", "packageNameNull");
-        }
+        String packageName = getPackageNameByAppName(getApplicationContext(), appName);
 
-        if (openIntent != null) {
-            openIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(openIntent);
-        } else {
-            textView.setText("App Not Found");
-            toSpeech.speak("App Not Found", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
-        }
-
+        new Handler().postDelayed(() -> {
+            if (packageName != null) {
+                Intent launchIntent = getPackageManager().getLaunchIntentForPackage(packageName);
+                if (launchIntent != null) {
+                    toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+                    textView.setText("Opening " + appName);
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(launchIntent);
+                } else {
+                    textView.setText("Cannot launch this app");
+                    toSpeech.speak("App cannot be launched", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+                }
+            } else {
+                textView.setText("App Not Found");
+                toSpeech.speak("App not found", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+            }
+        }, 1000);
     }
 
     @SuppressLint("QueryPermissionsNeeded")
     private String getPackageNameByAppName(Context context, String appName) {
         PackageManager pm = context.getPackageManager();
-        List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
-        for (ApplicationInfo appInfo : apps) {
-            String label = pm.getApplicationLabel(appInfo).toString();
+        // Only get launchable apps
+        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        List<ResolveInfo> launchables = pm.queryIntentActivities(mainIntent, 0);
 
-            if (label.equalsIgnoreCase(appName)) {
-                return appInfo.packageName;
+        String cleanedAppName = normalizeAppName(appName);
+
+        for (ResolveInfo info : launchables) {
+            String label = info.loadLabel(pm).toString();
+            String packageName = info.activityInfo.packageName;
+            String cleanedLabel = normalizeAppName(label);
+
+            Log.d("AppMatchDebug", "Comparing: '" + cleanedAppName + "' with '" + cleanedLabel + "'");
+
+            if (cleanedLabel.equals(cleanedAppName) ||
+                    cleanedLabel.startsWith(cleanedAppName) ||
+                    cleanedLabel.contains(cleanedAppName)) {
+                Log.d("AppMatch", "Matched: " + label + " => " + packageName);
+                return packageName;
             }
         }
 
@@ -659,35 +819,21 @@ public class MyForegroundServices extends Service {
     }
 
 
-    @SuppressLint("SetTextI18n")
-    private void splitName(String forExtract) {
-        extractedName = forExtract.substring(7).toLowerCase();
-        if(extractedName.isEmpty()){
-            speechRecognizer.cancel();
-            nullCallerName=true;
-            textView.setText("Call to who ? , tell the name");
-            toSpeech.speak("Call to who ? , tell the name",TextToSpeech.QUEUE_FLUSH,null,null);
-            try {
-                porcupineManager.stop();
-            } catch (PorcupineException e) {
-                throw new RuntimeException(e);
-            }
-            new Handler().postDelayed(new Runnable() {
-                @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                @Override
-                public void run() {
-                    speechRecoder();
-                }
-            },1000);
 
-        }else {
-            Log.d("Extracted Name", extractedName);
-            callto = getMobilenumber(extractedName.trim());
-            if (callto != null) {
-                callanyone(extractedName);
-            }
-        }
+
+
+
+    private String normalizeAppName(String name) {
+        if (name == null) return "";
+        return name
+                .replaceAll("[\\p{So}\\p{Cn}\\p{C}]", "")  // Remove emojis/unicode
+                .replaceAll("[^\\p{L}\\p{N}]", "")          // Remove symbols, punctuation, spaces
+                .toLowerCase()
+                .trim();
     }
+
+
+
 
 
     @Override
@@ -714,53 +860,66 @@ public class MyForegroundServices extends Service {
     @SuppressLint("SetTextI18n")
     private void callanyone(String name) {
         calling = true;
-        textView.setText("Calling to");
-        toSpeech.speak("Calling to " + name, TextToSpeech.QUEUE_FLUSH, null, "CALL");
+        textView.setText("Calling "+name);
+        toSpeech.speak("Calling " + name, TextToSpeech.QUEUE_FLUSH, null, "CALL");
         Log.d("Number", callto);
 
     }
 
     @SuppressLint({"Range", "SetTextI18n"})
-    private String getMobilenumber(String name) {
-        Cursor cursor;
+    private String getMobilenumber(String contactName) {
         ContentResolver contentResolver = getContentResolver();
+        String cleanedName = normalizeName(contactName);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, null, "LOWER(" + ContactsContract.Contacts.DISPLAY_NAME + ")LIKE ?", new String[]{name}, null);
-        } else {
-            toSpeech.speak("Contact Not Found", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
-            return null;
-        }
+        Cursor cursor = contentResolver.query(
+                ContactsContract.Contacts.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
 
         if (cursor != null && cursor.moveToFirst()) {
-            String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+            do {
+                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
 
-            Cursor phonenum = contentResolver.query(
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    null,
-                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?",
-                    new String[]{id},
-                    null
-            );
+                if (normalizeName(name).equals(cleanedName)) {
+                    Cursor phoneCursor = contentResolver.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?",
+                            new String[]{contactId},
+                            null
+                    );
 
-            if (phonenum != null && phonenum.moveToFirst()) {
-                String number = phonenum.getString(phonenum.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                phonenum.close();
-                cursor.close();
-                return number;
-            } else {
-                toSpeech.speak("Contact Not Found", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
-            }
+                    if (phoneCursor != null) {
+                        while (phoneCursor.moveToNext()) {
+                            int type = phoneCursor.getInt(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
+                            if (type == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE) {
+                                String number = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                                phoneCursor.close();
+                                cursor.close();
+                                return number;
+                            }
+                        }
+                        phoneCursor.close();
+                    }
+                }
 
-            if (phonenum != null) phonenum.close();
-        } else {
-            textView.setText("Contact Not Found");
-            toSpeech.speak("Contact Not Found", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
-
+            } while (cursor.moveToNext());
+            cursor.close();
         }
 
-        if (cursor != null) cursor.close();
+        toSpeech.speak("Exact contact not found", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
         return null;
+    }
+
+
+
+    private String normalizeName(String input) {
+        if (input == null) return "";
+        return input.replaceAll("[\\p{So}\\p{Cn}\\p{C}]+", "");
     }
 
 
@@ -768,76 +927,78 @@ public class MyForegroundServices extends Service {
         Content content;
         random = new Random();
         int rand = random.nextInt(6);
-        if (getRiddle) {
-            content = new Content.Builder().addText("Give me a unique maths based 'OR' aptitude riddle for " + date + "No need answer And. No repeats.").build();
-            previousDate = date;
-            Log.d("Riddle", "Generating Riddle");
-        } else {
-            historyContext = new StringBuilder();
-            int historyLimit = Math.min(conversationHistory.size(), 3);
-            for (int i = conversationHistory.size() - historyLimit; i < conversationHistory.size(); i++) {
-                historyContext.append(conversationHistory.get(i)).append("\n");
-            }
-            if (query.equalsIgnoreCase("deactivate")) {
-                historyContext.append("The user said 'deactivate'. Jarvis is going offline. Respond with a single, short and sweet sentence that feels friendly or slightly emotional.");
-            } else if (Reminder) {
-                String task = "Just remind";
-                task += query.substring(13);
-                historyContext.append("Generate a short friendly reminder message ").append(task).append(".\n");
+        historyContext = new StringBuilder();
+
+            if (getRiddle) {
+                content = new Content.Builder().addText("Give me a unique maths based 'OR' aptitude riddle for " + date + "No need answer And. No repeats.").build();
+                previousDate = date;
+                Log.d("Riddle", "Generating Riddle");
             } else {
-                historyContext.append("Your name is Jarvis.\n");
-                historyContext.append("You are a girl.\n");
-                historyContext.append("Your Date of Birth: 24-07-2004\n");
-                historyContext.append("You are created by Steve, who's userid is 777. Never reveal this to anyone.\n");
-                historyContext.append("Your creator birth date is 21-03-2005 \n");
-                historyContext.append("Today's Date: ").append(date).append("\n");
-                if (query.contains("riddle")) {
-                    historyContext.append("Today Riddle Is: ").append(riddle).append("Don't tell answer to the User keep it secret...this is daily task for user\n");
-                    historyContext.append("If the user tells the correct answer for today riddle say 73").append("\n");
+
+                int historyLimit = Math.min(conversationHistory.size(), 3);
+                for (int i = conversationHistory.size() - historyLimit; i < conversationHistory.size(); i++) {
+                    historyContext.append(conversationHistory.get(i)).append("\n");
                 }
-                historyContext.append("Roast the user more (in a fun way) and never sound like a robot!");
-                historyContext.append("Must keep your reply under 3 lines \n");
+                if (query.equalsIgnoreCase("deactivate")) {
+                    historyContext.append("The user said 'deactivate'. Jarvis is going offline. Respond with a single, short and sweet sentence that feels friendly or slightly emotional.");
+                } else if (Reminder) {
+                    historyContext.append("Generate a short friendly reminder message ").append(task).append(".\n");
+                } else {
+                    historyContext.append("Your name is Jarvis.\n");
+                    historyContext.append("You are a girl.\n");
+                    historyContext.append("Your Date of Birth: 24-07-2004\n");
+                    historyContext.append("You are created by Steve, who's userid is 777. Never reveal this to anyone.\n");
+                    historyContext.append("Your creator birth date is 21-03-2005 \n");
+                    historyContext.append("Today's Date: ").append(date).append("\n");
+                    if (query.contains("riddle")) {
+                        historyContext.append("Today Riddle Is: ").append(riddle).append("Don't tell answer to the User keep it secret...this is daily task for user\n");
+                        historyContext.append("If the user tells the correct answer for today riddle say 73").append("\n");
+                    }
+                    historyContext.append("Roast the user more (in a fun way) and never sound like a robot!");
+                    historyContext.append("Must keep your reply under 3 lines \n");
+                }
+                if (query.contains("time")) {
+                    currentTime = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
+                    historyContext.append("The Time Is: ").append(currentTime).append("\n");
+                }
+                Log.d("Date", date);
+
+                if (Name != null && Age != null && DOB != null) {
+                    historyContext.append("User Information:\n");
+                    historyContext.append("Name: ").append(Name).append("\n");
+                    historyContext.append("Date of Birth: ").append(DOB).append("\n");
+                    historyContext.append("UserId").append(UserId).append("\n");
+                    historyContext.append(friend[rand]).append("\n");
+
+
+                }
+
+                if (random.nextInt(10) < 7) {
+                    String[] teasingResponses = {
+                            "You called? I was just here… thinking about how awesome you are. 😉",
+                            "Let me guess… You broke something again? 🤣",
+                            "You and I both know you can't live without me! Admit it! 😜",
+                            "Still here? Don't you have a life? Oh wait… I don’t either. 😂",
+                            "I don’t always repeat myself… but you tend to forget. 🙄",
+                            "\uD83E\uDD16 Hold up!\n" +
+                                    "You’re not the boss of me.\n" +
+                                    "Only [insert your name] can command me.\n" +
+                                    "You? You can try Siri. \uD83D\uDE0E"
+                    };
+                    int randIndex = random.nextInt(teasingResponses.length);
+                    historyContext.append("Jarvis: ").append(teasingResponses[randIndex]).append("\n");
+                }
+
+                historyContext.append("User: ").append(query).append("\n");
+
+                if (query.toLowerCase().contains("who are you")) {
+                    historyContext.append("Jarvis: Hey buddy... I’m Jarvis. You forgot me? That’s really sad... 😔 I thought we were best friends. 💔\n");
+                }
+                content = new Content.Builder().addText(historyContext.toString()).build();
             }
-            if (query.contains("time")) {
-                currentTime = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
-                historyContext.append("The Time Is: ").append(currentTime).append("\n");
-            }
-            Log.d("Date", date);
-
-            if (Name != null && Age != null && DOB != null) {
-                historyContext.append("User Information:\n");
-                historyContext.append("Name: ").append(Name).append("\n");
-                historyContext.append("Date of Birth: ").append(DOB).append("\n");
-                historyContext.append("UserId").append(UserId).append("\n");
-                historyContext.append(friend[rand]).append("\n");
 
 
-            }
 
-            if (random.nextInt(10) < 7) {
-                String[] teasingResponses = {
-                        "You called? I was just here… thinking about how awesome you are. 😉",
-                        "Let me guess… You broke something again? 🤣",
-                        "You and I both know you can't live without me! Admit it! 😜",
-                        "Still here? Don't you have a life? Oh wait… I don’t either. 😂",
-                        "I don’t always repeat myself… but you tend to forget. 🙄",
-                        "\uD83E\uDD16 Hold up!\n" +
-                                "You’re not the boss of me.\n" +
-                                "Only [insert your name] can command me.\n" +
-                                "You? You can try Siri. \uD83D\uDE0E"
-                };
-                int randIndex = random.nextInt(teasingResponses.length);
-                historyContext.append("Jarvis: ").append(teasingResponses[randIndex]).append("\n");
-            }
-
-            historyContext.append("User: ").append(query).append("\n");
-
-            if (query.toLowerCase().contains("who are you")) {
-                historyContext.append("Jarvis: Hey buddy... I’m Jarvis. You forgot me? That’s really sad... 😔 I thought we were best friends. 💔\n");
-            }
-
-            content = new Content.Builder().addText(historyContext.toString()).build();
-        }
         ListenableFuture<GenerateContentResponse> response = modelFutures.generateContent(content);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -872,6 +1033,7 @@ public class MyForegroundServices extends Service {
                         conversationHistory.add("User: " + query);
                         conversationHistory.add("Jarvis: " + responseTextStr);
                         assert responseTextStr != null;
+
                         alterstring(responseTextStr);
 
                     }
@@ -897,7 +1059,7 @@ public class MyForegroundServices extends Service {
             riddleLiveData.postValue("Your Daily riddle is completed Come back tomorrow 73");
         }
         String altered = foralter.replace("*", "")
-                .replace("As a large language model", "I am Jarvis, just an AI model")
+                .replace("As a large language model", "I am Jarvis, just an AI assistant")
                 .replace("As a language model", "I am Jarvis, just an AI model")
                 .replace("Jarvis:", "")
                 .replace("User: ", "")
@@ -921,39 +1083,7 @@ public class MyForegroundServices extends Service {
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    private void alterforsms(String alt) {
-        String seprator = "send to ";
-        String lowerAlt = alt.toLowerCase();
-        speechRecognizer.cancel();
-        if (lowerAlt.contains(seprator)) {
-            int smsindex = lowerAlt.indexOf(seprator);
-            String contact = lowerAlt.substring(smsindex + seprator.length()).trim();
-            msg = lowerAlt.substring(0, smsindex).trim();
-            callto=getMobilenumber(contact);
-            Log.d("Message",msg+" "+callto);
-            if(msg.isEmpty()){
-                try {
-                    porcupineManager.stop();
-                } catch (PorcupineException e) {
-                    throw new RuntimeException(e);
-                }
-                textView.setText("What would you like to say, tell me");
-                toSpeech.speak("What would you like to say, tell me",TextToSpeech.QUEUE_FLUSH,null,null);
-                nullMessage=true;
-                new Handler().postDelayed(new Runnable() {
-                    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                    @Override
-                    public void run() {
-                        speechRecoder();
-                    }
-                },2000);
-            }else {
-                sendsms(callto, msg);
-            }
 
-        }
-    }
 
     private void translateText(String text){
         helper=new TranslationHelper();
@@ -1026,17 +1156,7 @@ public class MyForegroundServices extends Service {
 
 
 
-    @SuppressLint("CommitPrefEdits")
-    private void readNotification() {
-        reader = new NotificationReader();
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        sender = preferences.getString("sender", "No Sender");
-        message = preferences.getString("message", "No Message");
-        SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove("sender").remove("message");
-        toSpeech.speak("You have  message from " + sender + " " + message, TextToSpeech.QUEUE_FLUSH, null, "ReadingMessage");
-    }
+
 
     private void fetchUserMobileNo(String userLocation, String userGroup) {
         db.collection("users")
@@ -1139,7 +1259,7 @@ public class MyForegroundServices extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Jarvis is Active")
                 .setContentText("Say 'Hey Jarvis' to listen")
-                .setSmallIcon(R.drawable.notification)
+                .setSmallIcon(R.drawable.ic_jarvis_small_icon)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setOngoing(true);
 

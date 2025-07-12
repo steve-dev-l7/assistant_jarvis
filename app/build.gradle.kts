@@ -76,6 +76,5 @@ dependencies {
     implementation (libs.play.services.nearby)
     implementation (libs.lottie.v640)
     implementation (libs.localbroadcastmanager)
-
-    implementation (libs.rhino.android.v302)
+    implementation(libs.onnxruntime.android)
 }
