@@ -7,6 +7,7 @@ import android.annotation.SuppressLint;
 
 import android.app.ActivityManager;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -19,6 +20,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import android.os.Handler;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -77,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
     TextView textView, Riddle, txttask;
     Button wakeJarvis;
     private boolean isTextToSpeechInitialized = false;
+
+    ProgressDialog progressDialog;
 
     Toolbar toolbar1;
     TranslationHelper translationHelper;
@@ -247,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
         wakeJarvis.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                progressDialog=ProgressDialog.show(MainActivity.this,"Activating Jarvis","Please be patient");
                 if (isServiceisRunning(MyForegroundServices.class)) {
                     Toast.makeText(MainActivity.this, "Jarvis already running", Toast.LENGTH_SHORT).show();
                     return;
@@ -419,13 +424,21 @@ public class MainActivity extends AppCompatActivity {
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
                 wakeup = true;
-                toSpeech.speak("Jarvis activated", TextToSpeech.QUEUE_FLUSH, null, "INTRODUCING");
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressDialog.dismiss();
+                        toSpeech.speak("Jarvis activated", TextToSpeech.QUEUE_FLUSH, null, "INTRODUCING");
+                    }
+                },2000);
+
             }
 
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
-                toSpeech.speak("huh.., Unauthorized attempt detected.",TextToSpeech.QUEUE_ADD,null,null);
+                progressDialog.dismiss();
+                toSpeech.speak("Huh.., Try again",TextToSpeech.QUEUE_ADD,null,null);
             }
         });
         promptInfo=new BiometricPrompt.PromptInfo.Builder().setTitle("Jarvis Security")

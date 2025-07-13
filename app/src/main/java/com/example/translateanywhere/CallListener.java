@@ -22,6 +22,7 @@ public class CallListener extends PhoneStateListener {
     private String lastIncomingNumber = null;
     private final Map<String, Integer> callCountMap = new HashMap<>();
 
+
     String Name;
 
     String msg;
@@ -37,9 +38,9 @@ public class CallListener extends PhoneStateListener {
     public void onCallStateChanged(int state, String phoneNumber) {
         super.onCallStateChanged(state, phoneNumber);
         SharedPreferences sharedPreferences= context.getSharedPreferences("UserData",MODE_PRIVATE);
-        Name= sharedPreferences.getString("UserName", null);
+        Name= sharedPreferences.getString("UserName", "This person");
 
-        msg="Hello, this is Jarvis."+Name+"  is currently unavailable. Your repeated call has been noted, and he’ll get back to you as soon as possible.";
+        msg="Hello, this is Jarvis.  "+Name+"  is currently unavailable. Your repeated call has been noted, and he’ll / she'll get back to you as soon as possible.";
 
         switch (state) {
             case TelephonyManager.CALL_STATE_RINGING:

@@ -16,7 +16,9 @@ import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.app.Service;
+import android.app.admin.DevicePolicyManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
@@ -196,6 +198,7 @@ public class MyForegroundServices extends Service {
     CallListener callListener;
 
     Context context;
+
 
     IntentExtractor intentExtractor;
 
@@ -599,6 +602,7 @@ public class MyForegroundServices extends Service {
             msg = jsonObject.optString("content", null);
             task=jsonObject.optString("task",null);
             exTime=jsonObject.optString("time",null);
+            Log.d("Minute Time",exTime);
 
             Log.d("INTENT", "Intent: " + intent);
             Log.d("INTENT", "Target: " + target);
@@ -678,14 +682,14 @@ public class MyForegroundServices extends Service {
         }else if (intent.equalsIgnoreCase("translate")) {
             translateText(recodedtext.replace("translate",""));
         }
-        else if (recodedtext.equalsIgnoreCase("enable auto reply")) {
+        else if (recodedtext.equalsIgnoreCase("enable auto reply") && UserId.equals("777")) {
             forAutoReply = getSharedPreferences("Jarvis", MODE_PRIVATE);
             editor = forAutoReply.edit();
             editor.putBoolean("isFeatureEnabled", true);
             editor.apply();
             textView.setText("Auto reply is now enabled");
             toSpeech.speak("Auto reply is now enabled", TextToSpeech.QUEUE_FLUSH, null, "Auto reply");
-        } else if (recodedtext.equalsIgnoreCase("disable auto reply")) {
+        } else if (recodedtext.equalsIgnoreCase("disable auto reply") && UserId.equals("777")) {
             forAutoReply = getSharedPreferences("Jarvis", MODE_PRIVATE);
             editor = forAutoReply.edit();
             editor.putBoolean("isFeatureEnabled", false);
@@ -697,7 +701,7 @@ public class MyForegroundServices extends Service {
             Reminder = true;
             generateResponse(recodedtext);
             toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
-            if(exTime.contains("minutes") || exTime.contains("hours")){
+            if(exTime.contains("minutes") || exTime.contains("hours") || exTime.contains("minute") || exTime.contains("hour")){
                 startMinuteChecker(exTime);
             }else {
                 String time = extractForReminder(recodedtext);
@@ -706,7 +710,8 @@ public class MyForegroundServices extends Service {
             }
         } else if (intent.equalsIgnoreCase("open")) {
             openApplication(target);
-        } else {
+        }
+        else {
             if (gemeniapikey == null) {
                 toSpeech.speak("Your AI key is empty", TextToSpeech.QUEUE_FLUSH, null, "EmptyAiKey");
                 return;
@@ -826,8 +831,7 @@ public class MyForegroundServices extends Service {
     private String normalizeAppName(String name) {
         if (name == null) return "";
         return name
-                .replaceAll("[\\p{So}\\p{Cn}\\p{C}]", "")  // Remove emojis/unicode
-                .replaceAll("[^\\p{L}\\p{N}]", "")          // Remove symbols, punctuation, spaces
+                .replaceAll("[\\p{So}\\p{Cn}\\p{C}]", "")
                 .toLowerCase()
                 .trim();
     }
@@ -860,6 +864,10 @@ public class MyForegroundServices extends Service {
     @SuppressLint("SetTextI18n")
     private void callanyone(String name) {
         calling = true;
+        if(callto==null){
+            toSpeech.speak("Contact not found",TextToSpeech.QUEUE_FLUSH,null,"NoneCall");
+            return;
+        }
         textView.setText("Calling "+name);
         toSpeech.speak("Calling " + name, TextToSpeech.QUEUE_FLUSH, null, "CALL");
         Log.d("Number", callto);
@@ -869,7 +877,7 @@ public class MyForegroundServices extends Service {
     @SuppressLint({"Range", "SetTextI18n"})
     private String getMobilenumber(String contactName) {
         ContentResolver contentResolver = getContentResolver();
-        String cleanedName = normalizeName(contactName);
+        String cleanedInputName = removeEmojis(contactName).trim();
 
         Cursor cursor = contentResolver.query(
                 ContactsContract.Contacts.CONTENT_URI,
@@ -884,7 +892,11 @@ public class MyForegroundServices extends Service {
                 String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                 String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
 
-                if (normalizeName(name).equals(cleanedName)) {
+                if (name == null) continue;
+
+                String cleanedContactName = removeEmojis(name).trim();
+
+                if (cleanedContactName.equalsIgnoreCase(cleanedInputName)) {
                     Cursor phoneCursor = contentResolver.query(
                             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                             null,
@@ -912,14 +924,16 @@ public class MyForegroundServices extends Service {
         }
 
         toSpeech.speak("Exact contact not found", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
+
         return null;
     }
 
 
 
-    private String normalizeName(String input) {
+
+    private String removeEmojis(String input) {
         if (input == null) return "";
-        return input.replaceAll("[\\p{So}\\p{Cn}\\p{C}]+", "");
+        return input.replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "");
     }
 
 
@@ -1011,7 +1025,7 @@ public class MyForegroundServices extends Service {
                         riddleLiveData.postValue(result.getText());
 
                     } else if (Reminder) {
-                        reminderResponse = result.getText();
+                        reminderResponse = result.getText().replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "");;
                         assert reminderResponse != null;
                         Log.d("reminder response", reminderResponse);
                         Reminder = false;
@@ -1120,7 +1134,7 @@ public class MyForegroundServices extends Service {
                 textView.setText("Done.");
                 toSpeech.speak("Done.", TextToSpeech.QUEUE_FLUSH, null, "SMS");
             } catch (Exception e) {
-                toSpeech.speak("Sms send failed", TextToSpeech.QUEUE_FLUSH, null, "FAILED SMS");
+                toSpeech.speak("Try again", TextToSpeech.QUEUE_FLUSH, null, "FAILED SMS");
             }
         } else {
             toSpeech.speak("Message is empty ", TextToSpeech.QUEUE_FLUSH, null, "Empty Message");
