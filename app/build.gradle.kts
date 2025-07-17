@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.translateanywhere"
-    compileSdk = 35
+    compileSdk = 36
 
     
     defaultConfig {
@@ -43,6 +43,8 @@ android {
 
 }
 
+
+
 dependencies {
 
     implementation(libs.appcompat)
@@ -58,17 +60,13 @@ dependencies {
     implementation(libs.translate)
     implementation(libs.firebase.database)
     implementation (libs.porcupine.android)
-    implementation(libs.okhttp)
     implementation(libs.generativeai)
-    implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.generativeai.v070)
     implementation(libs.guava)
     implementation(libs.reactive.streams)
     implementation(libs.firebase.auth)
     implementation(libs.play.services.auth)
-    implementation (libs.retrofit)
-    implementation (libs.converter.gson)
     implementation(libs.biometric)
     implementation(libs.porcupine.android.v302)
     implementation (libs.core)
@@ -76,5 +74,4 @@ dependencies {
     implementation (libs.play.services.nearby)
     implementation (libs.lottie.v640)
     implementation (libs.localbroadcastmanager)
-    implementation(libs.onnxruntime.android)
 }

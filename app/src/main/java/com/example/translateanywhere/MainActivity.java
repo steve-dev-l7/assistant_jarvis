@@ -73,6 +73,7 @@ import java.util.Locale;
 import java.util.concurrent.Executor;
 
 
+
 public class MainActivity extends AppCompatActivity {
     Intent  intent1;
     TextToSpeech toSpeech;
@@ -81,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean isTextToSpeechInitialized = false;
 
     ProgressDialog progressDialog;
-
     Toolbar toolbar1;
     TranslationHelper translationHelper;
     SpeechRecognizer speechRecognizer;
@@ -93,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
     BiometricPrompt biometricPrompt;
     BiometricPrompt.PromptInfo promptInfo;
     Executor executor;
+
+
     private static final int PERMISSION_REQUEST_CODE = 101;
 
 
@@ -229,13 +231,14 @@ public class MainActivity extends AppCompatActivity {
         Riddle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 if (isServiceisRunning(MyForegroundServices.class)) {
                     MyForegroundServices.riddleLiveData.observe(MainActivity.this, new Observer<String>() {
                         @Override
                         public void onChanged(String riddle) {
                             if (riddle.contains("73")) {
                                 Riddle.setText("The daily riddle is completed come back tomorrow");
-                            } else {
+                            }   else {
                                 Riddle.setText(riddle);
                                 Riddle.setEnabled(false);
                                 toSpeech.speak("Your Riddle Is " + riddle, TextToSpeech.QUEUE_FLUSH, null, null);
@@ -424,11 +427,11 @@ public class MainActivity extends AppCompatActivity {
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
                 wakeup = true;
+                toSpeech.speak("Jarvis activated", TextToSpeech.QUEUE_FLUSH, null, "INTRODUCING");
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         progressDialog.dismiss();
-                        toSpeech.speak("Jarvis activated", TextToSpeech.QUEUE_FLUSH, null, "INTRODUCING");
                     }
                 },2000);
 

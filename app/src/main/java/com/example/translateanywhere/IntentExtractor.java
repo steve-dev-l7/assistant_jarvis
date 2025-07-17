@@ -111,7 +111,7 @@ public class IntentExtractor {
         SharedPreferences sharedPreferences=context.getSharedPreferences("AccessKeys",MODE_PRIVATE);
         GeminiApikey= sharedPreferences.getString("Key2",null);
         if(GeminiApikey==null)return;
-        generativeModel = new GenerativeModel("gemini-1.5-flash", GeminiApikey);
+        generativeModel = new GenerativeModel("gemini-2.0-flash", GeminiApikey);
         modelFutures = GenerativeModelFutures.from(generativeModel);
     }
 }

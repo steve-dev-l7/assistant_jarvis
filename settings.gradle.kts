@@ -19,6 +19,10 @@ dependencyResolutionManagement {
     }
 }
 
+
+
+
+
 rootProject.name = "TranslateAnyWhere"
 include(":app")
  

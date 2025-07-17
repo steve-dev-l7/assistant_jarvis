@@ -199,10 +199,9 @@ public class MyForegroundServices extends Service {
 
     Context context;
 
-
     IntentExtractor intentExtractor;
 
-    String exTime;
+    String exTime="0";
 
 
     @SuppressLint({"ServiceCast", "SecretInSource"})
@@ -540,6 +539,7 @@ public class MyForegroundServices extends Service {
                             @Override
                             public void onError(String e) {
                                 Log.d("ErrorExtractor",e);
+                                toSpeech.speak("Oops looks like my brain just glitched try again",TextToSpeech.QUEUE_FLUSH,null,"ERROR");
                             }
                         });
 
@@ -602,7 +602,6 @@ public class MyForegroundServices extends Service {
             msg = jsonObject.optString("content", null);
             task=jsonObject.optString("task",null);
             exTime=jsonObject.optString("time",null);
-            Log.d("Minute Time",exTime);
 
             Log.d("INTENT", "Intent: " + intent);
             Log.d("INTENT", "Target: " + target);
@@ -863,14 +862,16 @@ public class MyForegroundServices extends Service {
 
     @SuppressLint("SetTextI18n")
     private void callanyone(String name) {
-        calling = true;
+
         if(callto==null){
             toSpeech.speak("Contact not found",TextToSpeech.QUEUE_FLUSH,null,"NoneCall");
-            return;
+        }else{
+            calling = true;
+            textView.setText("Calling "+name);
+            toSpeech.speak("Calling " + name, TextToSpeech.QUEUE_FLUSH, null, "CALL");
+            Log.d("Number", callto);
         }
-        textView.setText("Calling "+name);
-        toSpeech.speak("Calling " + name, TextToSpeech.QUEUE_FLUSH, null, "CALL");
-        Log.d("Number", callto);
+
 
     }
 
