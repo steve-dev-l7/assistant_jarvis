@@ -81,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
     Button wakeJarvis;
     private boolean isTextToSpeechInitialized = false;
 
+    Boolean test;
+
     ProgressDialog progressDialog;
     Toolbar toolbar1;
     TranslationHelper translationHelper;
@@ -254,6 +256,8 @@ public class MainActivity extends AppCompatActivity {
         wakeJarvis.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+
                 progressDialog=ProgressDialog.show(MainActivity.this,"Activating Jarvis","Please be patient");
                 if (isServiceisRunning(MyForegroundServices.class)) {
                     Toast.makeText(MainActivity.this, "Jarvis already running", Toast.LENGTH_SHORT).show();

@@ -539,7 +539,7 @@ public class MyForegroundServices extends Service {
                             @Override
                             public void onError(String e) {
                                 Log.d("ErrorExtractor",e);
-                                toSpeech.speak("Oops looks like my brain just glitched try again",TextToSpeech.QUEUE_FLUSH,null,"ERROR");
+                                toSpeech.speak("Oops! Looks like my brain just glitched. Try again!", TextToSpeech.QUEUE_FLUSH, null, "FAILED");
                             }
                         });
 
@@ -708,7 +708,51 @@ public class MyForegroundServices extends Service {
                 startRemindChecker(time);
             }
         } else if (intent.equalsIgnoreCase("open")) {
-            openApplication(target);
+            if(target.equalsIgnoreCase("YouTube")){
+
+                openApplication("com.google.android.youtube",true);
+
+            } else if (target.equalsIgnoreCase("Instagram")) {
+
+                openApplication("com.instagram.android",true);
+
+            }else if (target.equalsIgnoreCase("WhatsApp")) {
+
+                openApplication("com.whatsapp",true);
+
+            }else if (target.equalsIgnoreCase("Facebook")) {
+
+                openApplication("com.facebook.katana",true);
+
+            }else if (target.equalsIgnoreCase("Snapchat")) {
+
+                openApplication("com.snapchat.android",true);
+
+            }else if (target.equalsIgnoreCase("Telegram")) {
+
+                openApplication("org.telegram.messenger",true);
+
+            }else if (target.equalsIgnoreCase("Spotify")) {
+
+                openApplication("com.spotify.music",true);
+
+            }else if (target.equalsIgnoreCase("Netflix")) {
+
+                openApplication("com.netflix.mediaclient",true);
+
+            }else if (target.equalsIgnoreCase("Chrome")) {
+
+                openApplication("com.android.chrome",true);
+
+            }else if (target.equalsIgnoreCase("Free Fire Max")) {
+
+                openApplication("com.dts.freefiremax",true);
+
+            } else if (target.equalsIgnoreCase("google pay")) {
+                openApplication("com.google.android.apps.nbu.paisa.user",true);
+            } else {
+                openApplication(target, false);
+            }
         }
         else {
             if (gemeniapikey == null) {
@@ -768,30 +812,54 @@ public class MyForegroundServices extends Service {
 
     }
 
-    @SuppressLint("SetTextI18n")
-    private void openApplication(String appName) {
-        Log.d("UserVoiceInput", "User said: " + appName);
+    @SuppressLint({"SetTextI18n", "QueryPermissionsNeeded"})
+    private void openApplication(String appName, Boolean isDirectPackage) {
 
-        String packageName = getPackageNameByAppName(getApplicationContext(), appName);
 
-        new Handler().postDelayed(() -> {
-            if (packageName != null) {
-                Intent launchIntent = getPackageManager().getLaunchIntentForPackage(packageName);
-                if (launchIntent != null) {
-                    toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
-                    textView.setText("Opening " + appName);
-                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(launchIntent);
-                } else {
-                    textView.setText("Cannot launch this app");
-                    toSpeech.speak("App cannot be launched", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
-                }
+        PackageManager pm = getPackageManager();
+        String packageName;
+        if(!isDirectPackage){
+            packageName=getPackageNameByAppName(context,appName);
+        }else {
+            packageName=appName;
+        }
+
+        try {
+            // Check if the app is installed
+            pm.getPackageInfo(packageName, 0); // throws if not installed
+
+            // Try to get launch intent
+            Intent launchIntent = pm.getLaunchIntentForPackage(packageName);
+
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // required if not calling from Activity
+                textView.setText("Opening app...");
+                toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+                startActivity(launchIntent);
             } else {
-                textView.setText("App Not Found");
-                toSpeech.speak("App not found", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+                textView.setText("App installed but cannot be launched");
+                toSpeech.speak("App is installed but has no launcher", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+                Log.e("Jarvis", "App installed but has no launchable intent: " + packageName);
             }
-        }, 1000);
+        } catch (PackageManager.NameNotFoundException e) {
+            // App not installed → go to Play Store
+            Log.e("Jarvis", "App not installed: " + packageName);
+            textView.setText("App not found. Redirecting to Play Store...");
+            toSpeech.speak("App not found. Redirecting to Play Store", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+
+            try {
+                Intent marketIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
+                marketIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(marketIntent);
+            } catch (android.content.ActivityNotFoundException err) {
+                Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
+                webIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(webIntent);
+            }
+        }
     }
+
+
 
     @SuppressLint("QueryPermissionsNeeded")
     private String getPackageNameByAppName(Context context, String appName) {

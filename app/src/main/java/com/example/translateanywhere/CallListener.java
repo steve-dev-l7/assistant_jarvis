@@ -53,7 +53,6 @@ public class CallListener extends PhoneStateListener {
             break;
 
             case TelephonyManager.CALL_STATE_OFFHOOK:
-                Context context1= context.getApplicationContext();
 
                 lastIncomingNumber=null;
                 break;
