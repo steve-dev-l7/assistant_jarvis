@@ -14,15 +14,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
-import android.hardware.ConsumerIrManager;
-
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
 import android.os.Handler;
 import android.provider.Settings;
-import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 
@@ -256,14 +253,12 @@ public class MainActivity extends AppCompatActivity {
         wakeJarvis.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-
                 progressDialog=ProgressDialog.show(MainActivity.this,"Activating Jarvis","Please be patient");
                 if (isServiceisRunning(MyForegroundServices.class)) {
                     Toast.makeText(MainActivity.this, "Jarvis already running", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                wakeupjarvis();
+                WakeUpJarvis();
             }
         });
     }
@@ -419,7 +414,7 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void wakeupjarvis() {
+    private void WakeUpJarvis() {
 
         biometricPrompt=new BiometricPrompt(MainActivity.this, executor, new BiometricPrompt.AuthenticationCallback() {
             @Override
@@ -445,7 +440,6 @@ public class MainActivity extends AppCompatActivity {
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
                 progressDialog.dismiss();
-                toSpeech.speak("Huh.., Try again",TextToSpeech.QUEUE_ADD,null,null);
             }
         });
         promptInfo=new BiometricPrompt.PromptInfo.Builder().setTitle("Jarvis Security")

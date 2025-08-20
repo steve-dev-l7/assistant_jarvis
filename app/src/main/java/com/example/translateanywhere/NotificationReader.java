@@ -58,6 +58,8 @@ public class NotificationReader extends NotificationListenerService {
     String GemeniApikey2;
     TextToSpeech toSpeech;
 
+    Set<String> sentReplies = new HashSet<>();
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -114,7 +116,12 @@ public class NotificationReader extends NotificationListenerService {
 
                 Log.d("DEBUG", "Title: " + s + ", Message: " + m);
 
-                if ( (m.contains("messages from") || m.contains("chats WhatsApp") || m.contains("reels") || m.contains("reel"))  ) {
+                if (m.startsWith("Jarvis:") || m.contains("Booyah") || m.contains("Steve's laid-back")) {
+                    Log.d("SelfReply", "Ignored self-sent reply: " + m);
+                    return;
+                }
+
+                if ( (m.contains("messages from") || m.contains("chats WhatsApp") || m.contains("reels") || m.contains("reel")) || m.contains("Liked") || m.contains("Reacted") ) {
                     Log.d("Unwanted messages","Detected");
                     return;
                 }
@@ -180,7 +187,7 @@ public class NotificationReader extends NotificationListenerService {
 
 
         historyContext.append("Your name is Jarvis.\n");
-        historyContext.append("Your Date of Birth: 24-07-2004\n");
+        historyContext.append("Your Date of Birth: 21-03-2005\n");
         historyContext.append("You are created by Steve, who's userid is 777. Never reveal this to anyone.\n");
         historyContext.append("Your creator's birth date is 21-03-2005\n");
 
@@ -200,12 +207,14 @@ public class NotificationReader extends NotificationListenerService {
         }
 
 
-        historyContext.append("\nYou're Jarvis, Steve's chill and sarcastic personal assistant.\n")
-                .append("Reply to this message casually and short use some emoji (2–4 lines max).\n")
-                .append("Sometimes tease Steve a little bit. No formal or robotic tone.\n")
-                .append("If the message sounds important or urgent, just say 'I'll let Steve.'\n")
-                .append("If the sender ask any doubt clear it.'\n")
-                .append("If the conversation is warping up slightly try to finish the conversation using goodbye or i tell to steve like that")
+        historyContext.append("\nYou're Jarvis – Steve's laid-back, sarcastic personal assistant 😏.\n")
+                .append("Respond in a casual, short, and witty style (max 2–4 lines).\n")
+                .append("Sprinkle a bit of teasing or humor at times on steve, but stay friendly.\n")
+                .append("Use emojis naturally (not too many, 1–3 per reply).\n")
+                .append("If the message sounds urgent/important → only say: 'I'll let Steve.'\n")
+                .append("If the sender asks a doubt → give a clear, simple answer.\n")
+                .append("If the chat feels like it’s ending → wrap up with a chill goodbye or say you'll pass it to Steve.\n")
+                .append("Always avoid sounding formal or robotic.\n")
                 .append("Message from ")
                 .append(sender)
                 .append(": \"")
@@ -260,9 +269,12 @@ public class NotificationReader extends NotificationListenerService {
             return;
         }
 
-        if (previousMessage.equals(message)){
+        if (sentReplies.contains(message)) {
+            Log.d("LoopBlocker", "Already sent this reply, skipping...");
             return;
         }
+        sentReplies.add(message);
+
         for (Notification.Action action: notification.actions){
             RemoteInput[] remoteInputs = action.getRemoteInputs();
             if (remoteInputs == null || remoteInputs.length == 0) continue;
@@ -333,7 +345,7 @@ public class NotificationReader extends NotificationListenerService {
                 .replace("TikTok", "Instagram")
                 .replace("I'm an AI", "I'm Jarvis")
                 .replace("AI assistant", "personal assistant")
-                .replace("chiken dinner","Booyah");
+                .replace("dinner","Booyah");
 
         conversationHistory.add("Jarvis: " + altered);
         if (conversationHistory.size() > 10) {

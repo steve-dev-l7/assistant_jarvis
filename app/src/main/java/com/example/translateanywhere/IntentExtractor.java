@@ -52,13 +52,14 @@ public class IntentExtractor {
                 "Supported intents:\n" +
                 "- MESSAGE: {\"intent\": \"MESSAGE\", \"target\": \"<name>\", \"content\": \"<message text>\"}\n" +
                 "- CALL: {\"intent\": \"CALL\", \"target\": \"<name>\"}\n" +
-                "- PLAY: {\"intent\": \"PLAY\", \"target\": \"<what to play>\"}\n" +
-                "- NEXT: {\"intent\": \"NEXT\"}\n" +
-                "- PREVIOUS: {\"intent\": \"PREVIOUS\"}\n" +
-                "- STOP: {\"intent\": \"STOP\"}\n" +
+                "- PLAY MUSIC: {\"intent\": \"PLAY MUSIC\", \"target\": \"<what to play>\"}\n" +
+                "- NEXT MUSIC: {\"intent\": \"NEXT MUSIC\"}\n" +
+                "- PREVIOUS MUSIC: {\"intent\": \"PREVIOUS MUSIC\"}\n" +
+                "- STOP MUSIC: {\"intent\": \"STOP MUSIC\"}\n" +
                 "- REMINDER: {\"intent\": \"REMINDER\", \"task\": \"<what to remind>\", \"time\": \"<time or date>\"}\n\n" +
                 "- TRANSLATE: {\"intent\": \"TRANSLATE\"}\n"+
                 "- OPEN: {\"intent\": \"OPEN\", \"target\": \"<app name>\"}\n" +
+                "- DEACTIVATE: {\"intent\": \"DEACTIVATE\"}\\n\""+
 
 
                 "Only include the relevant fields for each intent.\n" +
@@ -69,17 +70,20 @@ public class IntentExtractor {
                 "Examples:\n" +
                 "User: \"Call Steve\" → {\"intent\": \"CALL\", \"target\": \"Steve\"}\n" +
                 "User: \"Call \" → {\"intent\": \"CALL\", \"target\": \"null\"}\n" +
-                "User: \"Send a message to Alex saying good morning\" → {\"intent\": \"MESSAGE\", \"target\": \"Alex\", \"content\": \"good morning\"}\n" +
+                "User: \"Send a message to Alex  good morning\" → {\"intent\": \"MESSAGE\", \"target\": \"Alex\", \"content\": \"good morning\"}\n" +
                 "User: \"Send a message to Alex home 'or' Alex 2\" → {\"intent\": \"MESSAGE\", \"target\": \"Alex home 'or' Alex 2\", \"content\": \"null\"}\n" +
                 "User: \"Where are you send this to Sarah\" → {\"intent\": \"MESSAGE\", \"target\": \"Sarah\", \"content\": \"Where are you\"}\n" +
                 "User: \"Send this to John\" → {\"intent\": \"MESSAGE\", \"target\": \"John\", \"content\": \"this\"}\n" +
                 "User: \"Send hi to Steve\" → {\"intent\": \"MESSAGE\", \"target\": \"Steve\", \"content\": \"hi\"}\n" +
-                "User: \"Play Tamil hits\" → {\"intent\": \"PLAY\", \"target\": \"Tamil hits\"}\n" +
-                "User: \"Next song\" → {\"intent\": \"NEXT\"}\n" +
-                "User: \"Stop music\" → {\"intent\": \"STOP\"}\n" +
+                "User: \"Play Tamil songs\" → {\"intent\": \"PLAY MUSIC\", \"target\": \"Tamil hits\"}\n" +
+                "User: \"Next song\" → {\"intent\": \"NEXT MUSIC\"}\n" +
+                "User: \"Stop music\" → {\"intent\": \"STOP MUSIC\"}\n" +
                 "User: \"Remind me to charge phone at 9 PM\" → {\"intent\": \"REMINDER\", \"task\": \"charge phone\", \"time\": \"9 PM\"}\n\n" +
                 "User: \"Remind me in 5 minutes\" → {\"intent\": \"REMINDER\", \"task\": \"null\", \"time\": \"5 minutes\"}\n\n" +
                 "User: \"Can you open camera\" → {\"intent\": \"OPEN\", \"target\": \"CAMERA\"}\n" +
+                "User: \"Jarvis, you can sleep now.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
+                "User: \"Switch off, Jarvis.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
+                "User: \"Deactivate yourself, Jarvis.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
 
 
                 "Now extract intent from:\n" +

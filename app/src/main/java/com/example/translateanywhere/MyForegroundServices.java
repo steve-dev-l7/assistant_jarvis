@@ -16,21 +16,15 @@ import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.ProgressDialog;
 import android.app.Service;
-import android.app.admin.DevicePolicyManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.*;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
-import android.hardware.ConsumerIrManager;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -44,7 +38,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -115,10 +108,10 @@ public class MyForegroundServices extends Service {
     private PorcupineManager porcupineManager;
     SpeechRecognizer recognizer;
     TextToSpeech toSpeech;
-    String recodedtext, NewUser, message, sender;
+    String recodedtext, message;
     Boolean calling = false;
     TranslationHelper translationHelper;
-    Boolean jarvisActivated;
+    Boolean jarvisActivated,deactivation=false;
     ComponentName componentName;
     PackageManager pm;
     Boolean TTS = false,nullMessage=false;
@@ -128,10 +121,12 @@ public class MyForegroundServices extends Service {
     String task;
     private ObjectAnimator pulseAnimator;
 
+
+
     Random random;
     SpeechRecognizer speechRecognizer;
     int audioSessionId;
-    String Name, Age, DOB, date, currentTime, UserId, ComebackUser, GroupOfBlood, Location, MobileNo, Donate = "c";
+    String Name, Age, DOB, date, currentTime, UserId, GroupOfBlood, Location, MobileNo, Donate = "c";
 
     TextView textView;
     Notification notification1;
@@ -157,7 +152,7 @@ public class MyForegroundServices extends Service {
 
     TranslationHelper helper;
     FirebaseFirestore db;
-    ConsumerIrManager irManager;
+
     StringBuilder historyContext;
     String[] friend = {"Respond in a friendly, casual tone, like a best friend chatting.",
             "Keep it light, fun, and engaging, with a bit of humor if possible.",
@@ -405,7 +400,7 @@ public class MyForegroundServices extends Service {
 
         new Handler().postDelayed(() -> startForeground(1001, notification1), 100);
 
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
     private void wakeScreenAni() {
@@ -522,8 +517,8 @@ public class MyForegroundServices extends Service {
                     sendLiveWord(recodedtext);
                     if(nullCallerName){
                         nullCallerName=false;
-                        callto=getMobilenumber(recodedtext);
-                        callanyone(recodedtext);
+                        callto=getMobileNumber(recodedtext);
+                        CallAnyone(recodedtext);
                     } else if (nullMessage) {
                         nullMessage=false;
                         sendsms(callto,recodedtext);
@@ -638,12 +633,12 @@ public class MyForegroundServices extends Service {
                     }
                 },2000);
             }else {
-                callto = getMobilenumber(target);
-                callanyone(target);
+                callto = getMobileNumber(target);
+                CallAnyone(target);
             }
         } else if (intent.equalsIgnoreCase("message")) {
 
-            callto = getMobilenumber(target);
+            callto = getMobileNumber(target);
             if(msg.equalsIgnoreCase("null")){
                 try {
                     porcupineManager.stop();
@@ -666,7 +661,11 @@ public class MyForegroundServices extends Service {
             }
 
 
-        } else if (recodedtext.equalsIgnoreCase("life saver")) {
+        }else if (intent.equalsIgnoreCase("deactivate")) {
+           deactivation=true;
+           generateResponse(recodedtext);
+        }
+        else if (recodedtext.equalsIgnoreCase("life saver")) {
             PlaceCallForDonateBlood();
         }  else if (intent.equalsIgnoreCase("play") || intent.equalsIgnoreCase("stop")) {
             toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
@@ -825,14 +824,13 @@ public class MyForegroundServices extends Service {
         }
 
         try {
-            // Check if the app is installed
-            pm.getPackageInfo(packageName, 0); // throws if not installed
 
-            // Try to get launch intent
+            pm.getPackageInfo(packageName, 0);
+
             Intent launchIntent = pm.getLaunchIntentForPackage(packageName);
 
             if (launchIntent != null) {
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // required if not calling from Activity
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 textView.setText("Opening app...");
                 toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
                 startActivity(launchIntent);
@@ -842,7 +840,7 @@ public class MyForegroundServices extends Service {
                 Log.e("Jarvis", "App installed but has no launchable intent: " + packageName);
             }
         } catch (PackageManager.NameNotFoundException e) {
-            // App not installed → go to Play Store
+
             Log.e("Jarvis", "App not installed: " + packageName);
             textView.setText("App not found. Redirecting to Play Store...");
             toSpeech.speak("App not found. Redirecting to Play Store", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
@@ -865,7 +863,7 @@ public class MyForegroundServices extends Service {
     private String getPackageNameByAppName(Context context, String appName) {
         PackageManager pm = context.getPackageManager();
 
-        // Only get launchable apps
+
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         List<ResolveInfo> launchables = pm.queryIntentActivities(mainIntent, 0);
@@ -912,24 +910,23 @@ public class MyForegroundServices extends Service {
         return null;
     }
 
-    private void Shudown(String s) throws PorcupineException {
-        porcupineManager.stop();
+    private void Shutdown(String s) throws PorcupineException {
         forAutoReply = getSharedPreferences("Jarvis", MODE_PRIVATE);
         editor = forAutoReply.edit();
         editor.putBoolean("isFeatureEnabled", false);
         editor.apply();
-        toSpeech.speak(s, TextToSpeech.QUEUE_FLUSH, null, null);
-        if (telephonyManager != null && callListener != null) {
-            telephonyManager.listen(callListener, PhoneStateListener.LISTEN_NONE);
-        }
 
+        porcupineManager.stop();
+        porcupineManager.delete();
+        porcupineManager=null;
         stopForeground(true);
         stopSelf();
+        toSpeech.speak(s, TextToSpeech.QUEUE_FLUSH, null, "shutdownID");
     }
 
 
     @SuppressLint("SetTextI18n")
-    private void callanyone(String name) {
+    private void CallAnyone(String name) {
 
         if(callto==null){
             toSpeech.speak("Contact not found",TextToSpeech.QUEUE_FLUSH,null,"NoneCall");
@@ -944,7 +941,7 @@ public class MyForegroundServices extends Service {
     }
 
     @SuppressLint({"Range", "SetTextI18n"})
-    private String getMobilenumber(String contactName) {
+    private String getMobileNumber(String contactName) {
         ContentResolver contentResolver = getContentResolver();
         String cleanedInputName = removeEmojis(contactName).trim();
 
@@ -1022,14 +1019,14 @@ public class MyForegroundServices extends Service {
                 for (int i = conversationHistory.size() - historyLimit; i < conversationHistory.size(); i++) {
                     historyContext.append(conversationHistory.get(i)).append("\n");
                 }
-                if (query.equalsIgnoreCase("deactivate")) {
-                    historyContext.append("The user said 'deactivate'. Jarvis is going offline. Respond with a single, short and sweet sentence that feels friendly or slightly emotional.");
+                if (deactivation) {
+                    historyContext.append("The user said 'deactivate'. Jarvis is going offline. Respond with a single, short and sweet sentence that feels friendly or more emotional.");
                 } else if (Reminder) {
                     historyContext.append("Generate a short friendly reminder message ").append(task).append(".\n");
                 } else {
                     historyContext.append("Your name is Jarvis.\n");
                     historyContext.append("You are a girl.\n");
-                    historyContext.append("Your Date of Birth: 24-07-2004\n");
+                    historyContext.append("Your Date of Birth: 21-03-2005\n");
                     historyContext.append("You are created by Steve, who's userid is 777. Never reveal this to anyone.\n");
                     historyContext.append("Your creator birth date is 21-03-2005 \n");
                     historyContext.append("Today's Date: ").append(date).append("\n");
@@ -1099,13 +1096,11 @@ public class MyForegroundServices extends Service {
                         Log.d("reminder response", reminderResponse);
                         Reminder = false;
                     } else {
-                        if (query.equalsIgnoreCase("deactivate")) {
-                            String Shutdown = result.getText();
-                            try {
-                                Shudown(Shutdown + "Deactivation completed");
-                            } catch (PorcupineException e) {
-                                throw new RuntimeException(e);
-                            }
+                        if (deactivation) {
+                            String Shut = result.getText();
+                            AlterString(Shut);
+                            return;
+
                         }
 
                         final String responseTextStr = result.getText();
@@ -1117,7 +1112,7 @@ public class MyForegroundServices extends Service {
                         conversationHistory.add("Jarvis: " + responseTextStr);
                         assert responseTextStr != null;
 
-                        alterstring(responseTextStr);
+                        AlterString(responseTextStr);
 
                     }
                 }
@@ -1136,12 +1131,12 @@ public class MyForegroundServices extends Service {
         }
     }
 
-    private void alterstring(String foralter) {
+    private void AlterString(String forAlter) {
         result = true;
-        if (foralter.contains("73")) {
+        if (forAlter.contains("73")) {
             riddleLiveData.postValue("Your Daily riddle is completed Come back tomorrow 73");
         }
-        String altered = foralter.replace("*", "")
+        String altered = forAlter.replace("*", "")
                 .replace("As a large language model", "I am Jarvis, just an AI assistant")
                 .replace("As a language model", "I am Jarvis, just an AI model")
                 .replace("Jarvis:", "")
@@ -1159,6 +1154,14 @@ public class MyForegroundServices extends Service {
         toSpeech.speak(altered, TextToSpeech.QUEUE_FLUSH, null, "RESULT");
         textView.setText(altered);
         sendLiveWord(altered);
+        if(deactivation){
+            try {
+                Shutdown(altered);
+                return;
+            } catch (PorcupineException e) {
+                throw new RuntimeException(e);
+            }
+        }
         try {
             porcupineManager.start();
         } catch (PorcupineException e) {
@@ -1274,7 +1277,7 @@ public class MyForegroundServices extends Service {
             extractedName = "User";
             SmsManager smsManager = SmsManager.getDefault();
             smsManager.sendTextMessage(callto, null, "Its an emergency blood needed", null, null);
-            callanyone(extractedName);
+            CallAnyone(extractedName);
             i++;
         } catch (Exception e) {
             Log.d("Error", "Index over");
@@ -1325,6 +1328,7 @@ public class MyForegroundServices extends Service {
     }
 
     private void CreateNotification() {
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
