@@ -350,8 +350,6 @@ public class MyForegroundServices extends Service {
         }
         intentExtractor=new IntentExtractor(context);
 
-
-
         Log.d("SavedAccessKey", WakeWordAccessKey);
 
     }
@@ -707,22 +705,7 @@ public class MyForegroundServices extends Service {
         }else if (intent.equalsIgnoreCase("translate")) {
             translateText(recodedtext.replace("translate",""));
         }
-        else if (recodedtext.equalsIgnoreCase("enable auto reply") && UserId.equals("777")) {
-            forAutoReply = getSharedPreferences("Jarvis", MODE_PRIVATE);
-            editor = forAutoReply.edit();
-            editor.putBoolean("isFeatureEnabled", true);
-            editor.apply();
-            textView.setText("Auto reply is now enabled");
-            toSpeech.speak("Auto reply is now enabled", TextToSpeech.QUEUE_FLUSH, null, "Auto reply");
-        } else if (recodedtext.equalsIgnoreCase("disable auto reply") && UserId.equals("777")) {
-            forAutoReply = getSharedPreferences("Jarvis", MODE_PRIVATE);
-            editor = forAutoReply.edit();
-            editor.putBoolean("isFeatureEnabled", false);
-            editor.apply();
-            textView.setText("Auto reply is now disabled");
-            toSpeech.speak("Auto reply is now disabled", TextToSpeech.QUEUE_FLUSH, null, "Auto reply");
-
-        } else if (intent.equalsIgnoreCase("reminder")) {
+        else if (intent.equalsIgnoreCase("reminder")) {
             Reminder = true;
             generateResponse(recodedtext);
             toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
@@ -944,10 +927,6 @@ public class MyForegroundServices extends Service {
     }
 
     private void Shutdown(String s) throws PorcupineException {
-        forAutoReply = getSharedPreferences("Jarvis", MODE_PRIVATE);
-        editor = forAutoReply.edit();
-        editor.putBoolean("isFeatureEnabled", false);
-        editor.apply();
 
         porcupineManager.stop();
         porcupineManager.delete();
