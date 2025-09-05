@@ -30,18 +30,18 @@
     </androidx.appcompat.widget.Toolbar>
 
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:src="@drawable/logo2"
-        android:background="@drawable/fadesbg"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.113" />
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/ProfileAnimations"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        app:layout_constraintBottom_toTopOf="@+id/ID"
+        app:layout_constraintTop_toBottomOf="@+id/my_toolbar"
+        app:layout_constraintVertical_bias="1.0"
+        app:lottie_autoPlay="true"
+        app:lottie_enableMergePathsForKitKatAndAbove="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/user"
+        tools:layout_editor_absoluteX="0dp" />
 
     <Button
         android:id="@+id/button"
@@ -50,7 +50,7 @@
         android:layout_marginBottom="192dp"
         android:background="@drawable/btnshape"
         android:text="Login"
-        android:textColor="#00FFFF"
+        android:textColor="@color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
@@ -58,8 +58,8 @@
 
     <EditText
         android:id="@+id/ID"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="300dp"
+        android:layout_height="35dp"
         android:gravity="center"
         android:hint="Enter User ID"
         android:background="@drawable/edit_text"
@@ -75,8 +75,8 @@
 
     <EditText
         android:id="@+id/DOB"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="300dp"
+        android:layout_height="35dp"
         android:gravity="center"
         android:background="@drawable/edit_text"
         android:hint="Enter Your DOB"

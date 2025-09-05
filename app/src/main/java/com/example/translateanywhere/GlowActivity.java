@@ -148,12 +148,14 @@
             pulseAnimator.start();
         }
 
+        @SuppressLint("SetTextI18n")
         private void stopPulse() {
             if (pulseAnimator != null) {
                 jarvisSpeaking.cancelAnimation();
                 pulseAnimator.cancel();
                 jarvisSpeaking.setScaleX(1f);
                 jarvisSpeaking.setScaleY(1f);
+                liveText.setText("Hey Jarvis >");
             }
         }
 

@@ -211,7 +211,7 @@ public class NotificationReader extends NotificationListenerService {
                 .append("Respond in a casual, short, and witty style (max 2–4 lines).\n")
                 .append("Sprinkle a bit of teasing or humor at times on steve, but stay friendly.\n")
                 .append("Use emojis naturally (not too many, 1–3 per reply).\n")
-                .append("If the message sounds urgent/important → only say: 'I'll let Steve.'\n")
+                .append("If the message sounds urgent/important → only say: 'I am informed to steve, he will get back to you as soon as possible'\n")
                 .append("If the sender asks a doubt → give a clear, simple answer.\n")
                 .append("If the chat feels like it’s ending → wrap up with a chill goodbye or say you'll pass it to Steve.\n")
                 .append("Always avoid sounding formal or robotic.\n")
@@ -273,24 +273,45 @@ public class NotificationReader extends NotificationListenerService {
             Log.d("LoopBlocker", "Already sent this reply, skipping...");
             return;
         }
-        sentReplies.add(message);
+
 
         for (Notification.Action action: notification.actions){
+            if (sentReplies.contains(message)) {
+                Log.d("LoopBlocker", "Already sent this reply, skipping...");
+                return;
+            }
+
             RemoteInput[] remoteInputs = action.getRemoteInputs();
             if (remoteInputs == null || remoteInputs.length == 0) continue;
 
             androidx.core.app.RemoteInput[] compatInputs = new androidx.core.app.RemoteInput[remoteInputs.length];
 
+
             for(int i=0;i< remoteInputs.length;i++){
+                if (sentReplies.contains(message)) {
+                    Log.d("LoopBlocker", "Already sent this reply, skipping...");
+                    return;
+                }
+
                 compatInputs[i] = new androidx.core.app.RemoteInput.Builder(remoteInputs[i].getResultKey())
                         .setLabel(remoteInputs[i].getLabel())
                         .setChoices(remoteInputs[i].getChoices())
                         .setAllowFreeFormInput(remoteInputs[i].getAllowFreeFormInput())
                         .addExtras(remoteInputs[i].getExtras())
                         .build();
+
+                if (sentReplies.contains(message)) {
+                    Log.d("LoopBlocker", "Already sent this reply, skipping...");
+                    return;
+                }
             }
             Bundle replyBundle = new Bundle();
             for (androidx.core.app.RemoteInput input : compatInputs) {
+                if (sentReplies.contains(message)) {
+                    Log.d("LoopBlocker", "Already sent this reply, skipping...");
+                    return;
+                }
+
                 replyBundle.putCharSequence(input.getResultKey(), Jarvisresponse);
             }
             if (previousMessage.equals(message)){
@@ -301,6 +322,12 @@ public class NotificationReader extends NotificationListenerService {
             previousMessage=message;
             message=null;
             Log.d("Previous Message",previousMessage);
+            sentReplies.add(message);
+
+            if(sentReplies.size()>=10){
+                //noinspection SuspiciousMethodCalls
+                sentReplies.remove(1);
+            }
 
             try{
                 action.actionIntent.send(this, 0, replyIntent);
@@ -309,6 +336,7 @@ public class NotificationReader extends NotificationListenerService {
                     notificationManager.cancel(sbn.getPackageName(), sbn.getId());
                     Log.d("NotificationRemoved", "Notification removed: " + sbn.getKey());
                     cancelNotification(sbn.getKey());
+
                     }
                 Log.d("NotificationRemoved", "Cancelled with key: " + sbn.getKey());
                 Log.d("JarvisAutoReply", "Sent: " + Jarvisresponse);

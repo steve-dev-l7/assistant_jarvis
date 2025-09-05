@@ -59,7 +59,9 @@ public class IntentExtractor {
                 "- REMINDER: {\"intent\": \"REMINDER\", \"task\": \"<what to remind>\", \"time\": \"<time or date>\"}\n\n" +
                 "- TRANSLATE: {\"intent\": \"TRANSLATE\"}\n"+
                 "- OPEN: {\"intent\": \"OPEN\", \"target\": \"<app name>\"}\n" +
+                "- SAVE: {\"intent\": \"SAVE\", \"task\": \"<number>\" \"target\": \"<name>\"}\n" +
                 "- DEACTIVATE: {\"intent\": \"DEACTIVATE\"}\\n\""+
+                "- SHARE CONTACT: {\"intent\": \"SHARE CONTACT\", \"task\": \"<contact name>\" \"target\": \"<name>\"}\n" +
 
 
                 "Only include the relevant fields for each intent.\n" +
@@ -73,17 +75,18 @@ public class IntentExtractor {
                 "User: \"Send a message to Alex  good morning\" → {\"intent\": \"MESSAGE\", \"target\": \"Alex\", \"content\": \"good morning\"}\n" +
                 "User: \"Send a message to Alex home 'or' Alex 2\" → {\"intent\": \"MESSAGE\", \"target\": \"Alex home 'or' Alex 2\", \"content\": \"null\"}\n" +
                 "User: \"Where are you send this to Sarah\" → {\"intent\": \"MESSAGE\", \"target\": \"Sarah\", \"content\": \"Where are you\"}\n" +
-                "User: \"Send this to John\" → {\"intent\": \"MESSAGE\", \"target\": \"John\", \"content\": \"this\"}\n" +
                 "User: \"Send hi to Steve\" → {\"intent\": \"MESSAGE\", \"target\": \"Steve\", \"content\": \"hi\"}\n" +
                 "User: \"Play Tamil songs\" → {\"intent\": \"PLAY MUSIC\", \"target\": \"Tamil hits\"}\n" +
+                "User: \"Play music\" → {\"intent\": \"PLAY MUSIC\", \"target\": \"null\"}\n" +
                 "User: \"Next song\" → {\"intent\": \"NEXT MUSIC\"}\n" +
                 "User: \"Stop music\" → {\"intent\": \"STOP MUSIC\"}\n" +
-                "User: \"Remind me to charge phone at 9 PM\" → {\"intent\": \"REMINDER\", \"task\": \"charge phone\", \"time\": \"9 PM\"}\n\n" +
                 "User: \"Remind me in 5 minutes\" → {\"intent\": \"REMINDER\", \"task\": \"null\", \"time\": \"5 minutes\"}\n\n" +
                 "User: \"Can you open camera\" → {\"intent\": \"OPEN\", \"target\": \"CAMERA\"}\n" +
+                "User: \"Save number 9876543210 as Steve\" → {\"intent\": \"SAVE\", \"target\": \"Steve\", \"task\": \"9876543210\"}\n" +
                 "User: \"Jarvis, you can sleep now.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
                 "User: \"Switch off, Jarvis.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
                 "User: \"Deactivate yourself, Jarvis.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
+                "User: \"Share steve contact to lokesh\" → {\"intent\": \"SHARE CONTACT\", \"target\": \"Lokesh\",  \"task\": \"steve\"}\n" +
 
 
                 "Now extract intent from:\n" +

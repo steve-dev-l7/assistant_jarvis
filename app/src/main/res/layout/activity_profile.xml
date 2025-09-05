@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/fadesbg"
     tools:context=".Profile"
-    tools:ignore="Hardcodedtext">
+    tools:ignore="HardcodedText">
 
     <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
@@ -46,125 +46,156 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp"
-            android:gravity="center_horizontal">
+            android:gravity="center_horizontal"
+            android:padding="24dp">
 
-            <ImageView
-                android:id="@+id/imageView"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:background="@drawable/fadesbg"
-                android:src="@drawable/logo2"
-                android:layout_marginBottom="24dp"/>
+            <!-- Lottie animation -->
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/ProfileAnimation"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true"
+                app:lottie_rawRes="@raw/user" />
 
-
-            <EditText android:id="@+id/name"
-                android:autofillHints="Enter full name"
+            <!-- Form Inputs -->
+            <EditText
+                android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:maxWidth="300dp"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
                 android:hint="Type your full name"
                 android:inputType="text"
-                android:textColorHint="#00FFFF"
                 android:textColor="#00FFFF"
-                style="@style/FormInput"
-                />
-
-
-            <EditText android:id="@+id/age"
-                android:autofillHints=""
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                style="@style/FormInput"
                 android:textColorHint="#00FFFF"
-                android:textColor="#00FFFF"
-                android:hint="Type your age" android:inputType="number" />
+                android:padding="10dp"
+                style="@style/FormInput"/>
 
-
-            <EditText android:id="@+id/id"
-                android:autofillHints=""
+            <EditText
+                android:id="@+id/age"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:maxWidth="300dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:hint="Type your age"
+                android:inputType="number"
+                android:textColor="#00FFFF"
                 android:textColorHint="#00FFFF"
-                android:textColor="#00FFFF"
-                style="@style/FormInput"
+                android:padding="10dp"
+                style="@style/FormInput"/>
+
+            <EditText
+                android:id="@+id/id"
                 android:layout_width="match_parent"
-                android:hint="Set User Id" android:inputType="number" />
-
-
-            <EditText android:id="@+id/dob"
-                android:autofillHints=""
                 android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                android:hint="e.g 21-03-2005"
-                style="@style/FormInput"
+                android:maxWidth="300dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:hint="Set User Id"
+                android:inputType="number"
+                android:textColor="#00FFFF"
                 android:textColorHint="#00FFFF"
-                android:textColor="#00FFFF"
-                android:inputType="text" />
+                android:padding="10dp"
+                style="@style/FormInput"/>
 
-
-            <EditText android:id="@+id/mobile"
-                android:autofillHints=""
-                android:layout_height="wrap_content"
+            <EditText
+                android:id="@+id/dob"
                 android:layout_width="match_parent"
-                style="@style/FormInput"
+                android:layout_height="wrap_content"
+                android:maxWidth="300dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:hint="DOB : '00-00-0000'"
+                android:inputType="text"
+                android:textColor="#00FFFF"
                 android:textColorHint="#00FFFF"
-                android:textColor="#00FFFF"
-                android:hint="Mobile number" android:inputType="phone" />
+                android:padding="10dp"
+                style="@style/FormInput"/>
 
-
-            <EditText android:id="@+id/location"
-                android:autofillHints=""
-                android:layout_height="wrap_content"
+            <EditText
+                android:id="@+id/mobile"
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxWidth="300dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:hint="Mobile number"
+                android:inputType="phone"
+                android:textColor="#00FFFF"
+                android:textColorHint="#00FFFF"
+                android:padding="10dp"
+                style="@style/FormInput"/>
+
+            <EditText
+                android:id="@+id/location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxWidth="300dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
                 android:hint="Your city name"
-                style="@style/FormInput"
-                android:textColorHint="#00FFFF"
+                android:inputType="text"
                 android:textColor="#00FFFF"
-                android:inputType="text" />
+                android:textColorHint="#00FFFF"
+                android:padding="10dp"
+                style="@style/FormInput"/>
 
-
-            <EditText android:id="@+id/BloodGroup"
-                android:autofillHints=""
-                android:layout_height="wrap_content"
+            <EditText
+                android:id="@+id/BloodGroup"
                 android:layout_width="match_parent"
-                style="@style/FormInput"
-                android:textColorHint="#00FFFF"
-                android:textColor="#00FFFF"
+                android:layout_height="wrap_content"
+                android:maxWidth="300dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
                 android:hint="Enter Blood group"
-                android:inputType="text" />
+                android:inputType="text"
+                android:textColor="#00FFFF"
+                android:textColorHint="#00FFFF"
+                android:padding="10dp"
+                style="@style/FormInput"/>
 
+            <!-- Checkbox -->
             <CheckBox
                 android:id="@+id/bloodDonate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="Agree to donate"
-                android:textColor="@color/black"
-                android:layout_marginTop="16dp" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+                android:textColor="@color/white"/>
 
-
+            <!-- Buttons -->
             <Button
                 android:id="@+id/save"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
                 android:background="@drawable/btnshape"
                 android:text="Save"
-                android:textColor="#00FFFF"
-                android:layout_marginTop="24dp"/>
+                android:textColor="@color/black"/>
 
             <Button
                 android:id="@+id/saveUser"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/btnshape"
                 android:text="Save"
-                android:visibility="gone"
-                android:layout_marginTop="16dp"/>
+                android:textColor="@color/white"
+                android:visibility="gone"/>
 
+            <!-- Login link -->
             <TextView
                 android:id="@+id/gologin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Already Have An Account? Log in"
-                android:textColor="#4E342E"
-                android:textSize="15sp" />
+                android:textColor="@color/white"
+                android:textSize="15sp"/>
+
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

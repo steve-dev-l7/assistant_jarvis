@@ -22,6 +22,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
@@ -40,6 +41,9 @@ public class Profile extends AppCompatActivity {
     FirebaseFirestore db;
     String Name, Age, Id, dateofbirth, mobile, Loc, Donate, Group;
     ProgressDialog progressDialog;
+
+    LottieAnimationView ProfileAnimation;
+
     Toolbar toolbar1;
     TextView GoToLogIn;
     CheckBox donate;
@@ -69,7 +73,9 @@ public class Profile extends AppCompatActivity {
         GOB = findViewById(R.id.BloodGroup);
         save = findViewById(R.id.saveUser);
 
-
+        ProfileAnimation = findViewById(R.id.ProfileAnimation);
+        ProfileAnimation.setVisibility(View.VISIBLE);
+        ProfileAnimation.playAnimation();
 
         toolbar1 = findViewById(R.id.my_toolbar);
         if (getSupportActionBar() != null) {

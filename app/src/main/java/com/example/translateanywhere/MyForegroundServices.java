@@ -55,6 +55,8 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 
@@ -85,6 +87,7 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 import java.util.Date;
@@ -137,6 +140,8 @@ public class MyForegroundServices extends Service {
 
     int glitch = 0;
     String gemeniapikey;
+
+    JSONObject jsonObject;
 
 
     GenerativeModel gm;
@@ -198,6 +203,19 @@ public class MyForegroundServices extends Service {
 
     String exTime="0";
 
+    String[] jarvisSounds = {
+            "Uhh Huh?",
+            "Yes?",
+            "Yep?",
+            "Yea?",
+            "Hmm?",
+            "Huh?",
+            "Yeah?",
+            "Uhh ha?",
+            "A-ha?",
+            "Ah?"
+    };
+
 
     @SuppressLint({"ServiceCast", "SecretInSource"})
     @Override
@@ -247,6 +265,10 @@ public class MyForegroundServices extends Service {
                         result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Log.e("TTS", "Language is not supported");
                 }
+
+                toSpeech.setSpeechRate(1.07f);
+
+
             } else {
                 Log.e("TTS", "Initialization failed");
             }
@@ -366,7 +388,9 @@ public class MyForegroundServices extends Service {
                         }else {
                             animation();
                         }
-                        toSpeech.speak("Yes?", TextToSpeech.QUEUE_FLUSH, null, null);
+                        String reply=jarvisSounds[random.nextInt(jarvisSounds.length)];
+
+                        toSpeech.speak(reply, TextToSpeech.QUEUE_FLUSH, null, null);
                         new Handler().postDelayed(new Runnable() {
                             @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
                             @Override
@@ -590,7 +614,7 @@ public class MyForegroundServices extends Service {
                     .replace("```", "")
                     .trim();
 
-            JSONObject jsonObject = new JSONObject(jsonString);
+            jsonObject = new JSONObject(jsonString);
 
             String intent = jsonObject.optString("intent", null);
             String target = jsonObject.optString("target", null);
@@ -614,6 +638,9 @@ public class MyForegroundServices extends Service {
     @SuppressLint("SetTextI18n")
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void processCommand(String intent, String target) {
+
+        Log.d("Process INTENT", "Intent: " + intent);
+
         if (intent.equalsIgnoreCase("call")) {
             if(target==null || target.equalsIgnoreCase("NULL")){
                 speechRecognizer.cancel();
@@ -667,14 +694,14 @@ public class MyForegroundServices extends Service {
         }
         else if (recodedtext.equalsIgnoreCase("life saver")) {
             PlaceCallForDonateBlood();
-        }  else if (intent.equalsIgnoreCase("play") || intent.equalsIgnoreCase("stop")) {
+        }  else if (intent.equalsIgnoreCase("play music") || intent.equalsIgnoreCase("stop music")) {
             toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
             controlMusic(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
-        } else if (intent.equalsIgnoreCase("next")) {
+        } else if (intent.equalsIgnoreCase("next music")) {
             toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
             controlMusic(KeyEvent.KEYCODE_MEDIA_NEXT);
 
-        } else if (intent.equalsIgnoreCase("previous")) {
+        } else if (intent.equalsIgnoreCase("previous music")) {
             toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
             controlMusic(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
         }else if (intent.equalsIgnoreCase("translate")) {
@@ -706,7 +733,13 @@ public class MyForegroundServices extends Service {
                 Log.d("Reminder Time", time);
                 startRemindChecker(time);
             }
-        } else if (intent.equalsIgnoreCase("open")) {
+        }else if(intent.equalsIgnoreCase("SAVE")){
+            saveNumber(target,task);
+        }else if (intent.equalsIgnoreCase("SHARE CONTACT")) {
+
+            ShareContact(task,target);
+
+        }else if (intent.equalsIgnoreCase("open")) {
             if(target.equalsIgnoreCase("YouTube")){
 
                 openApplication("com.google.android.youtube",true);
@@ -849,7 +882,7 @@ public class MyForegroundServices extends Service {
                 Intent marketIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
                 marketIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(marketIntent);
-            } catch (android.content.ActivityNotFoundException err) {
+            } catch (ActivityNotFoundException err) {
                 Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
                 webIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(webIntent);
@@ -1077,10 +1110,7 @@ public class MyForegroundServices extends Service {
                 content = new Content.Builder().addText(historyContext.toString()).build();
             }
 
-
-
         ListenableFuture<GenerateContentResponse> response = modelFutures.generateContent(content);
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             Futures.addCallback(response, new FutureCallback<>() {
                 @Override
@@ -1091,13 +1121,12 @@ public class MyForegroundServices extends Service {
                         riddleLiveData.postValue(result.getText());
 
                     } else if (Reminder) {
-                        reminderResponse = result.getText().replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "");;
-                        assert reminderResponse != null;
-                        Log.d("reminder response", reminderResponse);
+                        reminderResponse = result.getText().replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "");
                         Reminder = false;
                     } else {
                         if (deactivation) {
                             String Shut = result.getText();
+                            assert Shut != null;
                             AlterString(Shut);
                             return;
 
@@ -1230,7 +1259,7 @@ public class MyForegroundServices extends Service {
                     Location =  data[6];
                 }
                 Log.d("Firestore", "User Data: " + Name + ", " + Age + ", " + DOB + " " + GroupOfBlood + " " + Location);
-                Log.d("ReturnedData", java.util.Arrays.toString(data));
+                Log.d("ReturnedData", Arrays.toString(data));
             }
 
             @Override
@@ -1424,6 +1453,148 @@ public class MyForegroundServices extends Service {
         };
         handler.post(checkerRunnableHolder[0]);
     }
+
+
+    private void saveNumber(String name, String Number){
+
+        String phoneNumber=Number.replace(" ","");
+        Log.d("Length", phoneNumber);
+
+        if(phoneNumber.length()!=10 || !phoneNumber.matches("\\d+")){
+            toSpeech.speak(" Hmm...... i think the is invalid,.. fix that number dude.  ",TextToSpeech.QUEUE_FLUSH,null,"SAVINGCONTACT");
+            showPopup(phoneNumber,name);
+
+        }else {
+
+            ArrayList<ContentProviderOperation> contentProviderOperations = new ArrayList<>();
+
+            contentProviderOperations.add(ContentProviderOperation.newInsert(
+                            ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+                    .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+                    .build());
+
+
+            contentProviderOperations.add(ContentProviderOperation.newInsert(
+                            ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                    .withValue(ContactsContract.Data.MIMETYPE,
+                            ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+                    .build());
+
+
+            contentProviderOperations.add(ContentProviderOperation.newInsert(
+                            ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                    .withValue(ContactsContract.Data.MIMETYPE,
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
+                    .withValue(ContactsContract.CommonDataKinds.Phone.TYPE,
+                            ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+                    .build());
+
+
+            try {
+
+                getContentResolver().applyBatch(ContactsContract.AUTHORITY, contentProviderOperations);
+                toSpeech.speak("Done", TextToSpeech.QUEUE_FLUSH, null, "SAVINGCONTACT");
+
+            } catch (Exception e) {
+                Log.d("Saving Error", e.getMessage());
+                toSpeech.speak("Failed to save contact", TextToSpeech.QUEUE_FLUSH, null, "SAVINGCONTACT");
+            }
+        }
+
+
+    }
+
+
+
+    View popupView;
+    private void showPopup(String wrongNumber , String name) {
+
+        
+        if (windowManager != null && popupView != null) return; // already showing
+
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        popupView = inflater.inflate(R.layout.popup_edit_number, null);
+
+        EditText editPhone = popupView.findViewById(R.id.editPhone);
+        EditText editName =popupView.findViewById(R.id.editName);
+        Button btnSave = popupView.findViewById(R.id.btnSave);
+        Button btnCancel=popupView.findViewById(R.id.btnCancel);
+
+        editPhone.setText(wrongNumber);
+        editName.setText(name);
+
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
+                        WindowManager.LayoutParams.TYPE_PHONE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT);
+
+        params.gravity = Gravity.CENTER;
+
+        windowManager.addView(popupView, params);
+
+        // Enable typing in EditText
+        params.flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        params.dimAmount = 0.6f;
+        windowManager.updateViewLayout(popupView, params);
+
+        btnSave.setOnClickListener(v -> {
+            String corrected = editPhone.getText().toString().trim();
+            String correctedName=editName.getText().toString().trim();
+
+            saveNumber(correctedName, corrected);
+            removePopup();
+
+        });
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                removePopup();
+            }
+        });
+    }
+
+    private void removePopup() {
+        if (windowManager != null && popupView != null) {
+            windowManager.removeView(popupView);
+            popupView = null;
+        }
+    }
+
+    private void ShareContact(String contactName, String targetName){
+
+        String contactNumber;
+
+        Log.d("Share Contact",contactName+" "+targetName);
+
+        if(contactName == null || targetName==null){
+            toSpeech.speak("I didn't get that , can you come again..?",TextToSpeech.QUEUE_FLUSH,null,"SHARE");
+            return;
+        }
+
+        if(contactName.contains("my contact number")){
+             contactNumber="Here "+Name+"'s Contact Number "+MobileNo;
+        }else{
+             contactNumber="Here "+contactName+"'s Contact Number "+getMobileNumber(contactName);
+        }
+
+        String targetNumber=getMobileNumber(targetName);
+        sendsms(targetNumber,contactNumber);
+
+
+
+    }
+
 
     private void animation() {
             if(overlayView==null){

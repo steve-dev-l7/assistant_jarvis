@@ -4,14 +4,11 @@ import static android.content.Context.MODE_PRIVATE;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.media.AudioManager;
-import android.os.Handler;
 import android.telephony.PhoneStateListener;
 import android.telephony.SmsManager;
-import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.Switch;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +18,7 @@ public class CallListener extends PhoneStateListener {
     private final Context context;
     private String lastIncomingNumber = null;
     private final Map<String, Integer> callCountMap = new HashMap<>();
+
 
 
     String Name;
@@ -37,8 +35,8 @@ public class CallListener extends PhoneStateListener {
     @Override
     public void onCallStateChanged(int state, String phoneNumber) {
         super.onCallStateChanged(state, phoneNumber);
-        SharedPreferences sharedPreferences= context.getSharedPreferences("UserData",MODE_PRIVATE);
-        Name= sharedPreferences.getString("UserName", "This person");
+        MyForegroundServices myForegroundServices=new MyForegroundServices();
+        Name= myForegroundServices.Name;
 
         msg="Hello, this is Jarvis.  "+Name+"  is currently unavailable. Your repeated call has been noted, and he’ll / she'll get back to you as soon as possible.";
 

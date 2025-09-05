@@ -85,7 +85,7 @@
 
     <ScrollView
         android:id="@+id/scrollView3"
-        android:layout_width="350dp"
+        android:layout_width="320dp"
         android:layout_height="230dp"
         android:layout_marginTop="44dp"
         android:background="@drawable/coustum_scroll"
@@ -97,7 +97,7 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/Task"
-            android:layout_width="350dp"
+            android:layout_width="320dp"
             android:layout_height="220dp"
 
             android:padding="16dp">
@@ -110,7 +110,7 @@
                 android:layout_marginStart="24dp"
                 android:fontFamily="serif-monospace"
                 android:text="1."
-                android:textColor="#4E342E"
+                android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -120,13 +120,13 @@
 
             <TextView
                 android:id="@+id/txtRiddle1"
-                android:layout_width="270dp"
+                android:layout_width="220dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:fontFamily="serif-monospace"
                 android:gravity="center"
-                android:text="Tap me to get riddle"
-                android:textColor="#4E342E"
+                android:text="Tap me to get riddle."
+                android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -143,7 +143,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/btnshape"
         android:text="Wake Up Jarvis"
-        android:textColor="#00FFFF"
+        android:textColor="@color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

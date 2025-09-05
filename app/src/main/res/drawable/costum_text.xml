@@ -1,18 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- res/drawable/diamond_shape.xml -->
-<!-- res/drawable/rounded_rectangle_shape.xml -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape>
-            <solid android:color="#202124" />
-            <corners android:radius="16dp" />
-        </shape>
-    </item>
-    <item android:left="2dp" android:top="2dp">
-        <shape>
-            <solid android:color="#1AD1D1" />
-            <corners android:radius="16dp" />
-        </shape>
-    </item>
-</layer-list>
 
+    <!-- Inner background (dark core, Jarvis style) -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#101215" /> <!-- Futuristic dark base -->
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+
+    <!-- Neon Gradient Stroke (Jarvis glow effect) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#00F5FF"
+                android:centerColor="#14FFE9"
+                android:endColor="#00BFFF"
+                android:type="linear" />
+            <stroke
+                android:width="3dp"
+                android:color="@android:color/transparent" /> <!-- Transparent placeholder -->
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+
+</layer-list>

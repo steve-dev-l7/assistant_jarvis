@@ -18,6 +18,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -31,6 +32,8 @@ public class Login extends AppCompatActivity {
     String userId, DofB;
     Toolbar toolbar1;
     ProgressDialog progressDialog;
+
+    LottieAnimationView ProfileAnimation;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -55,6 +58,9 @@ public class Login extends AppCompatActivity {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
 
+        ProfileAnimation = findViewById(R.id.ProfileAnimations);
+        ProfileAnimation.setVisibility(View.VISIBLE);
+        ProfileAnimation.playAnimation();
 
         Login.setOnClickListener(view -> {
             if (!isValidInput(ID)) {

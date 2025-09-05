@@ -109,7 +109,8 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.WRITE_CALL_LOG,
             Manifest.permission.POST_NOTIFICATIONS,
             Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.MODIFY_AUDIO_SETTINGS
+            Manifest.permission.MODIFY_AUDIO_SETTINGS,
+            Manifest.permission.WRITE_CONTACTS
     };
 
 
@@ -184,10 +185,13 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
+
+
         });
         
 

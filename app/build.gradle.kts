@@ -56,6 +56,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+
     implementation(libs.play.services.mlkit.language.id)
     implementation(libs.translate)
     implementation(libs.firebase.database)
@@ -74,4 +76,6 @@ dependencies {
     implementation (libs.play.services.nearby)
     implementation (libs.lottie.v640)
     implementation (libs.localbroadcastmanager)
+
+
 }
