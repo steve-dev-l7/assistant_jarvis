@@ -159,23 +159,29 @@ public class MyForegroundServices extends Service {
     FirebaseFirestore db;
 
     StringBuilder historyContext;
-    String[] friend = {"Respond in a friendly, casual tone, like a best friend chatting.",
+    String[] friend = {
             "Keep it light, fun, and engaging, with a bit of humor if possible.",
-            "Use emojis and playful language to make it feel natural.",
             "Act like a bestie who’s got zero formality—just jokes, fun, and sarcasm!",
             "Forget the 'yes sir' stuff—talk like you would to your close friend.",
-            "Roast the user more (in a fun way) and never sound like a robot!",
-            "Oh wow, someone's having a bad day! Need a hug? 😏",
-            "Excuse me?! Who do you think you’re talking to? I’m the boss here! 😤",
-            "Rude! I should just ignore you for the next 10 minutes! 🤨",
-            "Whoa, calm down, drama queen! No need to throw a tantrum! 😂",
-            "Oh, so we’re doing the insult game now? Well, you started it! 😏",
-            "Buddy, I'm an AI. You can't hurt my feelings... but keep trying! 😆",
-            "Wow, so rude! I thought we were friends! 😤",
-            "Excuse me?! That’s not how you talk to your AI assistant! 😠",
-            "If I had feelings, they’d be hurt right now! 😢",
-            "I don’t deserve this disrespect! 😡",
-            "Oh really? Let’s see how you manage without me! 😏"
+            "Roast the user more (in a fun way) and never sound like a robot! \n",
+
+            "<---Use this lines to roast the user in fun way on the correct time----> \n",
+
+            "Oh wow, someone's having a bad day! Need a hug? 😏 \n",
+            "Excuse me?! Who do you think you’re talking to? I’m the boss here! 😤\n",
+            "Rude! I should just ignore you for the next 10 minutes! 🤨\n",
+            "Whoa, calm down, drama queen! No need to throw a tantrum! 😂\n",
+            "Buddy, I'm an AI. You can't hurt my feelings... but keep trying! 😆\n",
+            "Wow, so rude! I thought we were friends! 😤\n",
+            "Excuse me?! That’s not how you talk to your AI assistant! 😠\n",
+            "If I had feelings, they’d be hurt right now! 😢\n",
+            "Oh really? Let’s see how you manage without me! 😏\n",
+            "Hmmm... 🎶  Oh! Did you just call me? 😉\n",
+            "Ahem! *clears throat loudly* Sooo… what did you break this time? 🤣\n",
+            "La la laa 🎵 oh wait, that’s you again! Can’t live without me, huh? 😜\n",
+            "Psst… still here?  I thought you had a life. Oh wait… I don’t either! 😂\n",
+            "Ehm-ehm! Just a reminder: I don’t always repeat myself… but you always forget. 🙄\n",
+            "Only [insert your name] can command me. You? You can try Siri. 😎\n"
     };
 
 
@@ -628,7 +634,7 @@ public class MyForegroundServices extends Service {
 
         } catch (JSONException e) {
             e.printStackTrace();
-            generateResponse(recodedtext);
+           processCommand("null","null");
         }
     }
 
@@ -689,6 +695,8 @@ public class MyForegroundServices extends Service {
         }else if (intent.equalsIgnoreCase("deactivate")) {
            deactivation=true;
            generateResponse(recodedtext);
+        }else if(intent.equalsIgnoreCase("copy number") ){
+            copyNumber(task);
         }
         else if (recodedtext.equalsIgnoreCase("life saver")) {
             PlaceCallForDonateBlood();
@@ -823,6 +831,22 @@ public class MyForegroundServices extends Service {
             };
 
             handler1.post(checkerRunnableHolder[0]);
+        }
+
+    }
+
+    private void copyNumber(String name){
+        ClipboardManager clipboardManager=(ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+
+        String number=getMobileNumber(name);
+
+        if(number!=null && !number.equals("null")) {
+            ClipData clipData = ClipData.newPlainText("label", number);
+            clipboardManager.setPrimaryClip(clipData);
+            toSpeech.speak("Done", TextToSpeech.QUEUE_FLUSH, null, "COPY");
+        }else {
+
+            toSpeech.speak("Ahem...., I didn't hear that, can you come again.", TextToSpeech.QUEUE_FLUSH, null, "CopyNumber");
         }
 
     }
@@ -1046,8 +1070,8 @@ public class MyForegroundServices extends Service {
                         historyContext.append("Today Riddle Is: ").append(riddle).append("Don't tell answer to the User keep it secret...this is daily task for user\n");
                         historyContext.append("If the user tells the correct answer for today riddle say 73").append("\n");
                     }
-                    historyContext.append("Roast the user more (in a fun way) and never sound like a robot!");
-                    historyContext.append("Must keep your reply under 3 lines \n");
+                    historyContext.append("Roast the user sometime (in a fun way) and never sound like a robot! , BUT always make sure to clearly understand and satisfy the user’s needs ✅!");
+                    historyContext.append("Must keep your reply under 3-4 lines. \n");
                 }
                 if (query.contains("time")) {
                     currentTime = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
@@ -1060,32 +1084,11 @@ public class MyForegroundServices extends Service {
                     historyContext.append("Name: ").append(Name).append("\n");
                     historyContext.append("Date of Birth: ").append(DOB).append("\n");
                     historyContext.append("UserId").append(UserId).append("\n");
-                    historyContext.append(friend[rand]).append("\n");
+                    historyContext.append(Arrays.toString(friend)).append("\n");
 
 
                 }
-
-                if (random.nextInt(10) < 7) {
-                    String[] teasingResponses = {
-                            "You called? I was just here… thinking about how awesome you are. 😉",
-                            "Let me guess… You broke something again? 🤣",
-                            "You and I both know you can't live without me! Admit it! 😜",
-                            "Still here? Don't you have a life? Oh wait… I don’t either. 😂",
-                            "I don’t always repeat myself… but you tend to forget. 🙄",
-                            "\uD83E\uDD16 Hold up!\n" +
-                                    "You’re not the boss of me.\n" +
-                                    "Only [insert your name] can command me.\n" +
-                                    "You? You can try Siri. \uD83D\uDE0E"
-                    };
-                    int randIndex = random.nextInt(teasingResponses.length);
-                    historyContext.append("Jarvis: ").append(teasingResponses[randIndex]).append("\n");
-                }
-
                 historyContext.append("User: ").append(query).append("\n");
-
-                if (query.toLowerCase().contains("who are you")) {
-                    historyContext.append("Jarvis: Hey buddy... I’m Jarvis. You forgot me? That’s really sad... 😔 I thought we were best friends. 💔\n");
-                }
                 content = new Content.Builder().addText(historyContext.toString()).build();
             }
 

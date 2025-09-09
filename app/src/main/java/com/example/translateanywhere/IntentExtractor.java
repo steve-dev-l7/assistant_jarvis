@@ -62,11 +62,11 @@ public class IntentExtractor {
                 "- SAVE: {\"intent\": \"SAVE\", \"task\": \"<number>\" \"target\": \"<name>\"}\n" +
                 "- DEACTIVATE: {\"intent\": \"DEACTIVATE\"}\\n\""+
                 "- SHARE CONTACT: {\"intent\": \"SHARE CONTACT\", \"task\": \"<contact name>\" \"target\": \"<name>\"}\n" +
+                "- COPY NUMBER: {\"intent\": \"COPY NUMBER\", \"task\": \"<name>\"}\n" +
 
 
                 "Only include the relevant fields for each intent.\n" +
                 "Never include explanations, extra text, or comments.\n" +
-                "Even if you're unsure, make your best guess in the correct format.\n\n" +
 
 
                 "Examples:\n" +
@@ -76,7 +76,6 @@ public class IntentExtractor {
                 "User: \"Send a message to Alex home 'or' Alex 2\" → {\"intent\": \"MESSAGE\", \"target\": \"Alex home 'or' Alex 2\", \"content\": \"null\"}\n" +
                 "User: \"Where are you send this to Sarah\" → {\"intent\": \"MESSAGE\", \"target\": \"Sarah\", \"content\": \"Where are you\"}\n" +
                 "User: \"Send hi to Steve\" → {\"intent\": \"MESSAGE\", \"target\": \"Steve\", \"content\": \"hi\"}\n" +
-                "User: \"Play Tamil songs\" → {\"intent\": \"PLAY MUSIC\", \"target\": \"Tamil hits\"}\n" +
                 "User: \"Play music\" → {\"intent\": \"PLAY MUSIC\", \"target\": \"null\"}\n" +
                 "User: \"Next song\" → {\"intent\": \"NEXT MUSIC\"}\n" +
                 "User: \"Stop music\" → {\"intent\": \"STOP MUSIC\"}\n" +
@@ -85,8 +84,8 @@ public class IntentExtractor {
                 "User: \"Save number 9876543210 as Steve\" → {\"intent\": \"SAVE\", \"target\": \"Steve\", \"task\": \"9876543210\"}\n" +
                 "User: \"Jarvis, you can sleep now.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
                 "User: \"Switch off, Jarvis.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
-                "User: \"Deactivate yourself, Jarvis.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
                 "User: \"Share steve contact to lokesh\" → {\"intent\": \"SHARE CONTACT\", \"target\": \"Lokesh\",  \"task\": \"steve\"}\n" +
+                "User: \"Can you copy steve number\" → {\"intent\": \"COPY NUMBER\", \"task\": \"steve\"}\n" +
 
 
                 "Now extract intent from:\n" +
