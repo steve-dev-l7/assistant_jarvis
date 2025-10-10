@@ -54,5 +54,11 @@ public class FetchUser {
                     Log.e("Firestore", "Error fetching user data", e);
                     callBack.onError(e);
                 });
+
+
+    }
+    public String getName() {
+        return userData[0];
+
     }
 }

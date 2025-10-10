@@ -65,11 +65,12 @@
                 android:layout_height="wrap_content"
                 android:maxWidth="300dp"
                 android:layout_marginTop="16dp"
+                android:background="@drawable/coustum_scroll"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:gravity="center"
                 android:hint="Type your full name"
                 android:inputType="text"
-                android:textColor="#00FFFF"
-                android:textColorHint="#00FFFF"
                 android:padding="10dp"
                 style="@style/FormInput"/>
 
@@ -82,8 +83,9 @@
                 android:gravity="center"
                 android:hint="Type your age"
                 android:inputType="number"
-                android:textColor="#00FFFF"
-                android:textColorHint="#00FFFF"
+                android:background="@drawable/coustum_scroll"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:padding="10dp"
                 style="@style/FormInput"/>
 
@@ -96,8 +98,9 @@
                 android:gravity="center"
                 android:hint="Set User Id"
                 android:inputType="number"
-                android:textColor="#00FFFF"
-                android:textColorHint="#00FFFF"
+                android:background="@drawable/coustum_scroll"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:padding="10dp"
                 style="@style/FormInput"/>
 
@@ -110,8 +113,9 @@
                 android:gravity="center"
                 android:hint="DOB : '00-00-0000'"
                 android:inputType="text"
-                android:textColor="#00FFFF"
-                android:textColorHint="#00FFFF"
+                android:background="@drawable/coustum_scroll"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:padding="10dp"
                 style="@style/FormInput"/>
 
@@ -124,8 +128,9 @@
                 android:gravity="center"
                 android:hint="Mobile number"
                 android:inputType="phone"
-                android:textColor="#00FFFF"
-                android:textColorHint="#00FFFF"
+                android:background="@drawable/coustum_scroll"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:padding="10dp"
                 style="@style/FormInput"/>
 
@@ -138,8 +143,9 @@
                 android:gravity="center"
                 android:hint="Your city name"
                 android:inputType="text"
-                android:textColor="#00FFFF"
-                android:textColorHint="#00FFFF"
+                android:background="@drawable/coustum_scroll"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:padding="10dp"
                 style="@style/FormInput"/>
 
@@ -152,8 +158,9 @@
                 android:gravity="center"
                 android:hint="Enter Blood group"
                 android:inputType="text"
-                android:textColor="#00FFFF"
-                android:textColorHint="#00FFFF"
+                android:background="@drawable/coustum_scroll"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:padding="10dp"
                 style="@style/FormInput"/>
 

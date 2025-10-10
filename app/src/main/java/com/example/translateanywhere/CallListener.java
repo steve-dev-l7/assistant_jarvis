@@ -1,6 +1,6 @@
 package com.example.translateanywhere;
 
-import static android.content.Context.MODE_PRIVATE;
+
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CallListener extends PhoneStateListener {
-    private final Context context;
+    final Context context;
     private String lastIncomingNumber = null;
     private final Map<String, Integer> callCountMap = new HashMap<>();
 
@@ -35,13 +35,29 @@ public class CallListener extends PhoneStateListener {
     @Override
     public void onCallStateChanged(int state, String phoneNumber) {
         super.onCallStateChanged(state, phoneNumber);
-        MyForegroundServices myForegroundServices=new MyForegroundServices();
-        Name= myForegroundServices.Name;
 
-        msg="Hello, this is Jarvis.  "+Name+"  is currently unavailable. Your repeated call has been noted, and he’ll / she'll get back to you as soon as possible.";
+
+
 
         switch (state) {
             case TelephonyManager.CALL_STATE_RINGING:
+                SharedPreferences sharedPreferences = context.getSharedPreferences("UserData", Context.MODE_PRIVATE);
+                FetchUser fetchUser=new FetchUser(sharedPreferences.getString("UserId", null), new FetchUser.UserDataCallBack() {
+                    @Override
+                    public void onUserDataFetched(String[] data) {
+                        Name=data[0];
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Name="null";
+                    }
+                });
+
+
+                msg="Hello, this is Jarvis.  "+Name+"  is currently unavailable. Your repeated call has been noted, and he’ll / she'll get back to you as soon as possible.";
+
+
             lastIncomingNumber = phoneNumber;
 
             int count = callCountMap.getOrDefault(phoneNumber, 0) + 1;

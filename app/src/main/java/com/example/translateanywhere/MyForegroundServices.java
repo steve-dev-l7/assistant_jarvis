@@ -66,7 +66,11 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.google.ai.client.generativeai.GenerativeModel;
@@ -192,8 +196,6 @@ public class MyForegroundServices extends Service {
     WindowManager windowManager;
     Boolean nullCallerName=false;
 
-    SharedPreferences.Editor editor;
-    SharedPreferences forAutoReply;
     DatabaseReference databaseReference;
     ArrayList<String> mobileNumbersList = new ArrayList<>();
     int i = 0;
@@ -204,6 +206,7 @@ public class MyForegroundServices extends Service {
     CallListener callListener;
 
     Context context;
+    OneTimeWorkRequest workRequest;
 
     IntentExtractor intentExtractor;
 
@@ -221,6 +224,8 @@ public class MyForegroundServices extends Service {
             "A-ha?",
             "Ah?"
     };
+
+    private Observer<WorkInfo> workObserver;
 
 
     @SuppressLint({"ServiceCast", "SecretInSource"})
@@ -367,7 +372,7 @@ public class MyForegroundServices extends Service {
         CreateNotification();
         PorcupineManager.Builder builder = new PorcupineManager.Builder();
         builder.setAccessKey(WakeWordAccessKey);
-        builder.setKeywordPath("jarvis.ppn");
+        builder.setKeywordPath("jarvis.ppn,Friday.ppn");
         builder.setSensitivity(0.70f);
         Log.d("Picovoice ", "created");
         if (isBluetoothHeadsetConnected()) {
@@ -405,7 +410,7 @@ public class MyForegroundServices extends Service {
 
 
                     } catch (PorcupineException e) {
-                        Log.d("Porcupine", e.getMessage());
+                        Log.d("Porcupine", Objects.requireNonNull(e.getMessage()));
                     }
                 }
             });
@@ -730,7 +735,11 @@ public class MyForegroundServices extends Service {
 
             ShareContact(task,target);
 
-        }else if (intent.equalsIgnoreCase("open")) {
+        } else if (intent.equalsIgnoreCase("INSTALL")) {
+            toSpeech.speak("Got it, I’ll open the Play Store right away. Just hit Install when you’re ready.", TextToSpeech.QUEUE_FLUSH, null, "INSTALL");
+            openPlayStore(task);
+
+        } else if (intent.equalsIgnoreCase("open")) {
             if(target.equalsIgnoreCase("YouTube")){
 
                 openApplication("com.google.android.youtube",true);
@@ -885,17 +894,26 @@ public class MyForegroundServices extends Service {
             textView.setText("App not found. Redirecting to Play Store...");
             toSpeech.speak("App not found. Redirecting to Play Store", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
 
-            try {
-                Intent marketIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
-                marketIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(marketIntent);
-            } catch (ActivityNotFoundException err) {
-                Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
-                webIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(webIntent);
-            }
+            openPlayStore(appName);
         }
     }
+
+    private void openPlayStore(String appName){
+        try {
+            Intent downloadIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=" + appName + "&c=apps"));
+            downloadIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            downloadIntent.setPackage("com.android.vending");
+            startActivity(downloadIntent);
+        }catch (ActivityNotFoundException e){
+            Intent intent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/search?q=" + appName + "&c=apps"));
+            startActivity(intent);
+        }
+
+
+    }
+
+
 
 
 
@@ -955,6 +973,12 @@ public class MyForegroundServices extends Service {
         porcupineManager.stop();
         porcupineManager.delete();
         porcupineManager=null;
+        if (workObserver != null) {
+            WorkManager.getInstance(this)
+                    .getWorkInfoByIdLiveData(workRequest.getId())
+                    .removeObserver(workObserver);
+            workObserver = null;
+        }
         stopForeground(true);
         stopSelf();
         toSpeech.speak(s, TextToSpeech.QUEUE_FLUSH, null, "shutdownID");
@@ -1154,7 +1178,6 @@ public class MyForegroundServices extends Service {
                 .replace("User: ", "")
                 .replace("TikTok", "Instagram")
                 .replace("73", "")
-                .replace(")","")
                 .replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "");
 
         conversationHistory.add("Jarvis: " + altered);
@@ -1636,7 +1659,7 @@ public class MyForegroundServices extends Service {
                 PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.2f, 1f),
                 PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.2f, 1f)
         );
-        if(pulseAnimator!=null) {
+        if(pulseAnimator==null) {
             pulseAnimator.setDuration(600);
             pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
             pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);

@@ -20,7 +20,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
 import java.util.List;
 
-public class IntentExtractor {
+import kotlinx.coroutines.scheduling.CoroutineScheduler;
+
+public class IntentExtractor  {
 
     GenerativeModelFutures modelFutures;
 
@@ -63,6 +65,8 @@ public class IntentExtractor {
                 "- DEACTIVATE: {\"intent\": \"DEACTIVATE\"}\\n\""+
                 "- SHARE CONTACT: {\"intent\": \"SHARE CONTACT\", \"task\": \"<contact name>\" \"target\": \"<name>\"}\n" +
                 "- COPY NUMBER: {\"intent\": \"COPY NUMBER\", \"task\": \"<name>\"}\n" +
+                "- INSTALL: {\"intent\": \"INSTALL\", \"task\": \"<app-name>\"}\n"+
+
 
 
                 "Only include the relevant fields for each intent.\n" +
@@ -75,7 +79,6 @@ public class IntentExtractor {
                 "User: \"Send a message to Alex  good morning\" → {\"intent\": \"MESSAGE\", \"target\": \"Alex\", \"content\": \"good morning\"}\n" +
                 "User: \"Send a message to Alex home 'or' Alex 2\" → {\"intent\": \"MESSAGE\", \"target\": \"Alex home 'or' Alex 2\", \"content\": \"null\"}\n" +
                 "User: \"Where are you send this to Sarah\" → {\"intent\": \"MESSAGE\", \"target\": \"Sarah\", \"content\": \"Where are you\"}\n" +
-                "User: \"Send hi to Steve\" → {\"intent\": \"MESSAGE\", \"target\": \"Steve\", \"content\": \"hi\"}\n" +
                 "User: \"Play music\" → {\"intent\": \"PLAY MUSIC\", \"target\": \"null\"}\n" +
                 "User: \"Next song\" → {\"intent\": \"NEXT MUSIC\"}\n" +
                 "User: \"Stop music\" → {\"intent\": \"STOP MUSIC\"}\n" +
@@ -86,6 +89,8 @@ public class IntentExtractor {
                 "User: \"Switch off, Jarvis.\" → {\"intent\": \"DEACTIVATE\", \"target\": \"SHUTDOWN\"}\n" +
                 "User: \"Share steve contact to lokesh\" → {\"intent\": \"SHARE CONTACT\", \"target\": \"Lokesh\",  \"task\": \"steve\"}\n" +
                 "User: \"Can you copy steve number\" → {\"intent\": \"COPY NUMBER\", \"task\": \"steve\"}\n" +
+                "User: \"Can you install whatsapp\" → {\"intent\": \"INSTALL\", \"task\": \"whatsapp\"}\n"+
+
 
 
                 "Now extract intent from:\n" +

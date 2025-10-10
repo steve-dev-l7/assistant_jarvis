@@ -70,7 +70,6 @@ import java.util.Locale;
 import java.util.concurrent.Executor;
 
 
-
 public class MainActivity extends AppCompatActivity {
     Intent  intent1;
     TextToSpeech toSpeech;
@@ -78,13 +77,15 @@ public class MainActivity extends AppCompatActivity {
     Button wakeJarvis;
     private boolean isTextToSpeechInitialized = false;
 
-    Boolean test;
+
 
     ProgressDialog progressDialog;
     Toolbar toolbar1;
     TranslationHelper translationHelper;
     SpeechRecognizer speechRecognizer;
     Boolean wakeup = false;
+
+    boolean test=true;
 
     int currentPermissionIndex = 0;
     ConstraintLayout constraintLayout;
@@ -94,7 +95,6 @@ public class MainActivity extends AppCompatActivity {
     Executor executor;
 
 
-    private static final int PERMISSION_REQUEST_CODE = 101;
 
 
     @SuppressLint("InlinedApi")
@@ -207,6 +207,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
@@ -226,6 +227,14 @@ public class MainActivity extends AppCompatActivity {
                 case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
                     Toast.makeText(this, "Error 8", Toast.LENGTH_SHORT).show();
                     break;
+                 case BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED:
+                    break;
+                case BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED:
+                    break;
+                case BiometricManager.BIOMETRIC_STATUS_UNKNOWN:
+                    break;
+                case BiometricManager.BIOMETRIC_SUCCESS:
+                    break;
         }
         executor=ContextCompat.getMainExecutor(this);
 
@@ -242,9 +251,11 @@ public class MainActivity extends AppCompatActivity {
                             if (riddle.contains("73")) {
                                 Riddle.setText("The daily riddle is completed come back tomorrow");
                             }   else {
+
                                 Riddle.setText(riddle);
                                 Riddle.setEnabled(false);
-                                toSpeech.speak("Your Riddle Is " + riddle, TextToSpeech.QUEUE_FLUSH, null, null);
+                                toSpeech.speak( riddle, TextToSpeech.QUEUE_FLUSH, null, null);
+
                             }
 
                         }
@@ -254,6 +265,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+
+
         wakeJarvis.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -266,6 +280,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 
 
     private void chechProfile() {
@@ -443,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
-                progressDialog.dismiss();
+                Toast.makeText(MainActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
             }
         });
         promptInfo=new BiometricPrompt.PromptInfo.Builder().setTitle("Jarvis Security")

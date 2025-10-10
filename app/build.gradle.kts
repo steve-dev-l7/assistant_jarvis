@@ -41,6 +41,7 @@ android {
 
 
 
+
 }
 
 
@@ -76,6 +77,11 @@ dependencies {
     implementation (libs.play.services.nearby)
     implementation (libs.lottie.v640)
     implementation (libs.localbroadcastmanager)
+    //noinspection UseTomlInstead
+    implementation("androidx.work:work-runtime:2.10.5")
+    //noinspection UseTomlInstead
+    implementation("org.jsoup:jsoup:1.21.2")
+
 
 
 }
