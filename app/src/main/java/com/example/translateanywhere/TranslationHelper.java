@@ -1,9 +1,9 @@
 package com.example.translateanywhere;
 
 
-import android.app.ProgressDialog;
+
 import android.content.Context;
-import android.view.View;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.mlkit.nl.translate.Translation;
@@ -12,7 +12,6 @@ import com.google.mlkit.nl.translate.TranslatorOptions;
 
 public class TranslationHelper {
     private Translator translator;
-    private ProgressDialog progressDialog;
 
     public interface TranslationCallback {
         void onTranslationSuccess(String translatedText);
@@ -27,13 +26,12 @@ public class TranslationHelper {
 
             translator = Translation.getClient(options);
 
-
-
             translator.downloadModelIfNeeded()
                     .addOnSuccessListener(unused -> {
 
                         if (callback != null) {
                             callback.onTranslationSuccess(null);
+                            Log.d("TranslationHelper", "Model downloaded successfully");
                         }
                     })
                     .addOnFailureListener(e -> {
@@ -41,6 +39,7 @@ public class TranslationHelper {
 
                         if (callback != null) {
                             callback.onTranslationFailure(e);
+                            Log.d("TranslationHelper", e.getMessage());
                         }
                     });
         }else {
@@ -51,18 +50,19 @@ public class TranslationHelper {
     public void translateText(Context context, String textToTranslate, TranslationCallback callback) {
 
 
-
         translator.translate(textToTranslate)
                 .addOnSuccessListener(translatedText -> {
 
                     if (callback != null) {
                         callback.onTranslationSuccess(translatedText);
+                        Log.d("TranslatedText",translatedText);
                     }
                 })
                 .addOnFailureListener(e -> {
 
                     if (callback != null) {
                         callback.onTranslationFailure(e);
+                        Log.d("TranslatedText",e.getMessage());
                     }
                 });
     }

@@ -2,8 +2,14 @@ package com.example.translateanywhere;
 
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.telephony.PhoneStateListener;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
@@ -18,7 +24,6 @@ public class CallListener extends PhoneStateListener {
     final Context context;
     private String lastIncomingNumber = null;
     private final Map<String, Integer> callCountMap = new HashMap<>();
-
 
 
     String Name;
@@ -36,25 +41,10 @@ public class CallListener extends PhoneStateListener {
     public void onCallStateChanged(int state, String phoneNumber) {
         super.onCallStateChanged(state, phoneNumber);
 
-
-
-
         switch (state) {
             case TelephonyManager.CALL_STATE_RINGING:
-                SharedPreferences sharedPreferences = context.getSharedPreferences("UserData", Context.MODE_PRIVATE);
-                FetchUser fetchUser=new FetchUser(sharedPreferences.getString("UserId", null), new FetchUser.UserDataCallBack() {
-                    @Override
-                    public void onUserDataFetched(String[] data) {
-                        Name=data[0];
-                    }
 
-                    @Override
-                    public void onError(Exception e) {
-                        Name="null";
-                    }
-                });
-
-
+                MyForegroundServices services=new MyForegroundServices();
                 msg="Hello, this is Jarvis.  "+Name+"  is currently unavailable. Your repeated call has been noted, and he’ll / she'll get back to you as soon as possible.";
 
 

@@ -10,9 +10,9 @@
             <!-- Jarvis futuristic gradient border -->
             <gradient
                 android:angle="135"
-                android:startColor="#e0e1dd"
+                android:startColor="#00F5FF"
                 android:centerColor="#0d1b2a"
-                android:endColor="#e0e1dd"
+                android:endColor="#00F5FF"
                 android:type="linear" />
 
             <corners android:radius="12dp" />
@@ -22,7 +22,7 @@
     <!-- Inner background (dark futuristic) -->
     <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
         <shape android:shape="rectangle">
-            <solid android:color="#000000" /> <!-- Dark background -->
+            <solid android:color="#0A0F18" /> <!-- Dark background -->
             <corners android:radius="10dp" />
         </shape>
     </item>

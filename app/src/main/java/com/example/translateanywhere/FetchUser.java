@@ -1,64 +1,118 @@
 package com.example.translateanywhere;
 
+import android.content.Context;
 import android.util.Log;
+import androidx.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.Arrays;
-
 public class FetchUser {
 
-    FirebaseFirestore dataBase;
-    DatabaseReference databaseReference;
+    // Singleton Instance
+    private static FetchUser instance;
 
-    String[] userData;
+    private FirebaseFirestore dataBase;
+    private DatabaseReference databaseReference;
 
-    public interface UserDataCallBack {
-        void onUserDataFetched(String[] data);
-        void onError(Exception e);
+    // User Variables
+    private String name = "Steve"; // Default fallback
+    private String age = "";
+    private String dob = "";
+    private String donate = "";
+    private String mobile = "";
+    private String groupOfBlood = "";
+    private String location = "";
+
+    private String userId ="";
+
+    private boolean isDataLoaded = false;
+
+    public interface OnUserFetchListener {
+        void onSuccess();
+        void onError(String message);
     }
 
-    public FetchUser(String UserID, UserDataCallBack callBack){
+    // Private constructor for Singleton
+    private FetchUser() {
         dataBase = FirebaseFirestore.getInstance();
         databaseReference = FirebaseDatabase.getInstance().getReference("users");
+    }
 
-        dataBase.collection("users").document(UserID)
+    // Get the single instance
+    public static FetchUser getInstance() {
+        if (instance == null) {
+            instance = new FetchUser();
+        }
+        return instance;
+    }
+
+    // Call this ONCE when your Service/App starts
+    // Context-ah parameter-ah vaangikrom
+    public void fetchUserData(Context context, OnUserFetchListener listener) {
+        // If already loaded, return immediately to save network
+        if (isDataLoaded) {
+            listener.onSuccess();
+            return;
+        }
+
+        // SharedPreferences logic ippo Inga vanthuduchu!
+        android.content.SharedPreferences preferences = context.getSharedPreferences("UserData", Context.MODE_PRIVATE);
+        userId = preferences.getString("UserId", null);
+
+        if (userId == null || userId.isEmpty()) {
+            listener.onError("UserId not found in local storage");
+            return;
+        }
+
+        dataBase.collection("users").document(userId)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-
                         if (documentSnapshot.exists()) {
-                            userData = new String[7];
-                            userData[0] = documentSnapshot.getString("Name");
-                            userData[1] = documentSnapshot.getString("Age");
-                            userData[2] = documentSnapshot.getString("DOB");
-                            userData[3] = documentSnapshot.getString("Donate");
-                            userData[4] = documentSnapshot.getString("Mobile");
-                            if (userData[3] != null && userData[3].equalsIgnoreCase("true")) {
-                                userData[5] = documentSnapshot.getString("Group");
-                                userData[6] = documentSnapshot.getString("Location");
+                            name = documentSnapshot.getString("Name");
+                            age = documentSnapshot.getString("Age");
+                            dob = documentSnapshot.getString("DOB");
+                            donate = documentSnapshot.getString("Donate");
+                            mobile = documentSnapshot.getString("Mobile");
+
+                            if ("true".equalsIgnoreCase(donate)) {
+                                groupOfBlood = documentSnapshot.getString("Group");
+                                location = documentSnapshot.getString("Location");
                             }
-                            Log.d("UserData", Arrays.toString(userData));
-                            callBack.onUserDataFetched(userData);
-                        }else {
-                            callBack.onError(new Exception("Document does not exist"));
+
+                            isDataLoaded = true;
+                            Log.d("FetchUser", "User data fetched and cached successfully.");
+                            listener.onSuccess();
+                        } else {
+                            Log.w("FetchUser", "User document not found");
+                            listener.onError("User not found in database");
                         }
                     }
-
-                }) .addOnFailureListener(e -> {
-                    Log.e("Firestore", "Error fetching user data", e);
-                    callBack.onError(e);
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("FetchUser", "Error fetching user data", e);
+                        listener.onError("Failed to fetch user data: " + e.getMessage());
+                    }
                 });
-
-
     }
-    public String getName() {
-        return userData[0];
 
-    }
+    // --- GETTERS ---
+    public String getName() { return name; }
+    public String getAge() { return age; }
+    public String getDob() { return dob; }
+    public String getDonate() { return donate; }
+    public String getMobile() { return mobile; }
+    public String getGroupOfBlood() { return groupOfBlood; }
+    public String getLocation() { return location; }
+    public boolean isLoaded() { return isDataLoaded; }
+
+    public String getUserId(){return userId;}
 }

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="270dp"
     android:layout_height="250dp"
-    android:background="@drawable/fadesbg"
+    android:background="#131C2A"
     android:orientation="vertical"
     android:padding="16dp"
     android:gravity="center_horizontal"
@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text=" Jarvis Alert "
-        android:textColor="#e0e1dd"
+        android:textColor="#00F0FF"
         android:textSize="20sp"
         android:textStyle="bold"
         android:paddingBottom="12dp" />
@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:hint="Enter correct phone number"
         android:inputType="phone"
-        android:background="@drawable/coustum_scroll"
+        android:background="@drawable/edit_text"
         android:textColor="@color/white"
         android:textColorHint="@color/white"
         android:padding="8dp" />
@@ -37,7 +37,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter name"
-        android:background="@drawable/coustum_scroll"
+        android:background="@drawable/edit_text"
         android:textColor="@color/white"
         android:textColorHint="@color/white"
         android:inputType="textPersonName"
@@ -55,7 +55,10 @@
             android:id="@+id/btnSave"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="#00F0FF"
+            android:textSize="10dp"
             android:layout_marginEnd="10dp"
+            android:background="@drawable/btnshape"
             android:text="Save Contact" />
 
         <Button
@@ -64,6 +67,9 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="0dp"
+            android:background="@drawable/btnshape"
+            android:textSize="10dp"
+            android:textColor="#00F0FF"
             android:text="Cancel" />
     </RelativeLayout>
 </LinearLayout>

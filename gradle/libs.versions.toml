@@ -1,5 +1,6 @@
 [versions]
 agp = "8.13.0"
+aiGenerativeai = "0.9.0"
 aiPorcupineAndroid = "3.0.3"
 
 biometric = "1.1.0"
@@ -21,7 +22,7 @@ espressoCore = "3.7.0"
 appcompat = "1.7.1"
 localbroadcastmanager = "1.1.0"
 
-lottieVersion = "6.6.10"
+lottieVersion = "6.7.1"
 material = "1.13.0"
 activity = "1.11.0"
 constraintlayout = "2.2.1"
@@ -45,6 +46,7 @@ firebaseFirestore = "26.0.2"
 
 
 [libraries]
+ai-generativeai = { module = "com.ai.client.generative:generativeai", version.ref = "aiGenerativeai" }
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 core = { module = "androidx.core:core", version.ref = "core" }

@@ -10,7 +10,7 @@ android {
     
     defaultConfig {
         applicationId = "com.example.translateanywhere"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -42,6 +42,7 @@ android {
 
 
 
+
 }
 
 
@@ -57,31 +58,26 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-
-
     implementation(libs.play.services.mlkit.language.id)
     implementation(libs.translate)
     implementation(libs.firebase.database)
-    implementation (libs.porcupine.android)
-    implementation(libs.generativeai)
+    implementation(libs.porcupine.android)
     implementation(libs.converter.gson)
-    implementation(libs.generativeai.v070)
     implementation(libs.guava)
     implementation(libs.reactive.streams)
     implementation(libs.firebase.auth)
     implementation(libs.play.services.auth)
     implementation(libs.biometric)
     implementation(libs.porcupine.android.v302)
-    implementation (libs.core)
-    implementation (libs.play.services.location)
-    implementation (libs.play.services.nearby)
-    implementation (libs.lottie.v640)
-    implementation (libs.localbroadcastmanager)
+    implementation(libs.core)
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.nearby)
+    implementation(libs.lottie.v640)
+    implementation(libs.localbroadcastmanager)
     //noinspection UseTomlInstead
-    implementation("androidx.work:work-runtime:2.10.5")
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     //noinspection UseTomlInstead
-    implementation("org.jsoup:jsoup:1.21.2")
-
-
-
+    implementation("com.google.mediapipe:tasks-genai:0.10.32")
+    //noinspection UseTomlInstead
+    implementation("com.squareup.okhttp3:okhttp:5.3.2")
 }

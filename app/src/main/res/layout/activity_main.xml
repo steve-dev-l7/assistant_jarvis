@@ -11,27 +11,40 @@
     tools:ignore="HardcodedText">
 
     <!-- Toolbar -->
+
+
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/my_toolbar"
-        android:layout_width="match_parent"
+        android:layout_width="350dp"
         android:layout_height="wrap_content"
         android:background="@drawable/heading"
         android:elevation="4dp"
         android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.454"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        tools:ignore="MissingConstraints">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:fontFamily="sans-serif-condensed-medium"
-            android:text="Steve Creations"
-            android:textColor="#202124"
+            android:shadowColor="#00F5FF"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="4"
+            android:text="STEVE CREATIONS"
+
+            android:textAllCaps="true"
+            android:textColor="#E0E7FF"
             android:textSize="25sp"
             android:textStyle="bold" />
     </androidx.appcompat.widget.Toolbar>
-
 
     <ScrollView
         android:id="@+id/scrollView2"
@@ -69,7 +82,7 @@
         android:id="@+id/txttask"
         android:layout_width="150dp"
         android:layout_height="30dp"
-        android:background="@drawable/costum_text"
+        android:background="@drawable/heading"
         android:fontFamily="serif-monospace"
         android:text="DAILY RIDDLE"
         android:gravity="center"
@@ -128,12 +141,13 @@
         android:layout_height="wrap_content"
         android:background="@drawable/btnshape"
         android:text="Wake Up Jarvis"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.891" />
+        app:layout_constraintVertical_bias="0.871" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

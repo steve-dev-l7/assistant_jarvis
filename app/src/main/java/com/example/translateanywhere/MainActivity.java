@@ -14,6 +14,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
+import android.hardware.ConsumerIrManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -85,7 +89,9 @@ public class MainActivity extends AppCompatActivity {
     SpeechRecognizer speechRecognizer;
     Boolean wakeup = false;
 
-    boolean test=true;
+
+
+
 
     int currentPermissionIndex = 0;
     ConstraintLayout constraintLayout;
@@ -127,22 +133,33 @@ public class MainActivity extends AppCompatActivity {
         requestNextPermission();
         intent1 = new Intent(getApplicationContext(), MyForegroundServices.class);
         FirebaseApp.initializeApp(this);
-
         chechProfile();
         hideSystemUI();
-
         TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
         if (!getPackageName().equals(telecomManager.getDefaultDialerPackage())) {
             Intent intent = new Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER);
             intent.putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, getPackageName());
             startActivity(intent);
         }
-
-
         SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
         String UserId = sharedPreferences.getString("UserId", null);
 
-        if (UserId == null) {
+        if (UserId != null ) {
+            FetchUser.getInstance().fetchUserData(this, new FetchUser.OnUserFetchListener() {
+                @Override
+                public void onSuccess() {
+
+
+                    Log.d("UserDetails", "Jarvis knows everything about   now!");
+                }
+
+                @Override
+                public void onError(String message) {
+                    Log.d("UserDetails", "Failed to fetch: " + message);
+                }
+            });
+
+        }else {
             updateprofile();
         }
 
@@ -157,6 +174,10 @@ public class MainActivity extends AppCompatActivity {
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         toSpeech = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
+                toSpeech.setEngineByPackageName("com.google.android.tts");
+
+                toSpeech.setLanguage(Locale.US);
+
                 int result = toSpeech.setLanguage(Locale.US);
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Toast.makeText(this, "TTS language not supported", Toast.LENGTH_SHORT).show();
@@ -177,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDone(String s) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && wakeup) {
                     startForegroundService(intent1);
+                    progressDialog.dismiss();
                 }
             }
 
@@ -204,6 +226,9 @@ public class MainActivity extends AppCompatActivity {
         txttask = findViewById(R.id.txttask);
         scrollView1 = findViewById(R.id.scrollView3);
         wakeJarvis=findViewById(R.id.btnWakeJarvis);
+
+
+
 
 
 
@@ -243,14 +268,13 @@ public class MainActivity extends AppCompatActivity {
         Riddle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 if (isServiceisRunning(MyForegroundServices.class)) {
                     MyForegroundServices.riddleLiveData.observe(MainActivity.this, new Observer<String>() {
                         @Override
                         public void onChanged(String riddle) {
                             if (riddle.contains("73")) {
                                 Riddle.setText("The daily riddle is completed come back tomorrow");
-                            }   else {
+                            }  else {
 
                                 Riddle.setText(riddle);
                                 Riddle.setEnabled(false);
@@ -271,15 +295,22 @@ public class MainActivity extends AppCompatActivity {
         wakeJarvis.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                progressDialog=ProgressDialog.show(MainActivity.this,"Activating Jarvis","Please be patient");
                 if (isServiceisRunning(MyForegroundServices.class)) {
                     Toast.makeText(MainActivity.this, "Jarvis already running", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                WakeUpJarvis();
-            }
+                if(!isInternetAvailable(MainActivity.this)){
+                    showNoInternetDialog();
+                    return;
+                }
+                    progressDialog = ProgressDialog.show(MainActivity.this, "Activating Jarvis", "Please be patient");
+
+                    WakeUpJarvis();
+                }
+
         });
     }
+
 
 
 
@@ -325,14 +356,6 @@ public class MainActivity extends AppCompatActivity {
                 getAccessKey();
 
         }
-        if(id==R.id.help){
-            if(isServiceisRunning(MyForegroundServices.class)){
-                Toast.makeText(this, "Deactivate Jarvis to paste key", Toast.LENGTH_SHORT).show();
-
-            }else {
-                getAiApiKeys();
-            }
-        }
 
         if(id==R.id.contact){
             String url="https://steve-dev-l7.github.io/Jarvis_support/";
@@ -365,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor=saveKey.edit();
                 editor.putString("Key",userAccessKey);
                 editor.apply();
-                Toast.makeText(MainActivity.this, "Key saved, Activate Jarvis and check your access key is valid", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Key saved, Activate Jarvis to check your access key is valid", Toast.LENGTH_SHORT).show();
                 Log.d("Access key",userAccessKey);
             }
         }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -376,62 +399,8 @@ public class MainActivity extends AppCompatActivity {
         });
         builder.show();
     }
-    private void getAiApiKeys(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Enter AI Keys");
 
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 10);
-
-
-        final EditText input = new EditText(this);
-        input.setHint("Enter first key");
-        input.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(input);
-
-
-        final EditText input1 = new EditText(this);
-        input1.setHint("Enter second key");
-        input1.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(input1);
-
-
-
-
-
-        builder.setView(layout);
-
-
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String key1 = input.getText().toString();
-                String key2= input1.getText().toString();
-                SharedPreferences saveKey=getSharedPreferences("AccessKeys",MODE_PRIVATE);
-                SharedPreferences.Editor editor=saveKey.edit();
-                editor.putString("Key1",key1);
-                editor.putString("Key2",key2);
-
-
-                editor.apply();
-                Toast.makeText(MainActivity.this, "Key saved, Activate Jarvis and check your access key is valid", Toast.LENGTH_SHORT).show();
-
-
-            }
-        });
-
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-
-        builder.show();
-    }
 
     private void WakeUpJarvis() {
 
@@ -445,30 +414,32 @@ public class MainActivity extends AppCompatActivity {
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
                 wakeup = true;
-                toSpeech.speak("Jarvis activated", TextToSpeech.QUEUE_FLUSH, null, "INTRODUCING");
+                toSpeech.speak("Jarvis activated!", TextToSpeech.QUEUE_FLUSH, null, "ACTIVATING");
+
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         progressDialog.dismiss();
                     }
-                },2000);
-
+                },5000);
             }
 
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
-                Toast.makeText(MainActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Activation failed", Toast.LENGTH_SHORT).show();
             }
         });
         promptInfo=new BiometricPrompt.PromptInfo.Builder().setTitle("Jarvis Security")
-                .setDescription("Place your fingerprint or use password to activate 'Jarvis'")
+                .setDescription("Place your fingerprint or use password to activate 'Jarvis.'")
                 .setDeviceCredentialAllowed(true)
                 .build();
 
         biometricPrompt.authenticate(promptInfo);
 
     }
+
+
 
 
 
@@ -531,4 +502,52 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
+
+    public static boolean isInternetAvailable(Context context) {
+        ConnectivityManager cm =
+                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (cm == null) return false;
+
+        Network network = cm.getActiveNetwork();
+        if (network == null) return false;
+
+        NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+        if (capabilities == null) return false;
+
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+    }
+
+    private void showNoInternetDialog() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setCancelable(false); // back press block
+
+        builder.setTitle("No Internet Connection");
+        builder.setMessage(
+                "Please turn on the internet to use Jarvis.\n\n" +
+                        "Note: Jarvis uses Google voice recognition, so an internet connection is required only to record and process your voice."
+        );
+
+
+        builder.setPositiveButton("Turn On Internet", (dialog, which) -> {
+            try {
+                startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        builder.setNegativeButton("Exit", (dialog, which) -> {
+            dialog.dismiss();
+            finish(); // app exit
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+
 }

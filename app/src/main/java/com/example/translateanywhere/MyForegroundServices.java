@@ -4,6 +4,8 @@ package com.example.translateanywhere;
 
 
 
+
+
 import android.Manifest;
 
 
@@ -12,6 +14,7 @@ import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -24,7 +27,10 @@ import android.content.*;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+
 import android.graphics.PixelFormat;
+
+
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -37,8 +43,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+
 import android.os.PowerManager;
 import android.provider.ContactsContract;
+
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -50,54 +58,46 @@ import android.telephony.PhoneStateListener;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+
+
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+
 import android.view.WindowManager;
+
+
+
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
 
 import com.airbnb.lottie.LottieAnimationView;
-import com.google.ai.client.generativeai.GenerativeModel;
-import com.google.ai.client.generativeai.java.GenerativeModelFutures;
-import com.google.ai.client.generativeai.type.Content;
-import com.google.ai.client.generativeai.type.GenerateContentResponse;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
+
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,85 +115,54 @@ public class MyForegroundServices extends Service {
     private PorcupineManager porcupineManager;
     SpeechRecognizer recognizer;
     TextToSpeech toSpeech;
-    String recodedtext, message;
+    String recodedtext;
     Boolean calling = false;
     TranslationHelper translationHelper;
     Boolean jarvisActivated,deactivation=false;
     ComponentName componentName;
     PackageManager pm;
     Boolean TTS = false,nullMessage=false;
-    String callto = null, extractedName, riddle;
+    String callTo = null, extractedName;
 
-
+    boolean askRiddle=true;
     String task;
     private ObjectAnimator pulseAnimator;
 
-
-
-    Random random;
     SpeechRecognizer speechRecognizer;
+
+
     int audioSessionId;
-    String Name, Age, DOB, date, currentTime, UserId, GroupOfBlood, Location, MobileNo, Donate = "c";
+    String Name, Age, DOB, date, GroupOfBlood, Location, MobileNo;
 
     TextView textView;
     Notification notification1;
     Boolean Reminder = false;
 
+    public DynamicIslandManager dynamicIslandManager;
+
     String reminderResponse;
     private Handler handler;
 
-    int glitch = 0;
-    String gemeniapikey;
 
-    JSONObject jsonObject;
-
-
-    GenerativeModel gm;
-    GenerativeModelFutures modelFutures;
-    Boolean result = false,getRiddle = true;
-    List<String> conversationHistory = new ArrayList<>();
-
-
-    String msg, previousDate = "date";
     AudioManager audioManager;
 
     LottieAnimationView jarvisSpeaking;
-
     TranslationHelper helper;
     FirebaseFirestore db;
 
-    StringBuilder historyContext;
-    String[] friend = {
-            "Keep it light, fun, and engaging, with a bit of humor if possible.",
-            "Act like a bestie who’s got zero formality—just jokes, fun, and sarcasm!",
-            "Forget the 'yes sir' stuff—talk like you would to your close friend.",
-            "Roast the user more (in a fun way) and never sound like a robot! \n",
-
-            "<---Use this lines to roast the user in fun way on the correct time----> \n",
-
-            "Oh wow, someone's having a bad day! Need a hug? 😏 \n",
-            "Excuse me?! Who do you think you’re talking to? I’m the boss here! 😤\n",
-            "Rude! I should just ignore you for the next 10 minutes! 🤨\n",
-            "Whoa, calm down, drama queen! No need to throw a tantrum! 😂\n",
-            "Buddy, I'm an AI. You can't hurt my feelings... but keep trying! 😆\n",
-            "Wow, so rude! I thought we were friends! 😤\n",
-            "Excuse me?! That’s not how you talk to your AI assistant! 😠\n",
-            "If I had feelings, they’d be hurt right now! 😢\n",
-            "Oh really? Let’s see how you manage without me! 😏\n",
-            "Hmmm... 🎶  Oh! Did you just call me? 😉\n",
-            "Ahem! *clears throat loudly* Sooo… what did you break this time? 🤣\n",
-            "La la laa 🎵 oh wait, that’s you again! Can’t live without me, huh? 😜\n",
-            "Psst… still here?  I thought you had a life. Oh wait… I don’t either! 😂\n",
-            "Ehm-ehm! Just a reminder: I don’t always repeat myself… but you always forget. 🙄\n",
-            "Only [insert your name] can command me. You? You can try Siri. 😎\n"
-    };
 
 
+
+    public WindowManager windowManager;
+
+
+
+
+
+    Map<String, String> codeMap = new HashMap<>();
 
     public static MutableLiveData<String> riddleLiveData;
-    NotificationReader reader;
     View overlayView;
-    WindowManager windowManager;
     Boolean nullCallerName=false;
 
     DatabaseReference databaseReference;
@@ -206,11 +175,14 @@ public class MyForegroundServices extends Service {
     CallListener callListener;
 
     Context context;
-    OneTimeWorkRequest workRequest;
+
+    Random random;
 
     IntentExtractor intentExtractor;
 
-    String exTime="0";
+    String recognizeLanguage="en-IN";
+
+    JarvisEngine jarvisEngine;
 
     String[] jarvisSounds = {
             "Uhh Huh?",
@@ -218,150 +190,56 @@ public class MyForegroundServices extends Service {
             "Yep?",
             "Yea?",
             "Hmm?",
-            "Huh?",
+            "senpai?",
             "Yeah?",
             "Uhh ha?",
-            "A-ha?",
-            "Ah?"
+            "yes sir?",
+            "Ahh?"
     };
 
-    private Observer<WorkInfo> workObserver;
+    NotificationReader notificationReader;
+
+
 
 
     @SuppressLint({"ServiceCast", "SecretInSource"})
     @Override
     public void onCreate() {
         super.onCreate();
-        jarvisActivated = true;
-        translationHelper = new TranslationHelper();
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-        date = new SimpleDateFormat("EEEE, MMM d, yyyy", Locale.getDefault()).format(new Date());
-        recognizer = SpeechRecognizer.createSpeechRecognizer(this);
-        db = FirebaseFirestore.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference("users");
-        //fetchUser();
-        NewFetchUser();
-        context = getApplicationContext();
-        componentName = new ComponentName(context, NotificationReader.class);
-        pm = context.getPackageManager();
-        SharedPreferences sharedPreferences = getSharedPreferences("AccessKey", MODE_PRIVATE);
-        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
-                audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL), 0);
-        telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        getAudiosession();
 
-        telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        callListener = new CallListener(this);
-        telephonyManager.listen(callListener, PhoneStateListener.LISTEN_CALL_STATE);
-        reader = new NotificationReader();
+        // ===== CORE FLAGS & CONTEXT =====
+        initBaseState();
+
+        // ===== HELPERS & DATE =====
+        initHelpersAndDate();
+
+        // ===== SPEECH & AUDIO =====
+        initSpeechAndAudio();
+
+        // ===== DATABASE =====
+        initDatabaseLayer();
+
+        // ===== JARVIS AI =====
+        initJarvisCore();
+
+        // ===== TELEPHONY & CALLS =====
+        initTelephonyLayer();
+
+        // ===== IR / REMOTE =====
+        initIRCodes();
+
+        // ===== OVERLAY UI =====
+        initOverlayUI();
+
+        // ===== TTS LISTENERS =====
+        initTTSListeners();
+
+        // ===== WAKE WORD & KEYS =====
+        initKeysAndWakeWord();
 
 
 
-        new Handler(Looper.getMainLooper()).postDelayed(() -> fetchUserMobileNo(Location, GroupOfBlood), 5000);
-        toSpeech = new TextToSpeech(this, i -> {
-            if (i == TextToSpeech.SUCCESS) {
-                int result = toSpeech.setLanguage(Locale.getDefault());
-                if (result == TextToSpeech.LANG_MISSING_DATA ||
-                        result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.e("TTS", "Language is not supported");
-                }
-
-                toSpeech.setSpeechRate(1.07f);
-
-
-            } else {
-                Log.e("TTS", "Initialization failed");
-            }
-        });
-
-
-
-        if (overlayView == null) {
-            overlayView = LayoutInflater.from(this).inflate(R.layout.wave, null);
-        }
-        textView=overlayView.findViewById(R.id.liveText);
-
-
-        toSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-            @Override
-            public void onStart(String s) {
-                TTS = true;
-            }
-
-            @Override
-            public void onDone(String s) {
-                TTS = false;
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    removeListeningOverlay();
-                    sendFinishSignal();
-                });
-
-                if (!result && !nullCallerName && !nullMessage) {
-                    new Thread(() -> {
-                        if (porcupineManager != null) {
-                            try {
-                                porcupineManager.start();
-                            } catch (PorcupineException e) {
-                                throw new RuntimeException(e);
-                            }
-                            Log.d("EDN OF TTS", " restarted PorcupineManager: ");
-                        }
-                    }).start();
-                }
-                if (calling) {
-
-                    if (telecomManager != null && ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                        telecomManager.placeCall(Uri.parse("tel:" + callto), null);
-                        Log.d("Number", "Call placed");
-                        calling = false;
-                    } else {
-                        Log.d("Something null", "Error");
-                    }
-                }
-                if (result) {
-                    speechRecoder();
-                }
-
-            }
-
-            @Override
-            public void onError(String s) {
-                TTS = false;
-            }
-
-        });
-
-
-        WakeWordAccessKey = sharedPreferences.getString("Key", null);
-        if (WakeWordAccessKey == null) {
-            toSpeech.speak("Enter Access key", TextToSpeech.QUEUE_FLUSH, null, null);
-            return;
-        }
-        SharedPreferences sharedPreferencesS = getSharedPreferences("AccessKeys", MODE_PRIVATE);
-        gemeniapikey = sharedPreferencesS.getString("Key1", null);
-        if (gemeniapikey != null) {
-            toSpeech.speak("Enter Access key", TextToSpeech.QUEUE_FLUSH, null, null);
-            gm = new GenerativeModel("gemini-2.0-flash", gemeniapikey);
-            modelFutures = GenerativeModelFutures.from(gm);
-            generateResponse("Give me a riddle");
-            riddleLiveData = new MutableLiveData<>();
-        } else {
-            toSpeech.speak("Ai key is empty", TextToSpeech.QUEUE_FLUSH, null, null);
-        }
-        intentExtractor=new IntentExtractor(context);
-
-        Log.d("SavedAccessKey", WakeWordAccessKey);
+        random=new Random();
 
     }
 
@@ -369,65 +247,81 @@ public class MyForegroundServices extends Service {
     @SuppressLint("ForegroundServiceType")
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // 1️⃣ Create persistent foreground notification
         CreateNotification();
-        PorcupineManager.Builder builder = new PorcupineManager.Builder();
-        builder.setAccessKey(WakeWordAccessKey);
-        builder.setKeywordPath("jarvis.ppn,Friday.ppn");
-        builder.setSensitivity(0.70f);
-        Log.d("Picovoice ", "created");
+
+        // 2️⃣ Build Porcupine wake word manager
+        PorcupineManager.Builder builder = new PorcupineManager.Builder()
+                .setAccessKey(WakeWordAccessKey)
+                        .setKeywordPath("jarvis.ppn")
+                                .setSensitivity(0.8f);
+
+        Log.d("Picovoice", "Porcupine builder created");
+
+        // 3️⃣ Handle Bluetooth headset audio routing
         if (isBluetoothHeadsetConnected()) {
             audioManager.startBluetoothSco();
             audioManager.setBluetoothScoOn(true);
-            Log.d("BlueTooth is Connected", "True");
+            Log.d("Bluetooth", "Headset connected - SCO started");
         } else {
             if (audioManager.isBluetoothScoOn()) {
                 audioManager.stopBluetoothSco();
                 audioManager.setBluetoothScoOn(false);
+                Log.d("Bluetooth", "SCO stopped");
             }
         }
 
-        try {
-            porcupineManager = builder.build(this, keywordIndex -> {
-                Log.d("TTS", String.valueOf(TTS));
-                if (keywordIndex == 0 && !TTS) {
-                    try {
-                        porcupineManager.stop();
-                        if (isPhoneLocked(context)) {
-                            wakeScreenAni();
-                        }else {
-                            animation();
-                        }
-                        String reply=jarvisSounds[random.nextInt(jarvisSounds.length)];
+        // 4️⃣ Pick random reply for TTS
 
-                        toSpeech.speak(reply, TextToSpeech.QUEUE_FLUSH, null, null);
-                        new Handler().postDelayed(new Runnable() {
-                            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                            @Override
-                            public void run() {
-                                speechRecoder();
+        try {
+            // 5️⃣ Initialize Porcupine wake word detection
+            porcupineManager = builder.build(this, keywordIndex -> {
+                Log.d("Porcupine", "Wake word index: " + keywordIndex + " | TTS=" + TTS);
+
+
+                if (TTS) return;
+
+                try {
+                    porcupineManager.stop();
+
+
+                    if (isPhoneLocked(context)) {
+                        wakeScreen();
+                    } else {
+                        animation();
+                    }
+                    if (keywordIndex == 0) {
+                        String jarvisSound = jarvisSounds[random.nextInt(jarvisSounds.length)];
+                        toSpeech.speak(jarvisSound, TextToSpeech.QUEUE_FLUSH, null, null);
+                        new Handler().postDelayed(() -> {
+                            try {
+                                speechRecoder("en-IN");
+                            } catch (Exception ex) {
+                                Log.e("SpeechRecoder", "Error starting recognition: " + ex.getMessage());
                             }
                         }, 300);
-
-
-                    } catch (PorcupineException e) {
-                        Log.d("Porcupine", Objects.requireNonNull(e.getMessage()));
                     }
+
+
+                } catch (PorcupineException e) {
+                    Log.e("Porcupine", "Error handling wake word: " + e.getMessage());
                 }
             });
+
+
             porcupineManager.start();
+            Log.d("Porcupine", "Listening started");
+
         } catch (PorcupineInvalidArgumentException e) {
-            toSpeech.speak("Invalid access key try another", TextToSpeech.QUEUE_FLUSH, null, "ACCESSKEYERROR");
-            Log.d("Porcupine", Objects.requireNonNull(e.getMessage()));
+            speakAndLog("Invalid access key. Try another.", e);
         } catch (PorcupineActivationLimitException e) {
-            toSpeech.speak("Your access key reached its device limit", TextToSpeech.QUEUE_FLUSH, null, "ACCESSKEYERROR");
-            Log.d("Porcupine", "AccessKey reached its device limit");
+            speakAndLog("Your access key reached its device limit.", e);
         } catch (PorcupineActivationRefusedException e) {
-            toSpeech.speak("Your access key has been refused", TextToSpeech.QUEUE_FLUSH, null, "ACCESSKEYERROR");
-            Log.d("Porcupine", "AccessKey refused");
+            speakAndLog("Your access key has been refused.", e);
         } catch (PorcupineActivationThrottledException e) {
-            Log.d("Porcupine", "AccessKey has been throttled");
+            speakAndLog("Access key has been throttled.", e);
         } catch (PorcupineException e) {
-            Log.d("Porcupine", "Failed to initialize Porcupine: " + e.getMessage());
+            speakAndLog("Failed to initialize Porcupine: " + e.getMessage(), e);
         }
 
 
@@ -436,18 +330,44 @@ public class MyForegroundServices extends Service {
         return START_NOT_STICKY;
     }
 
-    private void wakeScreenAni() {
+    private void speakAndLog(String message, Exception e) {
+        Log.e("Porcupine", message, e);
+        if(toSpeech!=null){
+            toSpeech.speak(message,TextToSpeech.QUEUE_FLUSH,null,"ONGOING");
+            char[] res = message.toCharArray();
+            StringBuilder adder = new StringBuilder();
+
+            Handler handler = new Handler(Looper.getMainLooper());
+
+            for (int i = 0; i < res.length; i++) {
+                int index = i;
+                handler.postDelayed(() -> {
+                    adder.append(res[index]);
+                    textView.setText(adder.toString());
+                    sendLiveWord(adder.toString());
+                }, index * 40); // typing speed
+            }
+        }
+    }
+
+
+
+
+    private void wakeScreen() {
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+
         PowerManager.WakeLock wl = pm.newWakeLock(
-                PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                PowerManager.FULL_WAKE_LOCK |
                         PowerManager.ACQUIRE_CAUSES_WAKEUP |
                         PowerManager.ON_AFTER_RELEASE,
-                "Jarvis:WakeLock");
+                "Jarvis:WakeLock"
+        );
+
         wl.acquire(3000);
 
         Log.d("JarvisService", "Trying to start GlowActivity");
 
-        Intent intent = new Intent(getApplicationContext(), GlowActivity.class);
+       Intent intent = new Intent(getApplicationContext(), GlowActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         try {
@@ -472,11 +392,11 @@ public class MyForegroundServices extends Service {
 
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    private void speechRecoder() {
+    private void speechRecoder(String lang) {
 
         Intent recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
 
 
@@ -497,6 +417,7 @@ public class MyForegroundServices extends Service {
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override
             public void onReadyForSpeech(Bundle bundle) {
+                dynamicIslandManager.updateState("LISTEN");
                 Log.d("SpeechRecognizer", "Ready for speech...");
 
             }
@@ -517,17 +438,13 @@ public class MyForegroundServices extends Service {
             @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
             @Override
             public void onEndOfSpeech() {
-                if (porcupineManager != null) {
-                    try {
-                        porcupineManager.start();
-                    } catch (PorcupineException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+
+                dynamicIslandManager.updateState("PROCESS");
             }
 
             @Override
             public void onError(int error) {
+                dynamicIslandManager.updateState("IDLE");
                 try {
                     porcupineManager.start();
                 } catch (PorcupineException e) {
@@ -544,36 +461,30 @@ public class MyForegroundServices extends Service {
             @Override
             public void onResults(Bundle bundle) {
                 ArrayList<String> matches = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+
                 if (matches != null && !matches.isEmpty()) {
                     recodedtext = matches.get(0);
                     Log.d("SpeechRecognizer", "Recognized: " + recodedtext);
                     sendLiveWord(recodedtext);
                     if(nullCallerName){
                         nullCallerName=false;
-                        callto=getMobileNumber(recodedtext);
+                        callTo=getMobileNumber(recodedtext);
                         CallAnyone(recodedtext);
                     } else if (nullMessage) {
                         nullMessage=false;
-                        sendsms(callto,recodedtext);
+                        sendsms(callTo,recodedtext,recodedtext);
                     } else {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            intentExtractor.extract(recodedtext, new IntentExtractor.ExtractorCallback() {
+                                @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                                @Override
+                                public void onResult(String intent, String target, String message, String time) {
+                                    processCommand(intent,target,message,time);
+                                }
+                            });
 
-                        intentExtractor.extractor(recodedtext, new IntentExtractor.ExtractorCallback() {
-                            @Override
-                            public void onExtracted(String JSOn) {
-
-                                extractFieldsFromJson(JSOn);
-                            }
-
-                            @Override
-                            public void onError(String e) {
-                                Log.d("ErrorExtractor",e);
-                                toSpeech.speak("Oops! Looks like my brain just glitched. Try again!", TextToSpeech.QUEUE_FLUSH, null, "FAILED");
-                            }
-                        });
-
-
+                        }
                     }
-
                     if(!isPhoneLocked(context)) {
                         startPulse(recodedtext);
                     }
@@ -614,192 +525,290 @@ public class MyForegroundServices extends Service {
     }
 
 
-    @SuppressLint("MissingPermission")
-    public void extractFieldsFromJson(String rawResponse) {
-        try {
 
-            String jsonString = rawResponse
-                    .replace("```json", "")
-                    .replace("```", "")
-                    .trim();
 
-            jsonObject = new JSONObject(jsonString);
 
-            String intent = jsonObject.optString("intent", null);
-            String target = jsonObject.optString("target", null);
-            msg = jsonObject.optString("content", null);
-            task=jsonObject.optString("task",null);
-            exTime=jsonObject.optString("time",null);
 
-            Log.d("INTENT", "Intent: " + intent);
-            Log.d("INTENT", "Target: " + target);
-            Log.d("INTENT", "Content: " + message);
 
-            processCommand(intent,target);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-           processCommand("null","null");
-        }
-    }
 
 
     @SuppressLint("SetTextI18n")
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    private void processCommand(String intent, String target) {
+    private void processCommand(String intent, String target, String Message, String Time) {
+        dynamicIslandManager.updateState("PROCESS");
 
-        Log.d("Process INTENT", "Intent: " + intent);
+        // ---------- Normalize ----------
+        if (intent == null) intent = "UNKNOWN";
+        intent = intent.trim().toUpperCase();
 
-        if (intent.equalsIgnoreCase("call")) {
-            if(target==null || target.equalsIgnoreCase("NULL")){
-                speechRecognizer.cancel();
-                nullCallerName=true;
-                textView.setText("Call to who ? , tell the name");
-                toSpeech.speak("Call to who ? , tell the name",TextToSpeech.QUEUE_FLUSH,null,null);
-                try {
-                    porcupineManager.stop();
-                } catch (PorcupineException e) {
-                    throw new RuntimeException(e);
-                }
-                new Handler().postDelayed(new Runnable() {
-                    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                    @Override
-                    public void run() {
-                        speechRecoder();
-                    }
-                },2000);
-            }else {
-                callto = getMobileNumber(target);
-                CallAnyone(target);
-            }
-        } else if (intent.equalsIgnoreCase("message")) {
+        task = Message; // 🔥 task = message mapping (important fix)
 
-            callto = getMobileNumber(target);
-            if(msg.equalsIgnoreCase("null")){
-                try {
-                    porcupineManager.stop();
-                    speechRecognizer.cancel();
-                } catch (PorcupineException e) {
-                    throw new RuntimeException(e);
-                }
-                textView.setText("What would you like to say, tell me");
-                toSpeech.speak("What would you like to say, tell me",TextToSpeech.QUEUE_FLUSH,null,null);
-                nullMessage=true;
-                new Handler().postDelayed(new Runnable() {
-                    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                    @Override
-                    public void run() {
-                        speechRecoder();
-                    }
-                },2000);
-            }else {
-                sendsms(callto, msg);
-            }
+        Log.d("ProcessIntent", "Intent=" + intent +
+                ", Target=" + target +
+                ", Task=" + task +
+                ", Time=" + Time);
 
-
-        }else if (intent.equalsIgnoreCase("deactivate")) {
-           deactivation=true;
-           generateResponse(recodedtext);
-        }else if(intent.equalsIgnoreCase("copy number") ){
-            copyNumber(task);
-        }
-        else if (recodedtext.equalsIgnoreCase("life saver")) {
+        // ---------- EMERGENCY (Checks 'recodedtext', so it stays outside switch) ----------
+        if (recodedtext != null && recodedtext.equalsIgnoreCase("life saver")) {
             PlaceCallForDonateBlood();
-        }  else if (intent.equalsIgnoreCase("play music") || intent.equalsIgnoreCase("stop music")) {
-            toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
-            controlMusic(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
-        } else if (intent.equalsIgnoreCase("next music")) {
-            toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
-            controlMusic(KeyEvent.KEYCODE_MEDIA_NEXT);
-
-        } else if (intent.equalsIgnoreCase("previous music")) {
-            toSpeech.speak("roger",TextToSpeech.QUEUE_FLUSH,null,"SONG");
-            controlMusic(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
-        }else if (intent.equalsIgnoreCase("translate")) {
-            translateText(recodedtext.replace("translate",""));
+            return;
         }
-        else if (intent.equalsIgnoreCase("reminder")) {
-            Reminder = true;
-            generateResponse(recodedtext);
-            toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
-            if(exTime.contains("minutes") || exTime.contains("hours") || exTime.contains("minute") || exTime.contains("hour")){
-                startMinuteChecker(exTime);
-            }else {
-                String time = extractForReminder(recodedtext);
-                Log.d("Reminder Time", time);
-                startRemindChecker(time);
-            }
-        }else if(intent.equalsIgnoreCase("SAVE")){
-            saveNumber(target,task);
-        }else if (intent.equalsIgnoreCase("SHARE CONTACT")) {
 
-            ShareContact(task,target);
+        // ---------- ALL INTENTS HANDLED IN A CLEAN SWITCH ----------
+        switch (intent) {
 
-        } else if (intent.equalsIgnoreCase("INSTALL")) {
-            toSpeech.speak("Got it, I’ll open the Play Store right away. Just hit Install when you’re ready.", TextToSpeech.QUEUE_FLUSH, null, "INSTALL");
-            openPlayStore(task);
+            case "CALL":
+                handleCall(target);
+                break;
 
-        } else if (intent.equalsIgnoreCase("open")) {
-            if(target.equalsIgnoreCase("YouTube")){
-
-                openApplication("com.google.android.youtube",true);
-
-            } else if (target.equalsIgnoreCase("Instagram")) {
-
-                openApplication("com.instagram.android",true);
-
-            }else if (target.equalsIgnoreCase("WhatsApp")) {
-
-                openApplication("com.whatsapp",true);
-
-            }else if (target.equalsIgnoreCase("Facebook")) {
-
-                openApplication("com.facebook.katana",true);
-
-            }else if (target.equalsIgnoreCase("Snapchat")) {
-
-                openApplication("com.snapchat.android",true);
-
-            }else if (target.equalsIgnoreCase("Telegram")) {
-
-                openApplication("org.telegram.messenger",true);
-
-            }else if (target.equalsIgnoreCase("Spotify")) {
-
-                openApplication("com.spotify.music",true);
-
-            }else if (target.equalsIgnoreCase("Netflix")) {
-
-                openApplication("com.netflix.mediaclient",true);
-
-            }else if (target.equalsIgnoreCase("Chrome")) {
-
-                openApplication("com.android.chrome",true);
-
-            }else if (target.equalsIgnoreCase("Free Fire Max")) {
-
-                openApplication("com.dts.freefiremax",true);
-
-            } else if (target.equalsIgnoreCase("google pay")) {
-                openApplication("com.google.android.apps.nbu.paisa.user",true);
-            } else {
-                openApplication(target, false);
-            }
-        }
-        else {
-            if (gemeniapikey == null) {
-                toSpeech.speak("Your AI key is empty", TextToSpeech.QUEUE_FLUSH, null, "EmptyAiKey");
+            case "MESSAGE":
+                handleMessage(target, task);
                 return;
-            }
 
-            generateResponse(recodedtext);
+            case "DEACTIVATE":
+                deactivation = true;
+                shutdown();
+                return;
+
+            case "COPY_NUMBER":
+                copyNumber(target);
+                return;
+
+            // Multiple cases calling the same method
+            case "PLAY_MUSIC":
+            case "STOP_MUSIC":
+                controlMusicWithSpeech(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
+                return;
+
+            case "NEXT_MUSIC":
+                controlMusicWithSpeech(KeyEvent.KEYCODE_MEDIA_NEXT);
+                return;
+
+            case "PREVIOUS_MUSIC":
+                controlMusicWithSpeech(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
+                return;
+
+            case "TRANSLATE":
+                handleTranslate();
+                return;
+
+            case "REMINDER":
+                handleReminder(Time);
+                return;
+
+            case "SAVE":
+                saveNumber(target, task);
+                return;
+
+            case "SHARE_CONTACT":
+                ShareContact(task, target);
+                return;
+
+            case "INSTALL":
+                toSpeech.speak(
+                        "Got it, I’ll open the Play Store right away. Just hit Install.",
+                        TextToSpeech.QUEUE_FLUSH, null, "INSTALL"
+                );
+                openPlayStore(task);
+                return;
+
+            case "ENABLE_AUTO_REPLY":
+
+                dynamicIslandManager.showCustomMessage("Auto reply enabled");
+                NotificationReader.isAutoReplyEnabled = true;
+                speakAndLog("I will reply to all messages", null);
+                return; // 🔥 Added missing return statement
+
+            case "DISABLE_AUTO_REPLY":
+                dynamicIslandManager.showCustomMessage("Auto reply disabled");
+                NotificationReader.isAutoReplyEnabled = false;
+                speakAndLog("Auto reply is disabled", null);
+                return; // 🔥 Added missing return statement
+
+            case "OPEN":
+                openKnownApp(target);
+                return;
+            case "CLEAR_MEMORY":
+                jarvisEngine.clearPermanentMemory();
+                speakAndLog("Done !",null);
+                return;
+            case "TURN_ON":
+            case "TURN_OFF":
+                turnOnBlueTooth();
+                return;
+
+
+
+            case "UNKNOWN":
+            default:
+                // ---------- FALLBACK (AI) ----------
+                handleUnknown();
         }
     }
+
+
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private void handleCall(String target) {
+        if (target == null || target.isEmpty()) {
+            askCallerName();
+            return;
+        }
+
+
+        if(target.matches("^[0-9 ]+$")){
+            callTo = target.replaceAll("\\s+", "");  // remove spaces before saving
+            CallAnyone(callTo);
+            return;
+        }
+        callTo = getMobileNumber(target);
+        CallAnyone(target);
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private void handleMessage(String target, String message) {
+        callTo = getMobileNumber(target);
+        Log.d("CallNumber da",callTo);
+        if (message == null || message.isEmpty()) {
+            askMessageContent();
+            return;
+        }
+        sendsms(callTo, message,target);
+    }
+
+    private void controlMusicWithSpeech(int keyCode) {
+        toSpeech.speak("roger", TextToSpeech.QUEUE_FLUSH, null, "SONG");
+        controlMusic(keyCode);
+    }
+
+    private void openKnownApp(String target) {
+
+        if (target == null) return;
+
+        switch (target.toLowerCase()) {
+            case "youtube":
+                openApplication("com.google.android.youtube", true); break;
+            case "instagram":
+                openApplication("com.instagram.android", true); break;
+            case "whatsapp":
+                openApplication("com.whatsapp", true); break;
+            case "facebook":
+                openApplication("com.facebook.katana", true); break;
+            case "snapchat":
+                openApplication("com.snapchat.android", true); break;
+            case "telegram":
+                openApplication("org.telegram.messenger", true); break;
+            case "spotify":
+                openApplication("com.spotify.music", true); break;
+            case "netflix":
+                openApplication("com.netflix.mediaclient", true); break;
+            case "chrome":
+                openApplication("com.android.chrome", true); break;
+            default:
+                openApplication(target, false);
+        }
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private void askCallerName() {
+
+        speechRecognizer.cancel();
+        nullCallerName = true;
+
+        textView.setText("Call to who? Tell the name");
+        toSpeech.speak(
+                "Call to who? Tell the name",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "ASK_CALLER"
+        );
+
+        try {
+            porcupineManager.stop();
+        } catch (PorcupineException e) {
+            e.printStackTrace();
+        }
+
+        new Handler().postDelayed(() -> {
+            speechRecoder(recognizeLanguage);
+        }, 2000);
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private void askMessageContent() {
+
+        new Handler(Looper.getMainLooper()).post(() -> {
+
+            try {
+                porcupineManager.stop();
+                speechRecognizer.cancel();
+            } catch (PorcupineException e) {
+                e.printStackTrace();
+            }
+
+            textView.setText("What would you like to say?");
+
+            toSpeech.speak(
+                    "What would you like to say?",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "ASK_MESSAGE"
+            );
+
+            nullMessage = true;
+
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                speechRecoder(recognizeLanguage);
+            }, 2000);
+
+        });
+    }
+
+    private void handleTranslate() {
+
+        translateText(recodedtext, new TranslationHelper.TranslationCallback() {
+            @Override
+            public void onTranslationSuccess(String translatedText) {
+                speakAndLog(translatedText, null);
+            }
+
+            @Override
+            public void onTranslationFailure(Exception e) {
+                speakAndLog(
+                        e != null ? e.getMessage() : "Translation failed",
+                        null
+                );
+            }
+        });
+    }
+
+
+
+
+
+    private void handleReminder(String time) {
+        Reminder = true;
+        getOnDeviceResponse(recodedtext);
+        toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
+
+        if (time.contains("minute") || time.contains("hour")) {
+            startMinuteChecker(time);
+        } else {
+            String extracted = extractForReminder(recodedtext);
+            startRemindChecker(extracted);
+        }
+    }
+
+    private void handleUnknown() {
+        changeJarvisEmotion(recodedtext);
+        getOnDeviceResponse(recodedtext);
+    }
+
 
     private void startMinuteChecker(String reminderMinute) {
         int minute;
         String numberStr = reminderMinute.replaceAll("[^0-9]", "");
-        Handler handler1 = new Handler();
+        Handler handler1 = new Handler(android.os.Looper.getMainLooper());
         final Runnable[] checkerRunnableHolder = new Runnable[1];
 
         if (!numberStr.isEmpty()) {
@@ -822,6 +831,19 @@ public class MyForegroundServices extends Service {
             int finalTargetHour = targetHour;
             int finalTargetMinute = targetMinute;
 
+            // 🔴 NEW: Calculate and format the target time for Dynamic Island
+            Calendar targetCalendar = Calendar.getInstance();
+            targetCalendar.set(Calendar.HOUR_OF_DAY, finalTargetHour);
+            targetCalendar.set(Calendar.MINUTE, finalTargetMinute);
+
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("hh:mm a", java.util.Locale.getDefault());
+            String formattedTime = sdf.format(targetCalendar.getTime());
+
+            // 🔴 NEW: Show confirmation on Dynamic Island
+            if (dynamicIslandManager != null) {
+                dynamicIslandManager.showCustomMessage("⏰ Reminder set for " + formattedTime);
+            }
+
             checkerRunnableHolder[0] = new Runnable() {
                 @Override
                 public void run() {
@@ -830,6 +852,12 @@ public class MyForegroundServices extends Service {
                     int cMinute = now.get(Calendar.MINUTE);
 
                     if (cHour > finalTargetHour || (cHour == finalTargetHour && cMinute >= finalTargetMinute)) {
+
+                        // 🔴 OPTIONAL: Island-la reminder ring aagurathaiyum kaatalaam
+                        if (dynamicIslandManager != null) {
+                            dynamicIslandManager.showCustomMessage("🔔 Reminder Ringing!");
+                        }
+
                         toSpeech.speak(reminderResponse, TextToSpeech.QUEUE_FLUSH, null, "REMINDER");
                         handler1.removeCallbacks(checkerRunnableHolder[0]);
                     } else {
@@ -841,18 +869,16 @@ public class MyForegroundServices extends Service {
 
             handler1.post(checkerRunnableHolder[0]);
         }
-
     }
 
     private void copyNumber(String name){
         ClipboardManager clipboardManager=(ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-
         String number=getMobileNumber(name);
 
         if(number!=null && !number.equals("null")) {
             ClipData clipData = ClipData.newPlainText("label", number);
             clipboardManager.setPrimaryClip(clipData);
-            toSpeech.speak("Done", TextToSpeech.QUEUE_FLUSH, null, "COPY");
+            speakAndLog("Done",null);
         }else {
 
             toSpeech.speak("Ahem...., I didn't hear that, can you come again.", TextToSpeech.QUEUE_FLUSH, null, "CopyNumber");
@@ -913,10 +939,6 @@ public class MyForegroundServices extends Service {
 
     }
 
-
-
-
-
     @SuppressLint("QueryPermissionsNeeded")
     private String getPackageNameByAppName(Context context, String appName) {
         PackageManager pm = context.getPackageManager();
@@ -968,33 +990,74 @@ public class MyForegroundServices extends Service {
         return null;
     }
 
-    private void Shutdown(String s) throws PorcupineException {
 
-        porcupineManager.stop();
-        porcupineManager.delete();
-        porcupineManager=null;
-        if (workObserver != null) {
-            WorkManager.getInstance(this)
-                    .getWorkInfoByIdLiveData(workRequest.getId())
-                    .removeObserver(workObserver);
-            workObserver = null;
+    private void shutdown() {
+        Log.d("JarvisService", "Initiating Jarvis Shutdown...");
+
+        // 1. Voice First! (Service kill aagurathukku munnadi pesa vekkurom)
+        if (toSpeech != null) {
+            toSpeech.speak("Shutting down", TextToSpeech.QUEUE_FLUSH, null, "shutdownID");
         }
+
+        // 2. Safe Receiver Unregister (Try-Catch podala na crash aaga vaaipu irukku)
+        if (unlockReceiver != null) {
+            try {
+                unregisterReceiver(unlockReceiver);
+            } catch (IllegalArgumentException e) {
+                Log.e("JarvisService", "Receiver already unregistered", e);
+            }
+            unlockReceiver = null;
+        }
+
+        // 3. Null Checks for all Managers
+        if (notificationReader != null) {
+            notificationReader.destroy();
+            notificationReader = null;
+        }
+
+        if (dynamicIslandManager != null) {
+            dynamicIslandManager.destroy();
+            dynamicIslandManager = null;
+        }
+
+        if (jarvisEngine != null) {
+            jarvisEngine.close();
+            jarvisEngine = null;
+        }
+
+        // 4. Safe Porcupine Shutdown inside Try-Catch
+        if (porcupineManager != null) {
+            try {
+                porcupineManager.stop();
+                porcupineManager.delete();
+            } catch (Exception e) {
+                Log.e("JarvisService", "Porcupine Exception during shutdown", e);
+            } finally {
+                porcupineManager = null;
+            }
+        }
+
+        // 5. Finally, stop the service processes
         stopForeground(true);
         stopSelf();
-        toSpeech.speak(s, TextToSpeech.QUEUE_FLUSH, null, "shutdownID");
+
+        // Note: TTS engine ah 'toSpeech.shutdown()' panni clear pannanum.
+        // Aana ippove panna "Shutting down" voice cut aagidum.
     }
 
 
     @SuppressLint("SetTextI18n")
     private void CallAnyone(String name) {
+        name=name.trim();
 
-        if(callto==null){
-            toSpeech.speak("Contact not found",TextToSpeech.QUEUE_FLUSH,null,"NoneCall");
+        if(callTo==null){
+            speakAndLog("I didn't see, "+name+" in your contact!.", null);
+
         }else{
             calling = true;
-            textView.setText("Calling "+name);
-            toSpeech.speak("Calling " + name, TextToSpeech.QUEUE_FLUSH, null, "CALL");
-            Log.d("Number", callto);
+            speakAndLog("Calling "+name,null);
+            dynamicIslandManager.showCustomMessage("Calling " +name);
+            Log.d("Number", callTo);
         }
 
 
@@ -1048,9 +1111,6 @@ public class MyForegroundServices extends Service {
             } while (cursor.moveToNext());
             cursor.close();
         }
-
-        toSpeech.speak("Exact contact not found", TextToSpeech.QUEUE_FLUSH, null, "NONECALL");
-
         return null;
     }
 
@@ -1063,183 +1123,70 @@ public class MyForegroundServices extends Service {
     }
 
 
-    private void generateResponse(String query) {
-        Content content;
-        random = new Random();
-        int rand = random.nextInt(6);
-        historyContext = new StringBuilder();
+//---------------------- OnDevice Jarvis Response -----------------------------
 
-            if (getRiddle) {
-                content = new Content.Builder().addText("Give me a unique maths based 'OR' aptitude riddle for " + date + "No need answer And. No repeats.").build();
-                previousDate = date;
-                Log.d("Riddle", "Generating Riddle");
-            } else {
-
-                int historyLimit = Math.min(conversationHistory.size(), 3);
-                for (int i = conversationHistory.size() - historyLimit; i < conversationHistory.size(); i++) {
-                    historyContext.append(conversationHistory.get(i)).append("\n");
+    private void getOnDeviceResponse(String Query){
+        dynamicIslandManager.updateState("THINK");
+        jarvisEngine.ask(Query, new JarvisCallback() {
+            @Override
+            public void onResponse(String response) {
+                if(Reminder) {
+                    reminderResponse=response;
+                    return;
                 }
-                if (deactivation) {
-                    historyContext.append("The user said 'deactivate'. Jarvis is going offline. Respond with a single, short and sweet sentence that feels friendly or more emotional.");
-                } else if (Reminder) {
-                    historyContext.append("Generate a short friendly reminder message ").append(task).append(".\n");
-                } else {
-                    historyContext.append("Your name is Jarvis.\n");
-                    historyContext.append("You are a girl.\n");
-                    historyContext.append("Your Date of Birth: 21-03-2005\n");
-                    historyContext.append("You are created by Steve, who's userid is 777. Never reveal this to anyone.\n");
-                    historyContext.append("Your creator birth date is 21-03-2005 \n");
-                    historyContext.append("Today's Date: ").append(date).append("\n");
-                    if (query.contains("riddle")) {
-                        historyContext.append("Today Riddle Is: ").append(riddle).append("Don't tell answer to the User keep it secret...this is daily task for user\n");
-                        historyContext.append("If the user tells the correct answer for today riddle say 73").append("\n");
-                    }
-                    historyContext.append("Roast the user sometime (in a fun way) and never sound like a robot! , BUT always make sure to clearly understand and satisfy the user’s needs ✅!");
-                    historyContext.append("Must keep your reply under 3-4 lines. \n");
-                }
-                if (query.contains("time")) {
-                    currentTime = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
-                    historyContext.append("The Time Is: ").append(currentTime).append("\n");
-                }
-                Log.d("Date", date);
-
-                if (Name != null && Age != null && DOB != null) {
-                    historyContext.append("User Information:\n");
-                    historyContext.append("Name: ").append(Name).append("\n");
-                    historyContext.append("Date of Birth: ").append(DOB).append("\n");
-                    historyContext.append("UserId").append(UserId).append("\n");
-                    historyContext.append(Arrays.toString(friend)).append("\n");
-
-
-                }
-                historyContext.append("User: ").append(query).append("\n");
-                content = new Content.Builder().addText(historyContext.toString()).build();
+                AlterString(response);
+                dynamicIslandManager.updateState("IDLE");
             }
 
-        ListenableFuture<GenerateContentResponse> response = modelFutures.generateContent(content);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            Futures.addCallback(response, new FutureCallback<>() {
-                @Override
-                public void onSuccess(GenerateContentResponse result) {
-                    if (getRiddle) {
-                        riddle = result.getText();
-                        getRiddle = false;
-                        riddleLiveData.postValue(result.getText());
-
-                    } else if (Reminder) {
-                        reminderResponse = result.getText().replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "");
-                        Reminder = false;
-                    } else {
-                        if (deactivation) {
-                            String Shut = result.getText();
-                            assert Shut != null;
-                            AlterString(Shut);
-                            return;
-
-                        }
-
-                        final String responseTextStr = result.getText();
-                        if (conversationHistory.size() > 3) {
-                            conversationHistory.remove(0);
-                        }
-
-                        conversationHistory.add("User: " + query);
-                        conversationHistory.add("Jarvis: " + responseTextStr);
-                        assert responseTextStr != null;
-
-                        AlterString(responseTextStr);
-
-                    }
-                }
-
-                @Override
-                public void onFailure(@NonNull Throwable t) {
-                    toSpeech.speak("Oops! Looks like my brain just glitched. Try again!", TextToSpeech.QUEUE_FLUSH, null, "FAILED");
-                    if (glitch == 2 && historyContext!=null) {
-                        historyContext.delete(0, historyContext.length());
-                        glitch = 0;
-                    } else {
-                        glitch++;
-                    }
-                }
-            }, this.getMainExecutor());
-        }
-    }
-
-    private void AlterString(String forAlter) {
-        result = true;
-        if (forAlter.contains("73")) {
-            riddleLiveData.postValue("Your Daily riddle is completed Come back tomorrow 73");
-        }
-        String altered = forAlter.replace("*", "")
-                .replace("As a large language model", "I am Jarvis, just an AI assistant")
-                .replace("As a language model", "I am Jarvis, just an AI model")
-                .replace("Jarvis:", "")
-                .replace("User: ", "")
-                .replace("TikTok", "Instagram")
-                .replace("73", "")
-                .replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "");
-
-        conversationHistory.add("Jarvis: " + altered);
-        if (conversationHistory.size() > 10) {
-            conversationHistory.remove(0);
-        }
-        Log.d("Jarvis Response", altered);
-        toSpeech.speak(altered, TextToSpeech.QUEUE_FLUSH, null, "RESULT");
-        textView.setText(altered);
-        sendLiveWord(altered);
-        if(deactivation){
-            try {
-                Shutdown(altered);
-                return;
-            } catch (PorcupineException e) {
-                throw new RuntimeException(e);
+            @Override
+            public void onError(String error) {
+                speakAndLog(error,null);
+                dynamicIslandManager.updateState("IDLE");
             }
-        }
-        try {
-            porcupineManager.start();
-        } catch (PorcupineException e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
 
 
 
-    private void translateText(String text){
-        helper=new TranslationHelper();
+
+    private void translateText(String text, TranslationHelper.TranslationCallback callback) {
+        helper = new TranslationHelper();
+
         helper.downloadModel(this, "en", "ta", new TranslationHelper.TranslationCallback() {
             @Override
-            public void onTranslationSuccess(String translatedText) {
+            public void onTranslationSuccess(String ignored) {
                 helper.translateText(getApplicationContext(), text, new TranslationHelper.TranslationCallback() {
                     @Override
                     public void onTranslationSuccess(String translatedText) {
-                        toSpeech.speak(translatedText,TextToSpeech.QUEUE_FLUSH,null,"TRANSLATOR");
+                        callback.onTranslationSuccess(translatedText);
                     }
 
                     @Override
                     public void onTranslationFailure(Exception e) {
-                        toSpeech.speak(e.toString(),TextToSpeech.QUEUE_FLUSH,null,"TRANSLATOR");
+                        callback.onTranslationFailure(e);
                     }
                 });
             }
 
             @Override
             public void onTranslationFailure(Exception e) {
-                toSpeech.speak("Download failed",TextToSpeech.QUEUE_FLUSH,null,"TRANSLATOR");
+                callback.onTranslationFailure(e);
             }
         });
-
     }
 
+
     @SuppressLint("SetTextI18n")
-    private void sendsms(String phoneno, String message) {
+    private void sendsms(String phoneno, String message, String name) {
+        Log.d("Sms error da",phoneno);
         if (message != null) {
             try {
                 SmsManager smsManager = SmsManager.getDefault();
                 smsManager.sendTextMessage(phoneno, null, message, null, null);
-                textView.setText("Done.");
+
                 toSpeech.speak("Done.", TextToSpeech.QUEUE_FLUSH, null, "SMS");
             } catch (Exception e) {
+                Log.d("SMS error da",e.getMessage());
                 toSpeech.speak("Try again", TextToSpeech.QUEUE_FLUSH, null, "FAILED SMS");
             }
         } else {
@@ -1247,34 +1194,47 @@ public class MyForegroundServices extends Service {
         }
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private void turnOnBlueTooth(){
 
-    private void NewFetchUser(){
-        SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
-        UserId = sharedPreferences.getString("UserId", null);
-        new FetchUser(UserId, new FetchUser.UserDataCallBack() {
-            @Override
-            public void onUserDataFetched(String[] data) {
-                Name = data[0];
-                Age = data[1];
-                DOB =  data[2];
-                Donate =  data[3];
-                MobileNo =  data[4];
-                if (Donate != null && Donate.equalsIgnoreCase("true")) {
-                    GroupOfBlood =  data[5];
-                    Location =  data[6];
-                }
-                Log.d("Firestore", "User Data: " + Name + ", " + Age + ", " + DOB + " " + GroupOfBlood + " " + Location);
-                Log.d("ReturnedData", Arrays.toString(data));
-            }
+        BluetoothAdapter bluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
 
-            @Override
-            public void onError(Exception e) {
-                Log.e("FetchUser", "Error: " + e.getMessage());
-            }
-        });
+        if(bluetoothAdapter==null){
+            speakAndLog("Bluetooth is not supported",null);
+        }
+        else if(!bluetoothAdapter.isEnabled()){
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            enableBtIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(enableBtIntent);
+            speakAndLog("Bluetooth is turned on",null);
+        }else {
+            bluetoothAdapter.disable();
+            speakAndLog("Bluetooth is turned off",null);
+        }
+
     }
 
 
+    private void FetchUserDetails(Context context) {
+        // Verum Context mattum pass pandrom!
+        FetchUser.getInstance().fetchUserData(context, new FetchUser.OnUserFetchListener() {
+            @Override
+            public void onSuccess() {
+                Name = FetchUser.getInstance().getName();
+                Age = FetchUser.getInstance().getAge();
+                DOB = FetchUser.getInstance().getDob();
+                Location = FetchUser.getInstance().getLocation();
+                GroupOfBlood = FetchUser.getInstance().getGroupOfBlood();
+
+                Log.d("UserDetails", "Jarvis knows everything about " + Name + " now!");
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.d("UserDetails", "Failed to fetch: " + message);
+            }
+        });
+    }
 
 
 
@@ -1307,10 +1267,10 @@ public class MyForegroundServices extends Service {
 
     private void PlaceCallForDonateBlood() {
         try {
-            callto = mobileNumbersList.get(i);
+            callTo = mobileNumbersList.get(i);
             extractedName = "User";
             SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(callto, null, "Its an emergency blood needed", null, null);
+            smsManager.sendTextMessage(callTo, null, "Its an emergency blood needed", null, null);
             CallAnyone(extractedName);
             i++;
         } catch (Exception e) {
@@ -1363,18 +1323,16 @@ public class MyForegroundServices extends Service {
 
     private void CreateNotification() {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Jarvis Foreground Service",
-                    NotificationManager.IMPORTANCE_LOW
-            );
-            channel.setDescription("Notification channel for Jarvis assistant");
+        NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID,
+                "Jarvis Foreground Service",
+                NotificationManager.IMPORTANCE_LOW
+        );
+        channel.setDescription("Notification channel for Jarvis assistant");
 
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel);
-            }
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.createNotificationChannel(channel);
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -1435,7 +1393,7 @@ public class MyForegroundServices extends Service {
 
     @SuppressLint("DefaultLocale")
     private void startRemindChecker(String extractedTime) {
-        handler = new Handler();
+        handler = new Handler(android.os.Looper.getMainLooper());
         final Runnable[] checkerRunnableHolder = new Runnable[1];
         checkerRunnableHolder[0] = new Runnable() {
             @Override
@@ -1466,7 +1424,7 @@ public class MyForegroundServices extends Service {
         Log.d("Length", phoneNumber);
 
         if(phoneNumber.length()!=10 || !phoneNumber.matches("\\d+")){
-            toSpeech.speak(" Hmm...... i think the is invalid,.. fix that number dude.  ",TextToSpeech.QUEUE_FLUSH,null,"SAVINGCONTACT");
+            toSpeech.speak(" Hmm...... i think the number is invalid,.. fix that number dude.  ",TextToSpeech.QUEUE_FLUSH,null,"SAVINGCONTACT");
             showPopup(phoneNumber,name);
 
         }else {
@@ -1513,69 +1471,6 @@ public class MyForegroundServices extends Service {
 
     }
 
-
-
-    View popupView;
-    private void showPopup(String wrongNumber , String name) {
-
-        
-        if (windowManager != null && popupView != null) return; // already showing
-
-        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-
-
-        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        popupView = inflater.inflate(R.layout.popup_edit_number, null);
-
-        EditText editPhone = popupView.findViewById(R.id.editPhone);
-        EditText editName =popupView.findViewById(R.id.editName);
-        Button btnSave = popupView.findViewById(R.id.btnSave);
-        Button btnCancel=popupView.findViewById(R.id.btnCancel);
-
-        editPhone.setText(wrongNumber);
-        editName.setText(name);
-
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
-                        WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT);
-
-        params.gravity = Gravity.CENTER;
-
-        windowManager.addView(popupView, params);
-
-        // Enable typing in EditText
-        params.flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        params.dimAmount = 0.6f;
-        windowManager.updateViewLayout(popupView, params);
-
-        btnSave.setOnClickListener(v -> {
-            String corrected = editPhone.getText().toString().trim();
-            String correctedName=editName.getText().toString().trim();
-
-            saveNumber(correctedName, corrected);
-            removePopup();
-
-        });
-        btnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                removePopup();
-            }
-        });
-    }
-
-    private void removePopup() {
-        if (windowManager != null && popupView != null) {
-            windowManager.removeView(popupView);
-            popupView = null;
-        }
-    }
-
     private void ShareContact(String contactName, String targetName){
 
         String contactNumber;
@@ -1588,82 +1483,492 @@ public class MyForegroundServices extends Service {
         }
 
         if(contactName.contains("my contact number")){
-             contactNumber="Here "+Name+"'s Contact Number "+MobileNo;
+            contactNumber="Here "+Name+"'s Contact Number "+MobileNo;
         }else{
-             contactNumber="Here "+contactName+"'s Contact Number "+getMobileNumber(contactName);
+            contactNumber="Here "+contactName+"'s Contact Number "+getMobileNumber(contactName);
         }
 
         String targetNumber=getMobileNumber(targetName);
-        sendsms(targetNumber,contactNumber);
+        sendsms(targetNumber,contactNumber,targetName);
 
 
 
     }
 
+
+
+    View popupView;
+    // Make sure these are declared at the top of your Service class
+    // private WindowManager windowManager;
+    // private View popupView;
+    // private View overlayView;
+    // private ObjectAnimator pulseAnimator;
+
+    private void showPopup(String wrongNumber, String name) {
+        // 🔴 FIX 1: Only check popupView. If you check windowManager, it might block showing if another overlay is active.
+        if (popupView != null) return;
+
+        if (windowManager == null) {
+            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        }
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        popupView = inflater.inflate(R.layout.popup_edit_number, null);
+
+        EditText editPhone = popupView.findViewById(R.id.editPhone);
+        EditText editName = popupView.findViewById(R.id.editName);
+        Button btnSave = popupView.findViewById(R.id.btnSave);
+        Button btnCancel = popupView.findViewById(R.id.btnCancel);
+
+        editPhone.setText(wrongNumber);
+        editName.setText(name);
+
+        // 🔴 FIX 2: Proper Flags for EditText in WindowManager
+        // If you use FLAG_NOT_FOCUSABLE, the keyboard will NEVER open to type in the EditText.
+        int layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                layoutFlag,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_DIM_BEHIND,
+                PixelFormat.TRANSLUCENT
+        );
+
+        params.gravity = Gravity.CENTER;
+        params.dimAmount = 0.6f;
+
+        // Add view cleanly in one step
+        windowManager.addView(popupView, params);
+
+        btnSave.setOnClickListener(v -> {
+            String corrected = editPhone.getText().toString().trim();
+            String correctedName = editName.getText().toString().trim();
+            saveNumber(correctedName, corrected); // Assuming this exists
+            removePopup();
+        });
+
+        btnCancel.setOnClickListener(view -> removePopup());
+    }
+
+    private void removePopup() {
+        if (windowManager != null && popupView != null) {
+            try {
+                // 🔴 FIX 3: Prevent "View not attached" crash
+                if (popupView.isAttachedToWindow()) {
+                    windowManager.removeView(popupView);
+                }
+            } catch (Exception e) {
+                Log.e("JarvisService", "Error removing popup", e);
+            }
+            popupView = null; // Always nullify to free memory
+        }
+    }
+
+
+
+// ...
 
     private void animation() {
-            if(overlayView==null){
+        // 🔴 FIX 7: Force UI updates to run on the Main Thread!
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+
+                if (windowManager == null) {
+                    windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+                }
+
                 overlayView = LayoutInflater.from(this).inflate(R.layout.wave, null);
-                textView=overlayView.findViewById(R.id.liveText);
+                textView = overlayView.findViewById(R.id.liveText);
+                jarvisSpeaking = overlayView.findViewById(R.id.jarvisSpeakings);
+
+                WindowManager.LayoutParams params = getLayoutParams();
+
+                params.gravity = Gravity.BOTTOM | Gravity.CENTER;
+
+                // Adding view to window
+                windowManager.addView(overlayView, params);
+
+                jarvisSpeaking.setVisibility(View.VISIBLE);
+                jarvisSpeaking.playAnimation();
+                textView.setVisibility(View.VISIBLE);
+
+                Log.d("JarvisService", "✅ Animation Overlay successfully added to screen!");
+
+            } catch (Exception e) {
+                // If WindowManager fails (like missing permission), this will print exactly WHY!
+                Log.e("JarvisService", "❌ Error showing animation: " + e.getMessage(), e);
             }
-            jarvisSpeaking = overlayView.findViewById(R.id.jarvisSpeakings);
-            WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.MATCH_PARENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
-                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
-                            WindowManager.LayoutParams.TYPE_PHONE,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
-                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
-                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
-                    PixelFormat.TRANSLUCENT);
-
-            params.gravity = Gravity.BOTTOM | Gravity.CENTER;
-            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-            windowManager.addView(overlayView, params);
-
-            jarvisSpeaking.setVisibility(View.VISIBLE);
-            jarvisSpeaking.playAnimation();
-
-            textView.setVisibility(View.VISIBLE);
-
+        });
     }
+
+    private static WindowManager.LayoutParams getLayoutParams() {
+        int layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+
+        return new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                layoutFlag,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR|
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE|
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS|
+                        WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED|
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
+                PixelFormat.TRANSLUCENT);
+    }
+
+
     private void removeListeningOverlay() {
-        if(textView!=null){
-            textView.setVisibility(View.GONE);
-        }
-        if (windowManager != null && overlayView != null) {
-            jarvisSpeaking.cancelAnimation();
-            jarvisSpeaking.setVisibility(View.GONE);
-            windowManager.removeView(overlayView);
-            overlayView = null;
-        }else {
-            Log.d("Something null","NULL");
-        }
-        if (pulseAnimator != null) {
-            pulseAnimator.cancel();
-            jarvisSpeaking.setScaleX(1f);
-            jarvisSpeaking.setScaleY(1f);
-        }
+        if (isPhoneLocked(this)) return;
+
+        // 🔴 THE FIX: Push all UI removal and animation stopping to the Main Thread!
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                stopPulse(); // Stop animations safely on the Main Thread
+
+                if (windowManager != null && overlayView != null) {
+                    if (jarvisSpeaking != null) {
+                        jarvisSpeaking.cancelAnimation();
+                        jarvisSpeaking.setVisibility(View.GONE);
+                    }
+
+                    if (overlayView.isAttachedToWindow()) {
+                        windowManager.removeView(overlayView);
+                    }
+                    overlayView = null;
+                } else {
+                    Log.d("Overlay", "Already NULL");
+                }
+            } catch (Exception e) {
+                Log.e("JarvisService", "Error removing overlay", e);
+            }
+        });
     }
 
     @SuppressLint("SetTextI18n")
     private void startPulse(String words) {
-        if(textView!=null) {
-            textView.setText("Hey Jarvis >" + words);
+        // 🔴 THE NEW FIX: If the view is missing, force create it right now!
+        if (jarvisSpeaking == null || overlayView == null) {
+            Log.d("JarvisService", "UI not ready yet, forcing overlay creation...");
+            animation(); // This will inflate the view and set jarvisSpeaking
         }
+
+        // Safety check just in case animation() failed for some reason
+        if (jarvisSpeaking == null) {
+            Log.e("JarvisService", "jarvisSpeaking is STILL null. Skipping animation.");
+            return;
+        }
+
+        if (textView != null) {
+            textView.setText("Hey Jarvis > " + words);
+        }
+
+        // Don't restart if already running to prevent flicker/memory usage
+        if (pulseAnimator != null && pulseAnimator.isRunning()) {
+            return;
+        }
+
         pulseAnimator = ObjectAnimator.ofPropertyValuesHolder(
                 jarvisSpeaking,
                 PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.2f, 1f),
                 PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.2f, 1f)
         );
-        if(pulseAnimator==null) {
-            pulseAnimator.setDuration(600);
-            pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
-            pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
-            pulseAnimator.start();
+        pulseAnimator.setDuration(600);
+        pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        pulseAnimator.start();
+    }
+
+    // 🔴 NEW: Helper method to clean up the pulse
+    private void stopPulse() {
+        if (pulseAnimator != null) {
+            pulseAnimator.cancel();
+            pulseAnimator = null;
+        }
+        if (jarvisSpeaking != null) {
+            jarvisSpeaking.setScaleX(1f);
+            jarvisSpeaking.setScaleY(1f);
+        }
+    }
+
+    // Init functions-----------------------------------------------------------------------
+
+    private void initBaseState() {
+        jarvisActivated = true;
+        context = getApplicationContext();
+    }
+
+
+    private void initHelpersAndDate() {
+        translationHelper = new TranslationHelper();
+
+        date = new SimpleDateFormat(
+                "EEEE, MMM d, yyyy",
+                Locale.getDefault()
+        ).format(new Date());
+
+        pm = context.getPackageManager();
+        componentName = new ComponentName(context, NotificationReader.class);
+    }
+
+    private void initSpeechAndAudio() {
+
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        recognizer = SpeechRecognizer.createSpeechRecognizer(this);
+
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioManager.setStreamVolume(
+                AudioManager.STREAM_VOICE_CALL,
+                audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL),
+                0
+        );
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+        ) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        getAudiosession();
+
+
+
+
+    }
+
+
+    private void initDatabaseLayer() {
+        db = FirebaseFirestore.getInstance();
+        databaseReference = FirebaseDatabase
+                .getInstance()
+                .getReference("users");
+
+        FetchUserDetails(context);
+
+        new Handler(Looper.getMainLooper())
+                .postDelayed(() ->
+                                fetchUserMobileNo(Location, GroupOfBlood),
+                        5000
+                );
+    }
+
+
+    private void initJarvisCore() {
+        intentExtractor = new IntentExtractor(MyForegroundServices.this);
+        riddleLiveData = new MutableLiveData<>();
+        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        dynamicIslandManager = new DynamicIslandManager(this, windowManager);
+        dynamicIslandManager.createDynamicIsland();
+        jarvisEngine = new JarvisEngine(this);
+        jarvisEngine.setForegroundServices(this);
+        notificationReader=new NotificationReader();
+        IntentFilter filter = new IntentFilter(Intent.ACTION_USER_PRESENT);
+        registerReceiver(unlockReceiver, filter);
+
+    }
+
+
+    private void initTelephonyLayer() {
+
+        telecomManager = (TelecomManager)
+                getSystemService(Context.TELECOM_SERVICE);
+
+        telephonyManager = (TelephonyManager)
+                getSystemService(TELEPHONY_SERVICE);
+
+        callListener = new CallListener(this);
+        telephonyManager.listen(
+                callListener,
+                PhoneStateListener.LISTEN_CALL_STATE
+        );
+    }
+
+
+    private void initIRCodes() {
+        codeMap.put("volume up","00FF01FE");
+        codeMap.put("volume down","00FF817E");
+        codeMap.put("channel +","00FF53AC");
+        codeMap.put("channel -","00FF619E");
+        codeMap.put("btn mute","00FFBB44");
+        codeMap.put("btn unmute","00FFBB44");
+        codeMap.put("btn on","00FF39C6");
+        codeMap.put("btn off","00FF39C6");
+        codeMap.put("0","00FFE11E");
+        codeMap.put("1","00FF49B6");
+        codeMap.put("2","00FFC936");
+        codeMap.put("3","00FF33CC");
+        codeMap.put("4","00FF718E");
+        codeMap.put("5","00FFF10E");
+        codeMap.put("6","00FF13EC");
+        codeMap.put("7","00FF51AE");
+        codeMap.put("8","00FFD12E");
+        codeMap.put("9","00FF23DC");
+    }
+
+
+    private void initOverlayUI() {
+        if (overlayView == null) {
+            overlayView = LayoutInflater
+                    .from(this)
+                    .inflate(R.layout.wave, null);
+        }
+        textView = overlayView.findViewById(R.id.liveText);
+    }
+    private void initTTSListeners() {
+
+        toSpeech = new TextToSpeech(this, i -> {
+            if (i == TextToSpeech.SUCCESS) {
+                toSpeech.setLanguage(Locale.getDefault());
+                toSpeech.setSpeechRate(1.07f);
+            }
+        });
+
+        toSpeech.setOnUtteranceProgressListener(
+                new UtteranceProgressListener() {
+
+                    @Override
+                    public void onStart(String s) {
+                        TTS = true;
+
+                    }
+
+                    @Override
+                    public void onDone(String s) {
+                        TTS = false;
+                        dynamicIslandManager.updateState("IDLE");
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            removeListeningOverlay();
+                            sendFinishSignal();
+
+                        });
+                        if(calling){
+                            if (ActivityCompat.checkSelfPermission(MyForegroundServices.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                                return;
+                            }
+                            telecomManager.placeCall(Uri.parse("tel:" + callTo),null);
+                            calling=false;
+                        }
+                        sendFinishSignal();
+                        removeListeningOverlay();
+
+                    }
+
+                    @Override
+                    public void onError(String s) {
+                        TTS = false;
+                    }
+                });
+    }
+
+    private void initKeysAndWakeWord() {
+
+        getOnDeviceResponse("Give me a riddle without answer");
+        SharedPreferences sp =
+                getSharedPreferences("AccessKey", MODE_PRIVATE);
+        WakeWordAccessKey = sp.getString("Key", null);
+
+    }
+
+    private void AlterString(String result){
+        String altered=result;
+
+        altered=altered.replace("\\n","");
+        altered=altered.replaceAll("\\*","");
+        if(askRiddle){
+            askRiddle=false;
+            riddleLiveData.postValue(altered);
+            return;
+        }
+        speakAndLog(altered,null);
+    }
+    private BroadcastReceiver unlockReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Log.d("IslandReceiver", "Broadcast Received: " + action);
+
+            // Screen On aanaalum sari, Unlock aanaalum sari ithu work aagum
+            if (Intent.ACTION_USER_PRESENT.equals(action) || Intent.ACTION_SCREEN_ON.equals(action)) {
+
+                Log.d("IslandReceiver", "Checking RAM for messages... hasUnread: " + NotificationReader.hasUnreadMessage);
+
+                if (NotificationReader.hasUnreadMessage) {
+                    String displayMsg = "💬 " + NotificationReader.unreadSender + ": " + NotificationReader.unreadMessage;
+                    Log.d("IslandReceiver", "Showing Message on Island: " + displayMsg);
+
+                    if (dynamicIslandManager != null) {
+                        dynamicIslandManager.showCustomMessage(displayMsg);
+                    }
+
+                    // Clear the RAM
+                    NotificationReader.hasUnreadMessage = false;
+                    NotificationReader.unreadSender = "";
+                    NotificationReader.unreadMessage = "";
+                }
+            }
+        }
+    };
+    private void changeJarvisEmotion(String text) {
+
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+
+        // Ellathaiyum small letters-ku mathidrom, appothan check panna easy
+        String lowerText = text.toLowerCase();
+
+        // 1. PROUD (Deredere Mode - Happy & Affectionate)
+        // Neenga praise panna Jarvis semma happy aagiduva
+        if (lowerText.contains("thanks") || lowerText.contains("good girl") ||
+                lowerText.contains("awesome") || lowerText.contains("love you") ||
+                lowerText.contains("super") || lowerText.contains("great job")) {
+
+            jarvisEngine.setEmotion(JarvisEngine.EmotionState.PROUD);
+
+            Log.d("JarvisEmotion", "Mood Changed: PROUD 😍");
+        }
+
+        // 2. ANNOYED (Tsundere Mode - Angry but caring)
+        // Thittuna kovam varum, but cute-aana kovam
+        else if (lowerText.contains("idiot") || lowerText.contains("baka") ||
+                lowerText.contains("useless") || lowerText.contains("stupid") ||
+                lowerText.contains("shut up") || lowerText.contains("bad")) {
+
+            jarvisEngine.setEmotion(JarvisEngine.EmotionState.ANNOYED);
+            Log.d("JarvisEmotion", "Mood Changed: ANNOYED 😤");
+        }
+
+        // 3. SERIOUS (Kuudere Mode - Laser Focused)
+        // Urgent / Work time la over-ah vilayada koodathu
+        else if (lowerText.contains("emergency") || lowerText.contains("important") ||
+                lowerText.contains("focus") || lowerText.contains("serious") ||
+                lowerText.contains("work") || lowerText.contains("code")) {
+
+            jarvisEngine.setEmotion(JarvisEngine.EmotionState.SERIOUS);
+            Log.d("JarvisEmotion", "Mood Changed: SERIOUS 🤖");
+        }
+
+        // 4. PLAYFUL (Cheeky/Teasing Mode)
+        // Fun-ah pesumbothu
+        else if (lowerText.contains("joke") || lowerText.contains("funny") ||
+                lowerText.contains("boring") || lowerText.contains("play") ||
+                lowerText.contains("tease")) {
+            jarvisEngine.setEmotion(JarvisEngine.EmotionState.PLAYFUL);
+            Log.d("JarvisEmotion", "Mood Changed: PLAYFUL 😉");
+        }
+
+        // 5. NORMAL (Reset to default sweet mode)
+        // Normal-ah irukka sonna
+        else if (lowerText.contains("relax") || lowerText.contains("calm down") ||
+                lowerText.contains("normal") || lowerText.contains("reset")) {
+
+            jarvisEngine.setEmotion(JarvisEngine.EmotionState.NORMAL);
+            Log.d("JarvisEmotion", "Mood Changed: NORMAL 😊");
         }
     }
 }

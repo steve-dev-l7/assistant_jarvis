@@ -7,9 +7,6 @@
         android:title="WakeWord key"
          />
 
-    <item android:id="@+id/help"
-        android:title="Ai keys"/>
-
     <item android:id="@+id/contact"
         android:title="Contact us"/>
 

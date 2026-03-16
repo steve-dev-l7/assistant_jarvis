@@ -1,16 +1,11 @@
 package com.example.translateanywhere;
 
-import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.RemoteInput;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -19,15 +14,10 @@ import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
-import com.google.ai.client.generativeai.GenerativeModel;
-import com.google.ai.client.generativeai.java.GenerativeModelFutures;
-import com.google.ai.client.generativeai.type.Content;
-import com.google.ai.client.generativeai.type.GenerateContentResponse;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.firebase.firestore.FirebaseFirestore;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,34 +27,50 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class NotificationReader extends NotificationListenerService {
     String sender;
     String message;
-    GenerativeModel gm;
-    GenerativeModelFutures modelFutures;
-    String Name,  DOB,  UserId;
-    FirebaseFirestore db;
+
+    private OkHttpClient client;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private static final String NGROK_URL = "https://stably-oversusceptible-anne.ngrok-free.dev/api/chat";
+    private static final String OLLAMA_MODEL = "deepseek-r1:8b";
+
     Map<String, List<String>> conversationMap = new HashMap<>();
-    StringBuilder historyContext;
-    String notifKey,previousMessage="  ";
-    boolean isFeatureEnabled;
-    List<String> key=new ArrayList<>();
+    String notifKey, previousMessage = "  ";
+    boolean isFeatureEnabled; // Master switch from UI
     Set<String> repliedKeys = new HashSet<>();
 
     List<String> conversationHistory;
-
-    String GemeniApikey2;
     TextToSpeech toSpeech;
-
     Set<String> sentReplies = new HashSet<>();
+
+    // 🔴 THE MAGIC TOGGLES FOR DYNAMIC ISLAND & VOICE CONTROL
+    public static boolean isAutoReplyEnabled = false; // Voice command controls this!
+    public static String unreadSender = "";
+    public static String unreadMessage = "";
+    public static boolean hasUnreadMessage = false;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        db = FirebaseFirestore.getInstance();
-        toSpeech=new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+
+        client = new OkHttpClient.Builder()
+                .readTimeout(45, java.util.concurrent.TimeUnit.SECONDS)
+                .build();
+
+        toSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int i) {
                 if (i == TextToSpeech.SUCCESS) {
@@ -78,325 +84,274 @@ public class NotificationReader extends NotificationListenerService {
                 }
             }
         });
+
+        // Master switch from app settings
         SharedPreferences sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
         isFeatureEnabled = sharedPreferences.getBoolean("isFeatureEnabled", false);
-
-        SharedPreferences sharedPreferencess=getSharedPreferences("AccessKeys",MODE_PRIVATE);
-        GemeniApikey2= sharedPreferencess.getString("Key1",null);
-        if(GemeniApikey2!=null){
-            gm = new GenerativeModel("gemini-1.5-flash", GemeniApikey2);
-            modelFutures = GenerativeModelFutures.from(gm);
-        }else {
-            toSpeech.speak("Your Second Access key is empty",TextToSpeech.QUEUE_FLUSH,null,null);
-
-        }
-        NewFetchUser();
     }
+
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         super.onNotificationPosted(sbn);
 
-        if(!isFeatureEnabled || GemeniApikey2==null){
-            Log.d("Notification Reader","Auto reply is disabled");
-            return;
-        }
-        if(previousMessage.equals(message)){
-            Log.d("Previous Message detected","Skipped::"+message);
-            return;
-        }
+        Log.d("NotificationReader", ">>> Notification Received from: " + sbn.getPackageName() + " <<<");
 
 
-        Log.d("DEBUG", "Notification received from: " + sbn.getPackageName());
         if (sbn.getNotification().extras != null) {
+            String packageName = sbn.getPackageName();
 
-            if( sbn.getPackageName().equals("com.instagram.android")) {
+            if (packageName.equals("com.instagram.android")) {
                 String m = sbn.getNotification().extras.getString("android.text", "");
                 String s = sbn.getNotification().extras.getString("android.title", "");
 
-                Log.d("DEBUG", "Title: " + s + ", Message: " + m);
+                Log.d("NotificationReader", "Insta Title: " + s + ", Message: " + m);
+
+                // 🔴 LOOP BLOCKER 1: Ignore if the sender is "Steve" or "You"
+                String myName = FetchUser.getInstance().isLoaded() ? FetchUser.getInstance().getName() : "Steve";
+                if (s != null && (s.equalsIgnoreCase(myName) || s.equalsIgnoreCase("Steve") || s.contains("You"))) {
+                    Log.d("LoopBlocker", "Ignored my own notification: " + s);
+                    return;
+                }
+
+                // 🔴 LOOP BLOCKER 2: Ignore if the message is exactly what Jarvis just sent
+                if (sentReplies.contains(m)) {
+                    Log.d("LoopBlocker", "Ignored echoed message (Jarvis talking to himself)!");
+                    return;
+                }
 
                 if (m.startsWith("Jarvis:") || m.contains("Booyah") || m.contains("Steve's laid-back")) {
-                    Log.d("SelfReply", "Ignored self-sent reply: " + m);
                     return;
                 }
 
-                if ( (m.contains("messages from") || m.contains("chats WhatsApp") || m.contains("reels") || m.contains("reel")) || m.contains("Liked") || m.contains("Reacted") ) {
-                    Log.d("Unwanted messages","Detected");
+                // Insta specific ignore words
+                if ((m.contains("messages from") || m.contains("reels") || m.contains("reel")) || m.contains("Liked") || m.contains("Reacted") || m.contains("sent an attachment")) {
                     return;
                 }
-                if( m.contains(previousMessage)){
-                    Log.d("previous message","skipped");
-                    return;
-                }
-                    if (m.contains("messages")) {
-                        Log.d("DEBUG", "Group message or multiple messages skipped.");
-                    }else {
 
-                        message = m;
-                        sender = s;
-                        notifKey = sbn.getKey();
-                    }
+                if (m.equals(previousMessage) || m.contains("messages")) {
+                    return;
+                }
+
+                message = m;
+                sender = s;
+                notifKey = sbn.getKey();
+
+                if (isAutoReplyEnabled) {
                     if (repliedKeys.contains(notifKey)) {
-                        Log.d("Already replied", "Skipping duplicate notification");
                         return;
-                    }if(message.contains("emergency") || message.contains("important")){
-                        Log.d("Important ","Notifying to steve");
+                    }
+
+                    if (message.toLowerCase().contains("emergency") || message.toLowerCase().contains("important")) {
                         notifyImportance(sender);
                     }
-                        repliedKeys.add(notifKey);
-                        createJarvisReply(sender, message, sbn);
 
-                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                                repliedKeys.remove(notifKey);
-                        }
-                    },5000);
+                    repliedKeys.add(notifKey);
+                    createJarvisReply(sender, message, sbn);
 
-                    Log.d("Message from WhatsApp", sender + ": " + message);
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> repliedKeys.remove(notifKey), 5000);
+                } else {
+                    unreadSender = sender;
+                    unreadMessage = message;
+                    hasUnreadMessage = true;
+                    Log.d("NotificationReader", "Auto reply OFF. Saved in RAM for Island.");
 
-            } else {
-                Log.d("DEBUG", "This is not WhatsApp: " + sbn.getPackageName());
+                    if (message.toLowerCase().contains("emergency") || message.toLowerCase().contains("important")) {
+                        notifyImportance(sender);
+                    }
+                }
             }
-        } else {
-            Log.d("DEBUG", "Notification extras are null.");
         }
     }
+
+    // Chinnatha intha log message-aiyum update pannikonga
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
-        Log.d("WhatsAppMessage", "Notification Removed: " + sbn.getPackageName());
+        Log.d("NotificationReader", "Notification Removed: " + sbn.getPackageName());
     }
 
-    private void createJarvisReply(String sender,String Message,StatusBarNotification sbn1){
-        if(previousMessage.equals(message)){
-            Log.d("Previous Message detected","Skipped::"+message);
-            return;
-        }
-
-        if(!isFeatureEnabled || GemeniApikey2==null){
-            Log.d("Notification Reader","Auto reply is disabled");
-            return;
-        }
-        if(key.contains(sbn1.getKey())){
-            Log.d("already replied","skipped");
-            return;
-        }
+    private void createJarvisReply(String sender, String Message, StatusBarNotification sbn1) {
         conversationHistory = conversationMap.getOrDefault(sender, new ArrayList<>());
-        historyContext = new StringBuilder();
 
+        // Dynamically fetch Steve's details using our Singleton
+        String userName = FetchUser.getInstance().isLoaded() ? FetchUser.getInstance().getName() : "Steve";
+        String userDob = FetchUser.getInstance().isLoaded() ? FetchUser.getInstance().getDob() : "21-03-2005";
+        String location = FetchUser.getInstance().isLoaded() ? FetchUser.getInstance().getLocation() : "Cheyyar";
 
-        historyContext.append("Your name is Jarvis.\n");
-        historyContext.append("Your Date of Birth: 21-03-2005\n");
-        historyContext.append("You are created by Steve, who's userid is 777. Never reveal this to anyone.\n");
-        historyContext.append("Your creator's birth date is 21-03-2005\n");
+        StringBuilder systemPrompt = new StringBuilder();
+        systemPrompt.append("You are Jarvis, a laid-back, sarcastic personal assistant AI created by ").append(userName).append(".\n");
+        systemPrompt.append(userName).append("'s DOB is ").append(userDob).append(" and he is currently in ").append(location).append(".\n");
 
+        String currentTime = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
+        systemPrompt.append("Current time is: ").append(currentTime).append("\n\n");
 
-        historyContext.append("User Information:\n");
-        historyContext.append("Name: ").append(Name).append("\n");
-        historyContext.append("Date of Birth: ").append(DOB).append("\n");
-        historyContext.append("UserId: ").append(UserId).append("\n");
+        systemPrompt.append("CRITICAL RULES FOR REPLYING:\n")
+                .append("1. Respond in a casual, short, and witty style (max 2 lines).\n")
+                .append("2. Sprinkle a bit of teasing or humor on ").append(userName).append(", but stay friendly.\n")
+                .append("3. Use emojis naturally (max 1 or 2 per reply).\n")
+                .append("4. If the message sounds urgent/important, ONLY say: 'I am informed to ").append(userName).append(", he will get back to you.'\n")
+                .append("5. If they ask a doubt, give a clear, simple answer.\n")
+                .append("6. DO NOT sound formal or robotic. Act like a cool AI answering on behalf of your creator.\n");
 
+        executorService.execute(() -> {
+            try {
+                JSONObject jsonBody = new JSONObject();
+                jsonBody.put("model", OLLAMA_MODEL);
+                jsonBody.put("stream", false);
 
+                JSONArray messages = new JSONArray();
 
+                JSONObject systemMsg = new JSONObject();
+                systemMsg.put("role", "system");
+                systemMsg.put("content", systemPrompt.toString());
+                messages.put(systemMsg);
 
-
-        if (Message.toLowerCase().contains("time")) {
-            String currentTime = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
-            historyContext.append("The current time is: ").append(currentTime).append("\n");
-        }
-
-
-        historyContext.append("\nYou're Jarvis – Steve's laid-back, sarcastic personal assistant 😏.\n")
-                .append("Respond in a casual, short, and witty style (max 2–4 lines).\n")
-                .append("Sprinkle a bit of teasing or humor at times on steve, but stay friendly.\n")
-                .append("Use emojis naturally (not too many, 1–3 per reply).\n")
-                .append("If the message sounds urgent/important → only say: 'I am informed to steve, he will get back to you as soon as possible'\n")
-                .append("If the sender asks a doubt → give a clear, simple answer.\n")
-                .append("If the chat feels like it’s ending → wrap up with a chill goodbye or say you'll pass it to Steve.\n")
-                .append("Always avoid sounding formal or robotic.\n")
-                .append("Message from ")
-                .append(sender)
-                .append(": \"")
-                .append(Message)
-                .append("\"");
-
-        if (!conversationHistory.isEmpty()) {
-            historyContext.append("\nPrevious conversation:\n");
-            for (String entry : conversationHistory) {
-                historyContext.append(entry).append("\n");
-            }
-        }
-
-
-
-        Content content = new Content.Builder().addText(historyContext.toString()).build();
-        ListenableFuture<GenerateContentResponse> response = modelFutures.generateContent(content);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            Futures.addCallback(response,
-                    new FutureCallback<GenerateContentResponse>() {
-                        @Override
-                        public void onSuccess(GenerateContentResponse result) {
-                            final String responseTextStr = result.getText();
-                            if (conversationHistory.size() >=7) {
-                                conversationHistory.remove(0);
-                            }
-                            conversationHistory.add("User: " + Message);
-                            conversationHistory.add("Jarvis: " + responseTextStr);
-
-                            conversationMap.put(sender, conversationHistory);
-                            Log.d("ConversationMap", conversationMap.toString());
-                            assert responseTextStr != null;
-                            alterstring(responseTextStr,sbn1);
-                        }
-
-                        @Override
-                        public void onFailure(Throwable t) {
-                           final String hardInput="I can't reply to hard thing or personal things";
-                           alterstring(hardInput,sbn1);
-                        }
-                    },this.getMainExecutor());
-        }
-    }
-
-
-    private void sendAutoReply(Notification notification,String Jarvisresponse,StatusBarNotification sbn){
-        if(notification==null || notification.actions==null ) return;
-
-        if(!isFeatureEnabled || GemeniApikey2==null){
-            Log.d("Notification Reader","Auto reply is disabled");
-            return;
-        }
-
-        if (sentReplies.contains(message)) {
-            Log.d("LoopBlocker", "Already sent this reply, skipping...");
-            return;
-        }
-
-
-        for (Notification.Action action: notification.actions){
-            if (sentReplies.contains(message)) {
-                Log.d("LoopBlocker", "Already sent this reply, skipping...");
-                return;
-            }
-
-            RemoteInput[] remoteInputs = action.getRemoteInputs();
-            if (remoteInputs == null || remoteInputs.length == 0) continue;
-
-            androidx.core.app.RemoteInput[] compatInputs = new androidx.core.app.RemoteInput[remoteInputs.length];
-
-
-            for(int i=0;i< remoteInputs.length;i++){
-                if (sentReplies.contains(message)) {
-                    Log.d("LoopBlocker", "Already sent this reply, skipping...");
-                    return;
+                // Add Conversation History
+                for (String entry : conversationHistory) {
+                    JSONObject histMsg = new JSONObject();
+                    if (entry.startsWith("User: ")) {
+                        histMsg.put("role", "user");
+                        histMsg.put("content", entry.substring(6));
+                    } else if (entry.startsWith("Jarvis: ")) {
+                        histMsg.put("role", "assistant");
+                        histMsg.put("content", entry.substring(8));
+                    }
+                    messages.put(histMsg);
                 }
 
-                compatInputs[i] = new androidx.core.app.RemoteInput.Builder(remoteInputs[i].getResultKey())
-                        .setLabel(remoteInputs[i].getLabel())
-                        .setChoices(remoteInputs[i].getChoices())
-                        .setAllowFreeFormInput(remoteInputs[i].getAllowFreeFormInput())
-                        .addExtras(remoteInputs[i].getExtras())
+                // Add current message
+                JSONObject currentMsg = new JSONObject();
+                currentMsg.put("role", "user");
+                currentMsg.put("content", "Message from " + sender + ": \"" + Message + "\"");
+                messages.put(currentMsg);
+
+                jsonBody.put("messages", messages);
+
+                RequestBody body = RequestBody.create(
+                        jsonBody.toString(),
+                        MediaType.get("application/json; charset=utf-8")
+                );
+
+                Request request = new Request.Builder()
+                        .url(NGROK_URL)
+                        .addHeader("ngrok-skip-browser-warning", "true")
+                        .post(body)
                         .build();
 
-                if (sentReplies.contains(message)) {
-                    Log.d("LoopBlocker", "Already sent this reply, skipping...");
-                    return;
-                }
-            }
-            Bundle replyBundle = new Bundle();
-            for (androidx.core.app.RemoteInput input : compatInputs) {
-                if (sentReplies.contains(message)) {
-                    Log.d("LoopBlocker", "Already sent this reply, skipping...");
-                    return;
-                }
-
-                replyBundle.putCharSequence(input.getResultKey(), Jarvisresponse);
-            }
-            if (previousMessage.equals(message)){
-                return;
-            }
-            Intent replyIntent = new Intent();
-            androidx.core.app.RemoteInput.addResultsToIntent(compatInputs, replyIntent, replyBundle);
-            previousMessage=message;
-            message=null;
-            Log.d("Previous Message",previousMessage);
-            sentReplies.add(message);
-
-            if(sentReplies.size()>=10){
-                //noinspection SuspiciousMethodCalls
-                sentReplies.remove(1);
-            }
-
-            try{
-                action.actionIntent.send(this, 0, replyIntent);
-                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                if (notificationManager != null) {
-                    notificationManager.cancel(sbn.getPackageName(), sbn.getId());
-                    Log.d("NotificationRemoved", "Notification removed: " + sbn.getKey());
-                    cancelNotification(sbn.getKey());
-
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        Log.e("NotificationReader", "API call failed", e);
+                        alterstring("I am having network issues, Steve will reply later.", sbn1, Message);
                     }
-                Log.d("NotificationRemoved", "Cancelled with key: " + sbn.getKey());
-                Log.d("JarvisAutoReply", "Sent: " + Jarvisresponse);
-            }catch (PendingIntent.CanceledException e){
-                Log.d("ReplyError", "Failed to send auto reply: " + e.getMessage());
-            }
 
-        }
-    }
-    private void NewFetchUser(){
-        SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
-        UserId = sharedPreferences.getString("UserId", null);
-        new FetchUser(UserId, new FetchUser.UserDataCallBack() {
-            @Override
-            public void onUserDataFetched(String[] data) {
-                Name = data[0];
-                DOB =  data[2];
-                Log.d("ReturnedData", java.util.Arrays.toString(data));
-            }
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        if (response.isSuccessful() && response.body() != null) {
+                            try {
+                                String responseString = response.body().string();
+                                JSONObject jsonResponse = new JSONObject(responseString);
+                                String jarvisReply = jsonResponse.getJSONObject("message").getString("content");
 
-            @Override
-            public void onError(Exception e) {
-                Log.e("FetchUser", "Error: " + e.getMessage());
+                                jarvisReply = jarvisReply.replaceAll("(?s)<think>.*?</think>", "").trim();
+
+                                if (conversationHistory.size() >= 6) {
+                                    conversationHistory.remove(0);
+                                    conversationHistory.remove(0);
+                                }
+                                conversationHistory.add("User: " + Message);
+
+                                alterstring(jarvisReply, sbn1, Message);
+
+                            } catch (Exception e) {
+                                alterstring("Error processing reply. Steve will check it out.", sbn1, Message);
+                            }
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                Log.e("NotificationReader", "Failed to build request", e);
             }
         });
     }
-    private void alterstring(String foralter,StatusBarNotification sbn) {
 
+    // ✅ FIXED: Clean and exact Auto Reply method
+    private void sendAutoReply(Notification notification, String jarvisResponse, StatusBarNotification sbn) {
+        if (notification == null || notification.actions == null) return;
+
+        for (Notification.Action action : notification.actions) {
+            android.app.RemoteInput[] remoteInputs = action.getRemoteInputs();
+            if (remoteInputs != null) {
+                for (android.app.RemoteInput remoteInput : remoteInputs) {
+
+                    // We found the actual reply input box!
+                    Bundle localReply = new Bundle();
+                    localReply.putCharSequence(remoteInput.getResultKey(), jarvisResponse);
+
+                    android.app.RemoteInput[] inputs = new android.app.RemoteInput[1];
+                    inputs[0] = remoteInput;
+
+                    Intent localIntent = new Intent();
+                    android.app.RemoteInput.addResultsToIntent(inputs, localIntent, localReply);
+
+                    try {
+                        action.actionIntent.send(this, 0, localIntent);
+
+                        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                        if (notificationManager != null) {
+                            cancelNotification(sbn.getKey());
+                        }
+                        Log.d("JarvisAutoReply", "Successfully sent: " + jarvisResponse);
+                        return; // Done sending, exit loop immediately!
+
+                    } catch (PendingIntent.CanceledException e) {
+                        Log.e("ReplyError", "Failed to send auto reply", e);
+                    }
+                }
+            }
+        }
+    }
+
+    private void alterstring(String foralter, StatusBarNotification sbn, String originalMessage) {
         String altered = foralter.replace("*", "")
-                .replace("As a large language model", "I am Jarvis, just an AI model")
-                .replace("As a language model", "I am Jarvis, just an AI model")
+                .replace("As a large language model", "I am Jarvis")
                 .replace("Jarvis:", "")
                 .replace("User:", "")
                 .replace("TikTok", "Instagram")
-                .replace("I'm an AI", "I'm Jarvis")
-                .replace("AI assistant", "personal assistant")
-                .replace("dinner","Booyah");
+                .trim();
 
         conversationHistory.add("Jarvis: " + altered);
-        if (conversationHistory.size() > 10) {
-            conversationHistory.remove(0);
+        conversationMap.put(sender, conversationHistory);
+
+        previousMessage = originalMessage;
+
+        // 🔴 LOOP BLOCKER 3: Save what we just sent so we don't reply to it again!
+        sentReplies.add(altered);
+
+        // Clear old memory so it doesn't slow down the phone
+        if (sentReplies.size() > 20) {
+            sentReplies.clear();
         }
+
         Log.d("Jarvis Response", altered);
-        sendAutoReply(sbn.getNotification(),altered,sbn);
-
+        sendAutoReply(sbn.getNotification(), altered, sbn);
     }
-    private void notifyImportance(String sender){
 
-
-        String speakText = "Hey"+Name+", you might want to call or message "
+    private void notifyImportance(String sender) {
+        String safeName = FetchUser.getInstance().isLoaded() ? FetchUser.getInstance().getName() : "Steve";
+        String speakText = "Hey " + safeName + ", you might want to check messages from "
                 + sender.replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "")
                 + ". They mentioned something important.";
 
-            toSpeech.speak(speakText, TextToSpeech.QUEUE_FLUSH, null, null);
-
+        toSpeech.speak(speakText, TextToSpeech.QUEUE_FLUSH, null, null);
     }
 
-    public void destroy(){
+    public void destroy() {
+        if (toSpeech != null) {
+            toSpeech.stop();
+            toSpeech.shutdown();
+        }
+        isAutoReplyEnabled=false;
         stopSelf();
     }
-
 }
-
