@@ -6,7 +6,7 @@ import { getAnalytics } from "firebase/analytics";
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBhf9-9878LvChIMMf_wPqcqxNYmwe4Ego",
-  authDomain: "translateanywhere-7614e.firebaseapp.com",
+  authDomain: "jarvis-official-support.firebaseapp.com",
   projectId: "translateanywhere-7614e",
   storageBucket: "translateanywhere-7614e.firebasestorage.app",
   messagingSenderId: "600499890236",
