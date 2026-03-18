@@ -5,13 +5,12 @@ import { getAnalytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBhf9-9878LvChIMMf_wPqcqxNYmwe4Ego",
-  authDomain: "jarvis-official-support.firebaseapp.com",
-  projectId: "translateanywhere-7614e",
-  storageBucket: "translateanywhere-7614e.firebasestorage.app",
-  messagingSenderId: "600499890236",
-  appId: "1:600499890236:web:1b6d5e04cc090354adbb39",
-  measurementId: "G-GQK692QVN7"
+  apiKey: "AIzaSyAgEe2sNXEMw0n9zrNbw2lv6rP4zX9Rl44",
+  authDomain: "steve-creations-01.firebaseapp.com",
+  projectId: "steve-creations-01",
+  storageBucket: "steve-creations-01.firebasestorage.app",
+  messagingSenderId: "931546126483",
+  appId: "1:931546126483:web:9cd904738a9894c6991566"
 };
 
 const app = initializeApp(firebaseConfig);
