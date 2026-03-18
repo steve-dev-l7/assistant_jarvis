@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "jarvis-support-official",
     "public": "dist",
     "ignore": [
       "firebase.json",
