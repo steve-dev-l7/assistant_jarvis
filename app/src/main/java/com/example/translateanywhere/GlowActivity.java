@@ -54,9 +54,9 @@ public class GlowActivity extends AppCompatActivity {
                 Log.d("GlowActivity", "Finishing due to speech end");
                 stopPulse();
 
-                // 🔴 UPDATED: Safely assigning runnable to handler
+                // 🔴 UPDATED: Reduced delay to 500ms for snappier exit
                 finishRunnable = () -> finishAndRemoveTask();
-                finishHandler.postDelayed(finishRunnable, 2000);
+                finishHandler.postDelayed(finishRunnable, 500);
             }
         }
     };
@@ -113,7 +113,7 @@ public class GlowActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        // Registering receiver here is fine
+        // Registering receiver
         IntentFilter filter = new IntentFilter();
         filter.addAction("ACTION_LIVE_WORD");
         filter.addAction("ACTION_FINISH_ACTIVITY");
@@ -178,7 +178,6 @@ public class GlowActivity extends AppCompatActivity {
             jarvisSpeaking.removeAllAnimatorListeners();
         }
 
-        // 4. Nullify views to free up RAM
         jarvisSpeaking = null;
         liveText = null;
         pulseAnimator = null;

@@ -3,15 +3,19 @@ package com.example.translateanywhere;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ClipboardManager;
+import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.ContactsContract;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
+import android.telephony.SmsManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -53,7 +57,6 @@ public class NotificationReader extends NotificationListenerService {
     Set<String> repliedKeys = new HashSet<>();
 
     List<String> conversationHistory;
-    TextToSpeech toSpeech;
     Set<String> sentReplies = new HashSet<>();
 
     // 🔴 THE MAGIC TOGGLES FOR DYNAMIC ISLAND & VOICE CONTROL
@@ -62,6 +65,8 @@ public class NotificationReader extends NotificationListenerService {
     public static String unreadMessage = "";
     public static boolean hasUnreadMessage = false;
 
+    MyForegroundServices myForegroundServices;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -69,21 +74,6 @@ public class NotificationReader extends NotificationListenerService {
         client = new OkHttpClient.Builder()
                 .readTimeout(45, java.util.concurrent.TimeUnit.SECONDS)
                 .build();
-
-        toSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int i) {
-                if (i == TextToSpeech.SUCCESS) {
-                    int result = toSpeech.setLanguage(Locale.US);
-                    if (result == TextToSpeech.LANG_MISSING_DATA ||
-                            result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Log.e("TTS", "Language is not supported");
-                    }
-                } else {
-                    Log.e("TTS", "Initialization failed");
-                }
-            }
-        });
 
         // Master switch from app settings
         SharedPreferences sharedPreferences = getSharedPreferences("Jarvis", MODE_PRIVATE);
@@ -100,6 +90,23 @@ public class NotificationReader extends NotificationListenerService {
 
         if (sbn.getNotification().extras != null) {
             String packageName = sbn.getPackageName();
+
+            if ("com.google.android.apps.messaging".equals(packageName) || "com.android.mms".equals(packageName)) {
+                Bundle extras = sbn.getNotification().extras;
+                if (extras != null) {
+                    // In notifications, 'title' is the sender name/number, 'text' is the message
+                    String senderNumber = extras.getString("android.title");
+                    CharSequence messageCharSeq = extras.getCharSequence("android.text");
+
+                    if (senderNumber != null && messageCharSeq != null) {
+                        String messageBody = messageCharSeq.toString();
+                        Log.d("NotificationReader", "🚨 SMS INTERCEPTED! Sender: " + senderNumber + " | Msg: " + messageBody);
+
+                        // Process the name saving logic
+                        checkAndSaveContact(getApplicationContext(), senderNumber, messageBody);
+                    }
+                }
+            }
 
             if (packageName.equals("com.instagram.android")) {
                 String m = sbn.getNotification().extras.getString("android.text", "");
@@ -168,6 +175,107 @@ public class NotificationReader extends NotificationListenerService {
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
         Log.d("NotificationReader", "Notification Removed: " + sbn.getPackageName());
+    }
+
+    private void checkAndSaveContact(Context context, String senderNumber, String messageBody) {
+        SharedPreferences prefs = context.getSharedPreferences("JarvisMemory", Context.MODE_PRIVATE);
+
+        String cleanNumber = senderNumber.replaceAll("[^0-9]", "");
+        String lookupKey = cleanNumber;
+        if (lookupKey.length() > 10) {
+            lookupKey = lookupKey.substring(lookupKey.length() - 10);
+        }
+
+        boolean isWaitingForName = prefs.getBoolean("waiting_for_name_" + lookupKey, false);
+
+        if (isWaitingForName) {
+            Log.d("JarvisSmsObserver", "Reply received for name request from " + lookupKey + ": " + messageBody);
+            String newContactName = messageBody.trim();
+            
+            // Use the full cleanNumber (including country code if present) for saving to contacts
+            saveNewContact(context, newContactName, cleanNumber);
+            
+            prefs.edit().remove("waiting_for_name_" + lookupKey).apply();
+            sendThankYouSMS(senderNumber, newContactName);
+            Log.d("JarvisSmsObserver", "Successfully saved contact: " + newContactName + " with number: " + cleanNumber);
+        } else {
+        Log.d("JarvisSmsObserver", "Normal SMS from " + cleanNumber + ": " + messageBody);
+
+        if (messageBody != null) {
+            // 1. Check if the message actually contains OTP-related words
+            String lowerMsg = messageBody.toLowerCase();
+            if (lowerMsg.contains("otp") || lowerMsg.contains("code") || lowerMsg.contains("pin") || lowerMsg.contains("verification")) {
+
+                // 2. REGEX MAGIC: Find any 4 to 8-digit number in the text
+                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\b\\d{4,8}\\b");
+                java.util.regex.Matcher matcher = pattern.matcher(messageBody);
+
+                if (matcher.find()) {
+                    String extractedOTP = matcher.group(); // The exact OTP number
+
+                    // 3. Copy to Clipboard
+                    android.content.ClipboardManager clipboardManager = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    android.content.ClipData clip = android.content.ClipData.newPlainText("Jarvis OTP", extractedOTP);
+                    if (clipboardManager != null) {
+                        clipboardManager.setPrimaryClip(clip);
+                    }
+
+                    Log.d("JarvisSmsObserver", "🚨 OTP Extracted & Copied: " + extractedOTP);
+
+                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            MyForegroundServices.instance.dynamicIslandManager.showCustomMessage("📋 OTP Copied: " + extractedOTP);
+                        }
+                    },100);
+
+                }
+            }
+        }
+    }
+    }
+
+
+
+    private void sendThankYouSMS(String phoneNumber, String name) {
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            String replyMessage = "Thank you, " + name + ". I have successfully saved your contact in my device.";
+            ArrayList<String> parts = smsManager.divideMessage(replyMessage);
+            smsManager.sendMultipartTextMessage(phoneNumber, null, parts, null, null);
+        } catch (Exception e) {
+            Log.e("JarvisSmsObserver", "Failed to send SMS", e);
+        }
+    }
+
+    private void saveNewContact(Context context, String name, String phoneNumber) {
+
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+        int rawContactInsertIndex = ops.size();
+
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+                .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+                .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+                .build());
+
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, rawContactInsertIndex)
+                .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+                .build());
+
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, rawContactInsertIndex)
+                .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
+                .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+                .build());
+
+        try {
+            context.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
+        } catch (Exception e) {
+            Log.e("JarvisSmsObserver", "Failed to save contact", e);
+        }
     }
 
     private void createJarvisReply(String sender, String Message, StatusBarNotification sbn1) {
@@ -343,14 +451,11 @@ public class NotificationReader extends NotificationListenerService {
                 + sender.replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}]", "")
                 + ". They mentioned something important.";
 
-        toSpeech.speak(speakText, TextToSpeech.QUEUE_FLUSH, null, null);
+        myForegroundServices.speakAndLog(speakText, null);
     }
 
     public void destroy() {
-        if (toSpeech != null) {
-            toSpeech.stop();
-            toSpeech.shutdown();
-        }
+
         isAutoReplyEnabled=false;
         stopSelf();
     }

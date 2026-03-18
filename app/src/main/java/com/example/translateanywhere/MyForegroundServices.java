@@ -1,20 +1,11 @@
 package com.example.translateanywhere;
 
 
-
-
-
-
-
 import android.Manifest;
-
-
-
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
-
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -22,57 +13,54 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothProfile;
+import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ComponentName;
+import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
 import android.content.Context;
-import android.content.*;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
-
 import android.graphics.PixelFormat;
-
-
+import android.hardware.camera2.CameraManager;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-
-
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-
 import android.os.PowerManager;
 import android.provider.ContactsContract;
-
+import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
-
 import android.telecom.TelecomManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-
-
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-
 import android.view.WindowManager;
-
-
-
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
 
 import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
@@ -81,27 +69,22 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.airbnb.lottie.LottieAnimationView;
-
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 import ai.picovoice.porcupine.PorcupineActivationLimitException;
 import ai.picovoice.porcupine.PorcupineActivationRefusedException;
@@ -113,26 +96,26 @@ import ai.picovoice.porcupine.PorcupineManager;
 
 public class MyForegroundServices extends Service {
     private PorcupineManager porcupineManager;
-    SpeechRecognizer recognizer;
+    SpeechRecognizer speechRecognizer;
     TextToSpeech toSpeech;
     String recodedtext;
     Boolean calling = false;
     TranslationHelper translationHelper;
-    Boolean jarvisActivated,deactivation=false;
+    Boolean jarvisActivated,deactivation=false,isShuttingDown=false;
     ComponentName componentName;
     PackageManager pm;
     Boolean TTS = false,nullMessage=false;
-    String callTo = null, extractedName;
+    String callTo = null;
 
     boolean askRiddle=true;
     String task;
     private ObjectAnimator pulseAnimator;
 
-    SpeechRecognizer speechRecognizer;
 
+    static MyForegroundServices instance;
 
     int audioSessionId;
-    String Name, Age, DOB, date, GroupOfBlood, Location, MobileNo;
+    String Name, Age, DOB, date, Location, MobileNo;
 
     TextView textView;
     Notification notification1;
@@ -147,17 +130,9 @@ public class MyForegroundServices extends Service {
     AudioManager audioManager;
 
     LottieAnimationView jarvisSpeaking;
-    TranslationHelper helper;
     FirebaseFirestore db;
 
-
-
-
     public WindowManager windowManager;
-
-
-
-
 
     Map<String, String> codeMap = new HashMap<>();
 
@@ -166,8 +141,7 @@ public class MyForegroundServices extends Service {
     Boolean nullCallerName=false;
 
     DatabaseReference databaseReference;
-    ArrayList<String> mobileNumbersList = new ArrayList<>();
-    int i = 0;
+
     String WakeWordAccessKey;
     private static final String CHANNEL_ID = "JarvisServiceChannel";
     TelecomManager telecomManager;
@@ -237,10 +211,47 @@ public class MyForegroundServices extends Service {
         // ===== WAKE WORD & KEYS =====
         initKeysAndWakeWord();
 
+        // ===== TEXT PROCESSOR =====
+        initTextProcessor();
 
+        random = new Random();
 
-        random=new Random();
+        instance=this;
 
+    }
+
+    private void initTextProcessor() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent != null && "ACTION_PROCESS_TEXT".equals(intent.getAction())) {
+                    String text = intent.getStringExtra("text");
+                    if (text != null && !text.isEmpty()) {
+                        recodedtext = text;
+                        Log.d("TextProcessor", "Received text: " + text);
+
+                        if (nullCallerName) {
+                            nullCallerName = false;
+                            callTo = getMobileNumber(recodedtext);
+                            CallAnyone(recodedtext);
+                        } else if (nullMessage) {
+                            nullMessage = false;
+                            sendsms(callTo, recodedtext, recodedtext);
+                        } else {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                intentExtractor.extract(recodedtext, new IntentExtractor.ExtractorCallback() {
+                                    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                                    @Override
+                                    public void onResult(String intent, String target, String message, String time) {
+                                        processCommand(intent, target, message, time);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }, new IntentFilter("ACTION_PROCESS_TEXT"));
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
@@ -330,7 +341,7 @@ public class MyForegroundServices extends Service {
         return START_NOT_STICKY;
     }
 
-    private void speakAndLog(String message, Exception e) {
+    public void speakAndLog(String message, Exception e) {
         Log.e("Porcupine", message, e);
         if(toSpeech!=null){
             toSpeech.speak(message,TextToSpeech.QUEUE_FLUSH,null,"ONGOING");
@@ -549,10 +560,7 @@ public class MyForegroundServices extends Service {
                 ", Time=" + Time);
 
         // ---------- EMERGENCY (Checks 'recodedtext', so it stays outside switch) ----------
-        if (recodedtext != null && recodedtext.equalsIgnoreCase("life saver")) {
-            PlaceCallForDonateBlood();
-            return;
-        }
+
 
         // ---------- ALL INTENTS HANDLED IN A CLEAN SWITCH ----------
         switch (intent) {
@@ -632,6 +640,31 @@ public class MyForegroundServices extends Service {
                 jarvisEngine.clearPermanentMemory();
                 speakAndLog("Done !",null);
                 return;
+            case "TURN_ON_WIFI":
+                toggleWiFi(true);
+                return;
+            case "TURN_OFF_WIFI":
+                toggleWiFi(false);
+                return;
+            case "TURN_ON_HOTSPOT":
+                toggleHotspot(true);
+                return;
+            case "TURN_OFF_HOTSPOT":
+                toggleHotspot(false);
+                return;
+            case "TURN_ON_FLASHLIGHT":
+                toggleFlashlight(true);
+                return;
+            case "TURN_OFF_FLASHLIGHT":
+                toggleFlashlight(false);
+                return;
+            case "TURN_ON_DATA":
+                toggleMobileData(true);
+                return;
+            case "TURN_OFF_DATA":
+                toggleMobileData(false);
+                return;
+
             case "TURN_ON":
             case "TURN_OFF":
                 turnOnBlueTooth();
@@ -668,6 +701,7 @@ public class MyForegroundServices extends Service {
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void handleMessage(String target, String message) {
         callTo = getMobileNumber(target);
+        if(callTo==null) {speakAndLog("Caller number is not found",null);return;}
         Log.d("CallNumber da",callTo);
         if (message == null || message.isEmpty()) {
             askMessageContent();
@@ -726,7 +760,7 @@ public class MyForegroundServices extends Service {
         try {
             porcupineManager.stop();
         } catch (PorcupineException e) {
-            e.printStackTrace();
+            Log.d("Porcupine Error", Objects.requireNonNull(e.getMessage()));
         }
 
         new Handler().postDelayed(() -> {
@@ -900,19 +934,22 @@ public class MyForegroundServices extends Service {
 
         try {
 
-            pm.getPackageInfo(packageName, 0);
+            if (packageName != null) {
+                pm.getPackageInfo(packageName, 0);
 
-            Intent launchIntent = pm.getLaunchIntentForPackage(packageName);
 
-            if (launchIntent != null) {
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                textView.setText("Opening app...");
-                toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
-                startActivity(launchIntent);
-            } else {
-                textView.setText("App installed but cannot be launched");
-                toSpeech.speak("App is installed but has no launcher", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
-                Log.e("Jarvis", "App installed but has no launchable intent: " + packageName);
+                Intent launchIntent = pm.getLaunchIntentForPackage(packageName);
+
+                if (launchIntent != null) {
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    textView.setText("Opening app...");
+                    toSpeech.speak("Roger", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+                    startActivity(launchIntent);
+                } else {
+                    textView.setText("App installed but cannot be launched");
+                    toSpeech.speak("App is installed but has no launcher", TextToSpeech.QUEUE_FLUSH, null, "OpeningApplication");
+                    Log.e("Jarvis", "App installed but has no launchable intent: " + packageName);
+                }
             }
         } catch (PackageManager.NameNotFoundException e) {
 
@@ -992,14 +1029,35 @@ public class MyForegroundServices extends Service {
 
 
     private void shutdown() {
+        if (isShuttingDown) return;
+        isShuttingDown = true;
+
         Log.d("JarvisService", "Initiating Jarvis Shutdown...");
 
-        // 1. Voice First! (Service kill aagurathukku munnadi pesa vekkurom)
+        // 1. Voice First!
         if (toSpeech != null) {
-            toSpeech.speak("Shutting down", TextToSpeech.QUEUE_FLUSH, null, "shutdownID");
+            toSpeech.speak("Shutting down", TextToSpeech.QUEUE_FLUSH, null, null);
         }
 
-        // 2. Safe Receiver Unregister (Try-Catch podala na crash aaga vaaipu irukku)
+        // 2. Kill Speech Components Immediately
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                if (speechRecognizer != null) {
+                    speechRecognizer.stopListening();
+                    speechRecognizer.cancel();
+                    speechRecognizer.destroy();
+                    speechRecognizer = null;
+                }
+            } catch (Exception e) {
+                Log.e("JarvisService", "Error destroying SpeechRecognizer", e);
+            }
+            removeListeningOverlay();
+            sendFinishSignal();
+        });
+
+        instance = null;
+
+        // 3. Safe Receiver Unregister
         if (unlockReceiver != null) {
             try {
                 unregisterReceiver(unlockReceiver);
@@ -1009,7 +1067,7 @@ public class MyForegroundServices extends Service {
             unlockReceiver = null;
         }
 
-        // 3. Null Checks for all Managers
+        // 4. Null Checks for Managers
         if (notificationReader != null) {
             notificationReader.destroy();
             notificationReader = null;
@@ -1025,7 +1083,9 @@ public class MyForegroundServices extends Service {
             jarvisEngine = null;
         }
 
-        // 4. Safe Porcupine Shutdown inside Try-Catch
+        jarvisSpeaking = null;
+
+        // 5. Safe Porcupine Shutdown
         if (porcupineManager != null) {
             try {
                 porcupineManager.stop();
@@ -1037,12 +1097,9 @@ public class MyForegroundServices extends Service {
             }
         }
 
-        // 5. Finally, stop the service processes
+        // 6. Stop the service
         stopForeground(true);
         stopSelf();
-
-        // Note: TTS engine ah 'toSpeech.shutdown()' panni clear pannanum.
-        // Aana ippove panna "Shutting down" voice cut aagidum.
     }
 
 
@@ -1126,7 +1183,9 @@ public class MyForegroundServices extends Service {
 //---------------------- OnDevice Jarvis Response -----------------------------
 
     private void getOnDeviceResponse(String Query){
-        dynamicIslandManager.updateState("THINK");
+        if (dynamicIslandManager != null) {
+            dynamicIslandManager.updateState("THINK");
+        }
         jarvisEngine.ask(Query, new JarvisCallback() {
             @Override
             public void onResponse(String response) {
@@ -1135,13 +1194,17 @@ public class MyForegroundServices extends Service {
                     return;
                 }
                 AlterString(response);
-                dynamicIslandManager.updateState("IDLE");
+                if (dynamicIslandManager != null) {
+                    dynamicIslandManager.updateState("IDLE");
+                }
             }
 
             @Override
             public void onError(String error) {
                 speakAndLog(error,null);
-                dynamicIslandManager.updateState("IDLE");
+                if (dynamicIslandManager != null) {
+                    dynamicIslandManager.updateState("IDLE");
+                }
             }
         });
     }
@@ -1150,7 +1213,7 @@ public class MyForegroundServices extends Service {
 
 
     private void translateText(String text, TranslationHelper.TranslationCallback callback) {
-        helper = new TranslationHelper();
+        TranslationHelper helper = new TranslationHelper();
 
         helper.downloadModel(this, "en", "ta", new TranslationHelper.TranslationCallback() {
             @Override
@@ -1224,7 +1287,7 @@ public class MyForegroundServices extends Service {
                 Age = FetchUser.getInstance().getAge();
                 DOB = FetchUser.getInstance().getDob();
                 Location = FetchUser.getInstance().getLocation();
-                GroupOfBlood = FetchUser.getInstance().getGroupOfBlood();
+
 
                 Log.d("UserDetails", "Jarvis knows everything about " + Name + " now!");
             }
@@ -1238,47 +1301,7 @@ public class MyForegroundServices extends Service {
 
 
 
-    private void fetchUserMobileNo(String userLocation, String userGroup) {
-        db.collection("users")
-                .whereEqualTo("Group", userGroup).whereEqualTo("Location", userLocation)
-                .addSnapshotListener((value, error) -> {
-                    if (error != null) {
-                        Log.e("FirestoreError", "Error fetching data", error);
-                        return;
-                    }
 
-                    if (value != null) {
-                        mobileNumbersList.clear();
-                        Log.d("Total Documents", "Found: " + value.size());
-
-                        for (DocumentSnapshot snapshot : value.getDocuments()) {
-
-                            if (snapshot.contains("Mobile")) {
-                                String mobileStr = snapshot.getString("Mobile");
-                                if (mobileStr != null && !mobileStr.equals(MobileNo)) {
-                                    mobileNumbersList.add(mobileStr);
-                                }
-                            }
-                        }
-                        Log.d("All Numbers :", mobileNumbersList.toString());
-                    }
-                });
-    }
-
-    private void PlaceCallForDonateBlood() {
-        try {
-            callTo = mobileNumbersList.get(i);
-            extractedName = "User";
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(callTo, null, "Its an emergency blood needed", null, null);
-            CallAnyone(extractedName);
-            i++;
-        } catch (Exception e) {
-            Log.d("Error", "Index over");
-            toSpeech.speak("No more nearby user matched with your blood group", TextToSpeech.QUEUE_FLUSH, null, "UNMATCHED");
-            i = 0;
-        }
-    }
 
     private void controlMusic(int key) {
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -1463,7 +1486,7 @@ public class MyForegroundServices extends Service {
                 toSpeech.speak("Done", TextToSpeech.QUEUE_FLUSH, null, "SAVINGCONTACT");
 
             } catch (Exception e) {
-                Log.d("Saving Error", e.getMessage());
+                Log.d("Saving Error", Objects.requireNonNull(e.getMessage()));
                 toSpeech.speak("Failed to save contact", TextToSpeech.QUEUE_FLUSH, null, "SAVINGCONTACT");
             }
         }
@@ -1498,11 +1521,7 @@ public class MyForegroundServices extends Service {
 
 
     View popupView;
-    // Make sure these are declared at the top of your Service class
-    // private WindowManager windowManager;
-    // private View popupView;
-    // private View overlayView;
-    // private ObjectAnimator pulseAnimator;
+    
 
     private void showPopup(String wrongNumber, String name) {
         // 🔴 FIX 1: Only check popupView. If you check windowManager, it might block showing if another overlay is active.
@@ -1572,6 +1591,7 @@ public class MyForegroundServices extends Service {
     private void animation() {
         // 🔴 FIX 7: Force UI updates to run on the Main Thread!
         new Handler(Looper.getMainLooper()).post(() -> {
+            if (isShuttingDown) return;
             try {
 
                 if (windowManager == null) {
@@ -1623,7 +1643,7 @@ public class MyForegroundServices extends Service {
 
 
     private void removeListeningOverlay() {
-        if (isPhoneLocked(this)) return;
+        // 🔴 FIX: Removed lock check. Always try to remove overlay if it exists.
 
         // 🔴 THE FIX: Push all UI removal and animation stopping to the Main Thread!
         new Handler(Looper.getMainLooper()).post(() -> {
@@ -1651,6 +1671,7 @@ public class MyForegroundServices extends Service {
 
     @SuppressLint("SetTextI18n")
     private void startPulse(String words) {
+        if (isShuttingDown) return;
         // 🔴 THE NEW FIX: If the view is missing, force create it right now!
         if (jarvisSpeaking == null || overlayView == null) {
             Log.d("JarvisService", "UI not ready yet, forcing overlay creation...");
@@ -1718,7 +1739,6 @@ public class MyForegroundServices extends Service {
     private void initSpeechAndAudio() {
 
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-        recognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.setStreamVolume(
@@ -1750,11 +1770,6 @@ public class MyForegroundServices extends Service {
 
         FetchUserDetails(context);
 
-        new Handler(Looper.getMainLooper())
-                .postDelayed(() ->
-                                fetchUserMobileNo(Location, GroupOfBlood),
-                        5000
-                );
     }
 
 
@@ -1766,10 +1781,8 @@ public class MyForegroundServices extends Service {
         dynamicIslandManager.createDynamicIsland();
         jarvisEngine = new JarvisEngine(this);
         jarvisEngine.setForegroundServices(this);
-        notificationReader=new NotificationReader();
         IntentFilter filter = new IntentFilter(Intent.ACTION_USER_PRESENT);
         registerReceiver(unlockReceiver, filter);
-
     }
 
 
@@ -1844,7 +1857,6 @@ public class MyForegroundServices extends Service {
                         new Handler(Looper.getMainLooper()).post(() -> {
                             removeListeningOverlay();
                             sendFinishSignal();
-
                         });
                         if(calling){
                             if (ActivityCompat.checkSelfPermission(MyForegroundServices.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
@@ -1856,11 +1868,32 @@ public class MyForegroundServices extends Service {
                         sendFinishSignal();
                         removeListeningOverlay();
 
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            try {
+                                if (porcupineManager != null && !nullCallerName && !nullMessage) {
+                                    porcupineManager.start();
+                                    Log.d("Porcupine", "Resumed listening after TTS Done");
+                                }
+                            } catch (PorcupineException e) {
+                                Log.e("Porcupine", "Error restarting after TTS: " + e.getMessage());
+                            }
+                        });
+
                     }
 
                     @Override
                     public void onError(String s) {
                         TTS = false;
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            try {
+                                if (porcupineManager != null && !nullCallerName && !nullMessage) {
+                                    porcupineManager.start();
+                                    Log.d("Porcupine", "Resumed listening after TTS Error");
+                                }
+                            } catch (PorcupineException e) {
+                                Log.e("Porcupine", "Error restarting after TTS Error: " + e.getMessage());
+                            }
+                        });
                     }
                 });
     }
@@ -1934,7 +1967,7 @@ public class MyForegroundServices extends Service {
         }
 
         // 2. ANNOYED (Tsundere Mode - Angry but caring)
-        // Thittuna kovam varum, but cute-aana kovam
+        
         else if (lowerText.contains("idiot") || lowerText.contains("baka") ||
                 lowerText.contains("useless") || lowerText.contains("stupid") ||
                 lowerText.contains("shut up") || lowerText.contains("bad")) {
@@ -1970,6 +2003,57 @@ public class MyForegroundServices extends Service {
             jarvisEngine.setEmotion(JarvisEngine.EmotionState.NORMAL);
             Log.d("JarvisEmotion", "Mood Changed: NORMAL 😊");
         }
+    }
+
+    private void toggleWiFi(boolean enable) {
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Intent panelIntent = new Intent(Settings.Panel.ACTION_WIFI);
+            panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(panelIntent);
+            speakAndLog("Opening WiFi settings, Commander.", null);
+        } else {
+            if (wifiManager != null) {
+                wifiManager.setWifiEnabled(enable);
+                speakAndLog("WiFi turned " + (enable ? "on" : "off"), null);
+            }
+        }
+    }
+
+    private void toggleFlashlight(boolean enable) {
+        CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        try {
+            String cameraId = cameraManager.getCameraIdList()[0];
+            cameraManager.setTorchMode(cameraId, enable);
+            speakAndLog("Flashlight turned " + (enable ? "on" : "off"), null);
+        } catch (Exception e) {
+            Log.e("JarvisAutomation", "Error toggling flashlight", e);
+            speakAndLog("I couldn't control the flashlight, Commander.", e);
+        }
+    }
+
+    private void toggleHotspot(boolean enable) {
+        // Hotspot is very restricted. Usually just opens the settings.
+        try {
+            Intent intent = new Intent();
+            intent.setClassName("com.android.settings", "com.android.settings.TetherSettings");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            speakAndLog("Opening Hotspot settings, Commander.", null);
+        } catch (Exception e) {
+            Intent intent = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            speakAndLog("I'll open wireless settings for you to toggle the hotspot.", null);
+        }
+    }
+
+    private void toggleMobileData(boolean enable) {
+        // Mobile data is also restricted.
+        Intent intent = new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        speakAndLog("Opening Mobile Data settings, Commander.", null);
     }
 }
 

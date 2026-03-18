@@ -28,7 +28,7 @@ public class IntentExtractor {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private static final String NGROK_URL = "https://stably-oversusceptible-anne.ngrok-free.dev/api/chat";
-    private static final String OLLAMA_MODEL = "deepseek-r1:8b";
+    private static final String OLLAMA_MODEL = "mistral";
 
     // ✅ Static HashMaps for Keywords and Examples (Loads only once for max speed)
     private static final Map<String, String[]> keywordsMap = new HashMap<>();
@@ -45,6 +45,7 @@ public class IntentExtractor {
             "message", "text", "sms", "tell", "send", "share",
             "enable", "disable", "turn on", "turn off", "switch",
             "deactivate", "sleep", "clear memory", "delete memory",
+            "wifi", "hotspot", "flashlight", "torch", "internet", "data"
     };
 
     static {
@@ -267,7 +268,42 @@ public class IntentExtractor {
             return true;
         }
 
+        // 10. AUTOMATIONS (WiFi, Hotspot, Flashlight, Internet)
+        if (q.contains("wifi")) {
+            if (q.contains("on") || q.contains("enable") || q.contains("start")) {
+                callback.onResult("TURN_ON_WIFI", "", "", "");
+            } else if (q.contains("off") || q.contains("disable") || q.contains("stop")) {
+                callback.onResult("TURN_OFF_WIFI", "", "", "");
+            }
+            return true;
+        }
 
+        if (q.contains("hotspot")) {
+            if (q.contains("on") || q.contains("enable") || q.contains("start")) {
+                callback.onResult("TURN_ON_HOTSPOT", "", "", "");
+            } else if (q.contains("off") || q.contains("disable") || q.contains("stop")) {
+                callback.onResult("TURN_OFF_HOTSPOT", "", "", "");
+            }
+            return true;
+        }
+
+        if (q.contains("flashlight") || q.contains("torch")) {
+            if (q.contains("on") || q.contains("enable") || q.contains("start")) {
+                callback.onResult("TURN_ON_FLASHLIGHT", "", "", "");
+            } else if (q.contains("off") || q.contains("disable") || q.contains("stop")) {
+                callback.onResult("TURN_OFF_FLASHLIGHT", "", "", "");
+            }
+            return true;
+        }
+
+        if (q.contains("internet") || q.contains("mobile data") || q.contains("data")) {
+            if (q.contains("on") || q.contains("enable") || q.contains("start")) {
+                callback.onResult("TURN_ON_DATA", "", "", "");
+            } else if (q.contains("off") || q.contains("disable") || q.contains("stop")) {
+                callback.onResult("TURN_OFF_DATA", "", "", "");
+            }
+            return true;
+        }
 
         return false;
     }
@@ -283,7 +319,6 @@ public class IntentExtractor {
                 JSONObject jsonBody = new JSONObject();
                 jsonBody.put("model", OLLAMA_MODEL);
                 jsonBody.put("stream", false);
-                jsonBody.put("options", new JSONObject().put("num_predict", 50));
                 JSONArray messages = new JSONArray();
 
                 JSONObject systemMsg = new JSONObject();
@@ -318,12 +353,13 @@ public class IntentExtractor {
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
-                        if (response.isSuccessful() && response.body() != null) {
+                        Log.d("IntentExtractor", "API call successful" +response);
+                        if (response.isSuccessful()) {
                             try {
                                 String responseString = response.body().string();
                                 JSONObject jsonResponse = new JSONObject(responseString);
                                 String extractedContent = jsonResponse.getJSONObject("message").getString("content");
-
+                                Log.d("IntentExtractor", "RAW AI Response Data: " + responseString);
                                 extractedContent = extractedContent.replaceAll("(?s)<think>.*?</think>", "").trim();
                                 extractedContent = extractedContent.replace("```json", "").replace("```", "").trim();
 
@@ -354,7 +390,6 @@ public class IntentExtractor {
 
 
 
-    // ✅ NEW HASHMAP BASED DYNAMIC PROMPT BUILDER
     private String getDynamicSystemPrompt(String query) {
         String basePrompt = "You are an Intent Extraction engine. Extract intent, target, message, and time from the user query.\n" +
                 "ALLOWED INTENTS: CALL, MESSAGE, OPEN, REMINDER, PLAY_MUSIC, STOP_MUSIC, INSTALL, SHARE_CONTACT, ENABLE AUTO REPLY , DISABLE AUTO REPLY , DEACTIVATE, UNKNOWN\n\n" +

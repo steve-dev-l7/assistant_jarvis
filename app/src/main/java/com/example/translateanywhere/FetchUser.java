@@ -6,8 +6,6 @@ import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -17,15 +15,14 @@ public class FetchUser {
     private static FetchUser instance;
 
     private FirebaseFirestore dataBase;
-    private DatabaseReference databaseReference;
 
     // User Variables
-    private String name = "Steve"; // Default fallback
+    private String name = "Commander"; // Default fallback
     private String age = "";
     private String dob = "";
-    private String donate = "";
+
     private String mobile = "";
-    private String groupOfBlood = "";
+
     private String location = "";
 
     private String userId ="";
@@ -38,9 +35,8 @@ public class FetchUser {
     }
 
     // Private constructor for Singleton
-    private FetchUser() {
+    FetchUser() {
         dataBase = FirebaseFirestore.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference("users");
     }
 
     // Get the single instance
@@ -78,13 +74,9 @@ public class FetchUser {
                             name = documentSnapshot.getString("Name");
                             age = documentSnapshot.getString("Age");
                             dob = documentSnapshot.getString("DOB");
-                            donate = documentSnapshot.getString("Donate");
-                            mobile = documentSnapshot.getString("Mobile");
 
-                            if ("true".equalsIgnoreCase(donate)) {
-                                groupOfBlood = documentSnapshot.getString("Group");
-                                location = documentSnapshot.getString("Location");
-                            }
+                            mobile = documentSnapshot.getString("Mobile");
+                            location = documentSnapshot.getString("Location");
 
                             isDataLoaded = true;
                             Log.d("FetchUser", "User data fetched and cached successfully.");
@@ -108,9 +100,7 @@ public class FetchUser {
     public String getName() { return name; }
     public String getAge() { return age; }
     public String getDob() { return dob; }
-    public String getDonate() { return donate; }
     public String getMobile() { return mobile; }
-    public String getGroupOfBlood() { return groupOfBlood; }
     public String getLocation() { return location; }
     public boolean isLoaded() { return isDataLoaded; }
 

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.0"
+agp = "8.9.1"
 aiGenerativeai = "0.9.0"
 aiPorcupineAndroid = "3.0.3"
 

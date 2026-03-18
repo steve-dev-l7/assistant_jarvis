@@ -2,4 +2,45 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Professional Design System (Refined Black) -->
+    <color name="bg_primary">#050505</color>
+    <color name="bg_surface">#0A0A0A</color>
+    <color name="bg_elevated">#121212</color>
+
+    <color name="accent_violet">#6D28D9</color>
+    <color name="accent_violet_light">#7C3AED</color>
+    <color name="accent_sky">#0284C7</color>
+    <color name="accent_sky_light">#0EA5E9</color>
+    <color name="accent_purple">#B026FF</color>
+
+    <color name="text_primary">#F1F5F9</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_hint">#64748B</color>
+
+    <color name="border_subtle">#2E3A5C</color>
+    <color name="divider">#1E293B</color>
+
+    <!-- Jarvis Brain Redesign Colors (Golden/Orange) -->
+    <color name="jarvis_bg_dark">#080808</color>
+    <color name="jarvis_card_bg">#121212</color>
+    <color name="jarvis_border">#1a2d3e</color>
+    <color name="jarvis_amber">#FFCC44</color>
+    <color name="jarvis_amber_glow">#40FFCC44</color>
+    <color name="jarvis_amber_muted">#4D432E</color>
+    <color name="jarvis_text_primary">#ffffff</color>
+    <color name="jarvis_text_secondary">#8a99a8</color>
+    <color name="jarvis_text_highlight">#FFAB40</color>
+
+    <!-- Keep old names but point to new colors for minimal friction -->
+    <color name="jarvis_cyan">@color/jarvis_amber</color>
+    <color name="jarvis_cyan_glow">@color/jarvis_amber_glow</color>
+    <color name="jarvis_cyan_muted">@color/jarvis_amber_muted</color>
+    <color name="accent_cyan">@color/jarvis_amber</color>
+
+    <!-- Legacy (kept for backward compat) -->
+    <color name="glass_bg">#1AFFFFFF</color>
+    <color name="glass_border">#33FFFFFF</color>
+    <color name="bg_deep_slate">#0F172A</color>
+    <color name="bg_midnight">#020617</color>
 </resources>

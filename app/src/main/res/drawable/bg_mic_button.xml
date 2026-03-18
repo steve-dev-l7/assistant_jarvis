@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer Glow -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/jarvis_cyan_glow" />
+            <size android:width="160dp" android:height="160dp" />
+        </shape>
+    </item>
+    <!-- Inner Border -->
+    <item android:top="8dp" android:bottom="8dp" android:left="8dp" android:right="8dp">
+        <shape android:shape="oval">
+            <stroke android:width="3dp" android:color="@color/jarvis_cyan" />
+            <solid android:color="@android:color/transparent" />
+            <size android:width="144dp" android:height="144dp" />
+        </shape>
+    </item>
+    <!-- Inner Circle Background (Dark) -->
+    <item android:top="11dp" android:bottom="11dp" android:left="11dp" android:right="11dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/jarvis_bg_dark" />
+            <size android:width="138dp" android:height="138dp" />
+        </shape>
+    </item>
+</layer-list>

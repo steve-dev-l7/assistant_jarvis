@@ -1,30 +1,6 @@
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- Outer glowing gradient stroke -->
-    <item>
-        <shape android:shape="rectangle">
-            <stroke
-                android:width="3dp"
-                android:color="@android:color/transparent" />
-
-            <!-- Jarvis futuristic gradient border -->
-            <gradient
-                android:angle="135"
-                android:startColor="#00F5FF"
-                android:centerColor="#0d1b2a"
-                android:endColor="#00F5FF"
-                android:type="linear" />
-
-            <corners android:radius="12dp" />
-        </shape>
-    </item>
-
-    <!-- Inner background (dark futuristic) -->
-    <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
-        <shape android:shape="rectangle">
-            <solid android:color="#0A0F18" /> <!-- Dark background -->
-            <corners android:radius="10dp" />
-        </shape>
-    </item>
-
-</layer-list>
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/glass_bg" />
+    <corners android:radius="16dp" />
+    <stroke android:width="1dp" android:color="@color/glass_border" />
+</shape>

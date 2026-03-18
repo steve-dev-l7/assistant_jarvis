@@ -13,7 +13,6 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -30,10 +29,10 @@ public class Login extends AppCompatActivity {
     EditText ID, DOB;
     FirebaseFirestore db;
     String userId, DofB;
-    Toolbar toolbar1;
     ProgressDialog progressDialog;
 
     LottieAnimationView ProfileAnimation;
+    private ParticleView particleBackground;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -41,6 +40,8 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
+        particleBackground = findViewById(R.id.loginParticleBackground);
+        if (particleBackground != null) particleBackground.startAnimation();
         hideSystemUI();
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -53,10 +54,7 @@ public class Login extends AppCompatActivity {
         ID = findViewById(R.id.ID);
         DOB = findViewById(R.id.DOB);
         db = FirebaseFirestore.getInstance();
-        toolbar1=findViewById(R.id.my_toolbar);
-        if(getSupportActionBar()!=null){
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-        }
+
 
         ProfileAnimation = findViewById(R.id.ProfileAnimations);
         ProfileAnimation.setVisibility(View.VISIBLE);
@@ -138,5 +136,17 @@ public class Login extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (particleBackground != null) particleBackground.stopAnimation();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (particleBackground != null) particleBackground.startAnimation();
     }
 }

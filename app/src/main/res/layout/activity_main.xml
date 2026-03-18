@@ -1,153 +1,499 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:background="@drawable/fadesbg"
-    tools:ignore="HardcodedText">
+    tools:context=".MainActivity">
 
-    <!-- Toolbar -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:ignore="HardcodedText">
+
+        <com.example.translateanywhere.ParticleView
+            android:id="@+id/mainParticleBackground"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/my_toolbar"
-        android:layout_width="350dp"
+    <!-- Top Bar -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/heading"
-        android:elevation="4dp"
-        android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.454"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
-        tools:ignore="MissingConstraints">
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:fontFamily="sans-serif-condensed-medium"
-            android:shadowColor="#00F5FF"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.12"
+            android:text="Jarvis"
+            android:textColor="@color/jarvis_amber"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:shadowColor="@color/jarvis_amber_glow"
             android:shadowDx="0"
             android:shadowDy="0"
-            android:shadowRadius="4"
-            android:text="STEVE CREATIONS"
+            android:shadowRadius="10"/>
 
-            android:textAllCaps="true"
-            android:textColor="#E0E7FF"
-            android:textSize="25sp"
-            android:textStyle="bold" />
-    </androidx.appcompat.widget.Toolbar>
+        <!-- Signal Strength -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-    <ScrollView
-        android:id="@+id/scrollView2"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:background="@drawable/coustum_scroll"
-        android:padding="14dp"
-        android:visibility="gone"
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_signal"
+                app:tint="@color/jarvis_cyan" />
+
+            <TextView
+                android:id="@+id/txtSignalStrength"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="98%"
+                android:textColor="@color/jarvis_cyan"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Profile Icon -->
+        <FrameLayout
+            android:id="@+id/btnProfile"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_active_session_outline"
+            android:clickable="true"
+            android:focusable="true">
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgMainProfile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_robot"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/CircleImage"
+                app:strokeColor="@color/jarvis_cyan"
+                app:strokeWidth="2dp"
+                android:padding="2dp"
+                app:tint="@color/jarvis_cyan" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/topDivider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="20dp"
+        android:background="@color/jarvis_border"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topBar" />
+
+
+
+    <!-- Active Session Chat Container -->
+
+        <!-- Wake Button Area -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/sessionContainer"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_glass_panel"
+            android:clipToOutline="true"
+            app:layout_constraintBottom_toTopOf="@id/btnWakeContainer"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/topDivider"
+            app:layout_constraintVertical_bias="1.0">
+
+            <!-- Gradient overlay at bottom inside the session box -->
+            <View
+                android:id="@+id/view"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:background="#00000000"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <!-- Header -->
+            <LinearLayout
+                android:id="@+id/sessionHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/btnshape"
+                    android:backgroundTint="@color/jarvis_cyan" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:letterSpacing="0.1"
+                    android:text="ACTIVE SESSION"
+                    android:textColor="@color/jarvis_cyan"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ENCRYPTION: AES-256"
+                    android:textColor="@color/jarvis_text_secondary"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/sessionDivider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/jarvis_border"
+                app:layout_constraintTop_toBottomOf="@id/sessionHeader" />
+
+            <ScrollView
+                android:id="@+id/chatScroll"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:paddingHorizontal="16dp"
+                android:scrollbars="none"
+                app:layout_constraintBottom_toTopOf="@id/chatInputContainer"
+                app:layout_constraintTop_toBottomOf="@id/sessionDivider">
+
+                <LinearLayout
+                    android:id="@+id/chatContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Chat bubbles will be injected here dynamically -->
+
+                </LinearLayout>
+            </ScrollView>
+
+            <!-- Chat Input Field -->
+            <LinearLayout
+                android:id="@+id/chatInputContainer"
+                android:layout_width="350dp"
+                android:layout_height="57dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/bg_jarvis_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.486"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/sessionHeader"
+                app:layout_constraintVertical_bias="1.0">
+
+                <EditText
+                    android:id="@+id/etChatInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/input_bg_golden"
+                    android:hint="Talk to Jarvis..."
+                    android:maxLines="4"
+                    android:paddingLeft="20dp"
+                    android:paddingTop="12dp"
+                    android:paddingRight="20dp"
+                    android:paddingBottom="12dp"
+                    android:textColor="@color/jarvis_text_primary"
+                    android:textColorHint="#80FFCC44"
+                    android:textSize="14sp" />
+
+                <FrameLayout
+                    android:id="@+id/btnChatSend"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_active_session_outline"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_send"
+                        app:tint="@color/jarvis_cyan" />
+                </FrameLayout>
+
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <FrameLayout
+        android:id="@+id/btnWakeContainer"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent">
 
+        <ImageButton
+            android:id="@+id/btnWakeJarvis"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_mic_button"
+            android:src="@drawable/ic_mic_cyan" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="70dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:elevation="10dp">
+
+            <TextView
+                android:id="@+id/tvWakeStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.1"
+                android:text="Wake up JARVIS"
+                android:textColor="@color/jarvis_cyan"
+                android:textSize="13sp"
+                android:layout_marginBottom="35dp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- My Toolbar (kept with matching ID, hidden behind new top bar) -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/my_toolbar"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Custom Side Menu -->
+    <LinearLayout
+        android:id="@+id/custom_menu"
+        android:layout_width="300dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="@color/jarvis_bg_dark"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:clickable="true"
+        android:focusable="true">
+        
+        <!-- Premium Header Area -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="COMMANDER PROFILE"
+            android:textColor="@color/jarvis_cyan"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.2"
+            android:layout_marginBottom="24dp"
+            android:gravity="center" />
+
+        <!-- Horizontal Profile Banner -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp"
+            android:padding="8dp"
+            android:background="@drawable/bg_jarvis_card">
 
-            <TextView
-                android:id="@+id/textview"
-                android:layout_width="match_parent"
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgProfileMenu"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_robot"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/CircleImage"
+                app:strokeColor="@color/jarvis_cyan"
+                app:strokeWidth="2dp"
+                android:padding="2dp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@drawable/costum_text"
-                android:gravity="center"
-                android:paddingTop="5dp"
-                android:text="Translated text will appear here"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
+
+                <TextView
+                    android:id="@+id/txtMenuName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Username: -"
+                    android:textColor="@color/jarvis_text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtMenuUserId"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="User ID: -"
+                    android:textColor="@color/jarvis_text_secondary"
+                    android:textSize="12sp"
+                    android:layout_marginTop="6dp" />
+
+                <TextView
+                    android:id="@+id/txtMenuMobile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mobile: -"
+                    android:textColor="@color/jarvis_text_secondary"
+                    android:textSize="12sp"
+                    android:layout_marginTop="6dp" />
+            </LinearLayout>
         </LinearLayout>
-    </ScrollView>
 
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/jarvis_border"
+            android:layout_marginBottom="32dp" />
+            
+        <!-- System Options -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SYSTEM CONTROLS"
+            android:textColor="@color/jarvis_text_highlight"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"
+            android:letterSpacing="0.1" />
 
+        <Button
+            android:id="@+id/btnMenuWakewordKey"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Wakeword Key"
+            android:backgroundTint="@color/jarvis_cyan"
+            android:textColor="#1A1C23"
+            android:layout_marginBottom="16dp"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:stateListAnimator="@null"
+            android:textAllCaps="false"/>
+            
+        <Button
+            android:id="@+id/btnMenuContactUs"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Contact Support"
+            android:backgroundTint="@color/jarvis_card_bg"
+            android:textColor="@color/jarvis_cyan"
+            android:layout_marginBottom="16dp"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:stateListAnimator="@null"
+            android:textAllCaps="false"/>
 
-    <TextView
-        android:id="@+id/txttask"
-        android:layout_width="150dp"
-        android:layout_height="30dp"
-        android:background="@drawable/heading"
-        android:fontFamily="serif-monospace"
-        android:text="DAILY RIDDLE"
-        android:gravity="center"
-        android:textColor="@color/white"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/my_toolbar"
-        app:layout_constraintVertical_bias="0.235" />
+        <Button
+            android:id="@+id/btnMenuHelp"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Help Center"
+            android:backgroundTint="@color/jarvis_card_bg"
+            android:textColor="@color/jarvis_cyan"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:stateListAnimator="@null"
+            android:textAllCaps="false"/>
 
-    <ScrollView
-        android:id="@+id/scrollView3"
-        android:layout_width="320dp"
-        android:layout_height="230dp"
-        android:layout_marginTop="44dp"
-        android:background="@drawable/coustum_scroll"
-        android:fillViewport="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.491"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/txttask">
+        <Button
+            android:id="@+id/btnMenuJarvisBrain"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:text="⬡  Jarvis Brain"
+            android:backgroundTint="#33FFAA00"
+            android:textColor="#FFCC44"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:stateListAnimator="@null"
+            android:shadowColor="#FF8800"
+            android:textAllCaps="false"/>
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/Task"
-            android:layout_width="320dp"
-            android:layout_height="220dp"
+        <Button
+            android:id="@+id/btnMenuSettings"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:text="System Settings"
+            android:backgroundTint="@color/jarvis_card_bg"
+            android:textColor="@color/jarvis_cyan"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:stateListAnimator="@null"
+            android:textAllCaps="false"/>
 
-            android:padding="16dp">
+        <Button
+            android:id="@+id/btnMenuLogout"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Logout"
+            android:backgroundTint="#33FF5252"
+            android:textColor="#FF5252"
+            android:layout_marginTop="16dp"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:stateListAnimator="@null"
+            android:textAllCaps="false"/>
 
+        <!-- Spacer to push bottom content -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-            <TextView
-                android:id="@+id/txtRiddle1"
-                android:layout_width="220dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:fontFamily="serif-monospace"
-                android:gravity="center"
-                android:text="Tap me to get riddle."
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
+        <!-- Footer -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="JARVIS OS v1.0\nSecure Authentication Active"
+            android:textColor="@color/jarvis_text_secondary"
+            android:textSize="10sp"
+            android:gravity="center"
+            android:alpha="0.5" />
+    </LinearLayout>
 
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </ScrollView>
-
-    <Button
-        android:id="@+id/btnWakeJarvis"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:background="@drawable/btnshape"
-        android:text="Wake Up Jarvis"
-        android:textColor="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.871" />
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

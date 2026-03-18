@@ -6,200 +6,278 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/fadesbg"
     tools:context=".Profile"
     tools:ignore="HardcodedText">
 
-    <!-- Toolbar -->
-    <androidx.appcompat.widget.Toolbar
+    <com.example.translateanywhere.ParticleView
+        android:id="@+id/profileParticleBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Top bar -->
+    <LinearLayout
         android:id="@+id/my_toolbar"
-        android:layout_width="350dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/heading"
-        android:elevation="4dp"
-        android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="28dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:fontFamily="sans-serif-condensed-medium"
-            android:shadowColor="#00F5FF"
-            android:shadowDx="0"
-            android:shadowDy="0"
-            android:shadowRadius="4"
-            android:text="STEVE CREATIONS"
-
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.12"
+            android:text="Jarvis"
             android:textAllCaps="true"
-            android:textColor="#E0E7FF"
-            android:textSize="25sp"
+            android:textColor="@color/jarvis_amber"
+            android:textSize="24sp"
             android:textStyle="bold" />
-    </androidx.appcompat.widget.Toolbar>
+    </LinearLayout>
 
-    <!-- Scrollable content -->
+    <!-- Scrollable Form content -->
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/my_toolbar"
+        android:scrollbars="none"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/my_toolbar">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:gravity="center_horizontal"
+            android:orientation="vertical"
             android:padding="24dp">
 
-            <!-- Lottie animation -->
+            <!-- Avatar Animation -->
             <com.airbnb.lottie.LottieAnimationView
                 android:id="@+id/ProfileAnimation"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
                 app:lottie_autoPlay="true"
+                android:layout_gravity="center"
+                app:lottie_enableMergePathsForKitKatAndAbove="true"
+                android:background="@color/jarvis_amber_glow"
                 app:lottie_loop="true"
-                app:lottie_rawRes="@raw/user" />
+                app:lottie_rawRes="@raw/login" />
 
-            <!-- Form Inputs -->
-            <EditText
-                android:id="@+id/name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxWidth="300dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/edit_text"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
-                android:gravity="center"
-                android:hint="Type your full name"
-                android:inputType="text"
-                android:padding="10dp"
-                style="@style/FormInput"/>
-
-            <EditText
-                android:id="@+id/age"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxWidth="300dp"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:hint="Type your age"
-                android:inputType="number"
-                android:background="@drawable/edit_text"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
-                android:padding="10dp"
-                style="@style/FormInput"/>
-
-            <EditText
-                android:id="@+id/id"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxWidth="300dp"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:hint="Set User Id"
-                android:inputType="number"
-                android:background="@drawable/edit_text"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
-                android:padding="10dp"
-                style="@style/FormInput"/>
-
-            <EditText
-                android:id="@+id/dob"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxWidth="300dp"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:hint="DOB : '00-00-0000'"
-                android:inputType="text"
-                android:background="@drawable/edit_text"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
-                android:padding="10dp"
-                style="@style/FormInput"/>
-
-            <EditText
-                android:id="@+id/mobile"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxWidth="300dp"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:hint="Mobile number"
-                android:inputType="phone"
-                android:background="@drawable/edit_text"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
-                android:padding="10dp"
-                style="@style/FormInput"/>
-
-            <EditText
-                android:id="@+id/location"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxWidth="300dp"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:hint="Your city name"
-                android:inputType="text"
-                android:background="@drawable/edit_text"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
-                android:padding="10dp"
-                style="@style/FormInput"/>
-
-            <EditText
-                android:id="@+id/BloodGroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxWidth="300dp"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:hint="Enter Blood group"
-                android:inputType="text"
-                android:background="@drawable/edit_text"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
-                android:padding="10dp"
-                style="@style/FormInput"/>
-
-            <!-- Checkbox -->
-            <CheckBox
-                android:id="@+id/bloodDonate"
+            <!-- Page title -->
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Agree to donate"
-                android:textColor="@color/white"/>
+                android:layout_marginTop="8dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="Your Profile"
+                android:textColor="@color/jarvis_cyan"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-            <!-- Buttons -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="24dp"
+                android:fontFamily="sans-serif"
+                android:text="Jarvis needs to know you better"
+                android:textColor="@color/jarvis_amber_glow"
+                android:textSize="13sp" />
+
+            <!-- Form Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- Name -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="User Name"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.05" />
+
+                <EditText
+                    android:id="@+id/name"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/input_bg_golden"
+                    android:textAlignment="center"
+                    android:hint="User name"
+                    android:inputType="textPersonName"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="15sp"
+                    android:autofillHints="name"
+                    style="@style/FormInput" />
+
+                <!-- Age -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="6dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Age"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.05" />
+
+                <EditText
+                    android:id="@+id/age"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/input_bg_golden"
+                    android:textAlignment="center"
+                    android:hint="Your age"
+                    android:inputType="number"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="15sp"
+                    android:autofillHints="none"
+                    style="@style/FormInput" />
+
+                <!-- User ID -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="6dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="User ID"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.05" />
+
+                <EditText
+                    android:id="@+id/UserId"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/input_bg_golden"
+                    android:textAlignment="center"
+                    android:hint="Set a unique ID"
+                    android:inputType="number"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="15sp"
+                    android:autofillHints="none"
+                    style="@style/FormInput" />
+
+                <!-- DOB -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="6dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Date of Birth"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.05" />
+
+                <EditText
+                    android:id="@+id/dob"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/input_bg_golden"
+                    android:textAlignment="center"
+                    android:hint="DD-MM-YYYY"
+                    android:inputType="text"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="15sp"
+                    android:autofillHints="birthDateFull"
+                    style="@style/FormInput" />
+
+                <!-- Mobile -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="6dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Mobile Number"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.05" />
+
+                <EditText
+                    android:id="@+id/mobile"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/input_bg_golden"
+                    android:textAlignment="center"
+                    android:hint="+91 00000 00000"
+                    android:inputType="phone"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="15sp"
+                    android:autofillHints="phoneNumber"
+                    style="@style/FormInput" />
+
+                <!-- Location -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="6dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="City"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.05" />
+
+                <EditText
+                    android:id="@+id/location"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/input_bg_golden"
+                    android:textAlignment="center"
+                    android:hint="Your city"
+                    android:inputType="text"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="15sp"
+                    android:autofillHints="postalAddress"
+                    style="@style/FormInput" />
+
+                <!-- Blood Group -->
+
+
+
+
+                <!-- Blood Donate Checkbox -->
+            </LinearLayout>
+
+            <!-- Save Button -->
             <Button
                 android:id="@+id/save"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="20dp"
                 android:background="@drawable/btnshape"
-                android:text="Save"
-                android:textColor="@color/white"/>
-
-            <Button
-                android:id="@+id/saveUser"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/btnshape"
-                android:text="Save"
+                android:elevation="4dp"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.04"
+                android:text="Save Profile"
                 android:textColor="@color/white"
-                android:visibility="gone"/>
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+
 
             <!-- Login link -->
             <TextView
@@ -207,9 +285,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Already Have An Account? Log in"
-                android:textColor="@color/white"
-                android:textSize="15sp"/>
+                android:layout_marginBottom="32dp"
+                android:fontFamily="sans-serif"
+                android:text="Already have an account? Log in"
+                android:textColor="@color/jarvis_cyan"
+                android:textSize="14sp" />
 
         </LinearLayout>
     </ScrollView>

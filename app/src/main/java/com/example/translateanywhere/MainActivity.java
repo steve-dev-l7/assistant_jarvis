@@ -14,20 +14,25 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
-import android.hardware.ConsumerIrManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
-import android.os.Build;
+import android.os.BatteryManager;
 import android.os.Bundle;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 
 import androidx.activity.EdgeToEdge;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.core.view.GravityCompat;
+import android.util.DisplayMetrics;
 import androidx.annotation.NonNull;
 
 
@@ -36,35 +41,31 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.lifecycle.Observer;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
-import static com.example.translateanywhere.R.menu.menu_main;
 
 import android.speech.tts.UtteranceProgressListener;
 
 import android.telecom.TelecomManager;
-import android.text.InputType;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-
-
 
 
 import com.google.firebase.FirebaseApp;
@@ -77,11 +78,14 @@ import java.util.concurrent.Executor;
 public class MainActivity extends AppCompatActivity {
     Intent  intent1;
     TextToSpeech toSpeech;
-    TextView textView, Riddle, txttask;
-    Button wakeJarvis;
+    ImageButton wakeJarvis;
+    private ParticleView particleBackground;
+    FrameLayout btnProfile;
+    LinearLayout chatContainer;
+    ScrollView chatScroll;
+    EditText etChatInput;
+    FrameLayout btnChatSend;
     private boolean isTextToSpeechInitialized = false;
-
-
 
     ProgressDialog progressDialog;
     Toolbar toolbar1;
@@ -89,19 +93,17 @@ public class MainActivity extends AppCompatActivity {
     SpeechRecognizer speechRecognizer;
     Boolean wakeup = false;
 
-
-
-
-
     int currentPermissionIndex = 0;
-    ConstraintLayout constraintLayout;
-    ScrollView scrollView, scrollView1;
     BiometricPrompt biometricPrompt;
     BiometricPrompt.PromptInfo promptInfo;
     Executor executor;
 
+    JarvisEngine jarvisEngine;
+    TextView txtSignalStrength;
 
-
+    ImageView imgProfileMenu, imgMainProfile;
+    ActivityResultLauncher<String[]> mOpenDocument;
+    TextView tvWakeStatus;
 
     @SuppressLint("InlinedApi")
     String[] permissions = {
@@ -116,7 +118,9 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.POST_NOTIFICATIONS,
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.MODIFY_AUDIO_SETTINGS,
-            Manifest.permission.WRITE_CONTACTS
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.RECEIVE_SMS,
+            Manifest.permission.READ_SMS
     };
 
 
@@ -130,6 +134,28 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+        particleBackground = findViewById(R.id.mainParticleBackground);
+        if (particleBackground != null) particleBackground.startAnimation();
+        
+        mOpenDocument = registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+            if (uri != null) {
+                try {
+                    getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
+                    prefs.edit().putString("ProfileImageUri", uri.toString()).apply();
+                    if (imgProfileMenu != null) {
+                        imgProfileMenu.setImageURI(uri);
+                    }
+                    if (imgMainProfile != null) {
+                        imgMainProfile.setImageURI(uri);
+                        imgMainProfile.setImageTintList(null);
+                    }
+                } catch (SecurityException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         requestNextPermission();
         intent1 = new Intent(getApplicationContext(), MyForegroundServices.class);
         FirebaseApp.initializeApp(this);
@@ -144,13 +170,13 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
         String UserId = sharedPreferences.getString("UserId", null);
 
+
         if (UserId != null ) {
             FetchUser.getInstance().fetchUserData(this, new FetchUser.OnUserFetchListener() {
                 @Override
                 public void onSuccess() {
-
-
                     Log.d("UserDetails", "Jarvis knows everything about   now!");
+                    runOnUiThread(() -> updateProfileBanner());
                 }
 
                 @Override
@@ -196,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onDone(String s) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && wakeup) {
+                if (wakeup) {
                     startForegroundService(intent1);
                     progressDialog.dismiss();
                 }
@@ -218,101 +244,237 @@ public class MainActivity extends AppCompatActivity {
         
 
         toolbar1 = findViewById(R.id.my_toolbar);
-        textView = findViewById(R.id.textview);
         setSupportActionBar(toolbar1);
-        Riddle = findViewById(R.id.txtRiddle1);
-        scrollView = findViewById(R.id.scrollView2);
-        constraintLayout = findViewById(R.id.Task);
-        txttask = findViewById(R.id.txttask);
-        scrollView1 = findViewById(R.id.scrollView3);
-        wakeJarvis=findViewById(R.id.btnWakeJarvis);
+        wakeJarvis = findViewById(R.id.btnWakeJarvis);
+        btnProfile = findViewById(R.id.btnProfile);
+        chatContainer = findViewById(R.id.chatContainer);
+        chatScroll = findViewById(R.id.chatScroll);
+        etChatInput = findViewById(R.id.etChatInput);
+        btnChatSend = findViewById(R.id.btnChatSend);
+        jarvisEngine = new JarvisEngine(this);
+        txtSignalStrength = findViewById(R.id.txtSignalStrength);
+        tvWakeStatus = findViewById(R.id.tvWakeStatus);
+
+        // Signal Strength / Battery Monitor
+        BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                int batteryPct = (int) ((level / (float) scale) * 100);
+                if (txtSignalStrength != null) {
+                    txtSignalStrength.setText(batteryPct + "%");
+                }
+            }
+        };
+        registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
+        // Send Button Logic
+        btnChatSend.setOnClickListener(v -> {
+            String text = etChatInput.getText().toString().trim();
+            if (!text.isEmpty()) {
+                addChatMessage("YOU: " + text, false);
+                etChatInput.setText("");
+                handleQuery(text);
+            }
+        });
+
+        // Add Breathing/Pulsing Animation to Wake Button
+        animateWakeButton();
 
 
+        // Initial Jarvis Greeting
+        addChatMessage("Hi, How can I assist your mission today, Commander?", true);
 
+        // Profile Menu Logic
+        DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        LinearLayout customMenu = findViewById(R.id.custom_menu);
+        
+        imgProfileMenu = findViewById(R.id.imgProfileMenu);
+        imgMainProfile = findViewById(R.id.imgMainProfile);
 
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int width = displayMetrics.widthPixels;
+        DrawerLayout.LayoutParams params = (DrawerLayout.LayoutParams) customMenu.getLayoutParams();
+        params.width = (int) (width * 0.7);
+        customMenu.setLayoutParams(params);
 
+        updateProfileBanner();
 
+        imgProfileMenu.setOnClickListener(v -> {
+            mOpenDocument.launch(new String[]{"image/*"});
+        });
+
+        findViewById(R.id.btnMenuSettings).setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.END);
+            startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+        });
+
+        // Wake Button Logic — handled by the unified listener below (after biometric setup)
+
+        // Profile Button Logic
+        findViewById(R.id.btnProfile).setOnClickListener(v -> {
+            drawerLayout.openDrawer(GravityCompat.END);
+        });
+
+        // Menu Options Click Listeners
+        findViewById(R.id.btnMenuWakewordKey).setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.END);
+            getAccessKey();
+        });
+
+        findViewById(R.id.btnMenuLogout).setOnClickListener(v -> {
+            showLogoutConfirmation();
+        });
+
+        findViewById(R.id.btnMenuHelp).setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.END);
+            startActivity(new Intent(MainActivity.this, HelpActivity.class));
+        });
+
+        findViewById(R.id.btnMenuJarvisBrain).setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.END);
+            startActivity(new Intent(MainActivity.this, JarvisBrainActivity.class));
+        });
+
+        findViewById(R.id.btnMenuContactUs).setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.END);
+            String url = "https://steve-dev-l7.github.io/Jarvis_support/";
+            Intent intentUrl = new Intent(Intent.ACTION_VIEW);
+            intentUrl.setData(Uri.parse(url));
+            startActivity(intentUrl);
+        });
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
 
-
-        BiometricManager biometricManager=BiometricManager.from(this);
-        switch (biometricManager.canAuthenticate()){
-                case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
-                    Toast.makeText(this, "Error 7", Toast.LENGTH_SHORT).show();
-                    break;
-
-
-                case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
-                    Toast.makeText(this, "Error 6", Toast.LENGTH_SHORT).show();
-                    break;
-
-                case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                    Toast.makeText(this, "Error 8", Toast.LENGTH_SHORT).show();
-                    break;
-                 case BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED:
-                    break;
-                case BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED:
-                    break;
-                case BiometricManager.BIOMETRIC_STATUS_UNKNOWN:
-                    break;
-                case BiometricManager.BIOMETRIC_SUCCESS:
-                    break;
+        BiometricManager biometricManager = BiometricManager.from(this);
+        switch (biometricManager.canAuthenticate()) {
+            case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
+                Toast.makeText(this, "Error 7", Toast.LENGTH_SHORT).show();
+                break;
+            case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
+                Toast.makeText(this, "Error 6", Toast.LENGTH_SHORT).show();
+                break;
+            case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
+                Toast.makeText(this, "Error 8", Toast.LENGTH_SHORT).show();
+                break;
+            case BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED:
+            case BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED:
+            case BiometricManager.BIOMETRIC_STATUS_UNKNOWN:
+            case BiometricManager.BIOMETRIC_SUCCESS:
+                break;
         }
-        executor=ContextCompat.getMainExecutor(this);
+        executor = ContextCompat.getMainExecutor(this);
 
-
-
-        Riddle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (isServiceisRunning(MyForegroundServices.class)) {
-                    MyForegroundServices.riddleLiveData.observe(MainActivity.this, new Observer<String>() {
-                        @Override
-                        public void onChanged(String riddle) {
-                            if (riddle.contains("73")) {
-                                Riddle.setText("The daily riddle is completed come back tomorrow");
-                            }  else {
-
-                                Riddle.setText(riddle);
-                                Riddle.setEnabled(false);
-                                toSpeech.speak( riddle, TextToSpeech.QUEUE_FLUSH, null, null);
-
-                            }
-
-                        }
-                    });
-                } else {
-                    Toast.makeText(MainActivity.this, "Activate Jarvis First ", Toast.LENGTH_SHORT).show();
-                }
+        // Unified Wake Button Toggle
+        wakeJarvis.setOnClickListener(v -> {
+            SharedPreferences saveKey = getSharedPreferences("AccessKey", MODE_PRIVATE);
+            String key = saveKey.getString("Key", null);
+            if (key == null || key.isEmpty()) {
+                Toast.makeText(MainActivity.this, "Access denied: Set your Wakeword Key first", Toast.LENGTH_SHORT).show();
+                getAccessKey();
+                return;
             }
+
+            if (isServiceisRunning(MyForegroundServices.class)) {
+                Toast.makeText(this, "Jarvis already running", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!isInternetAvailable(MainActivity.this)) {
+                showNoInternetDialog();
+                return;
+            }
+            // START Jarvis
+            progressDialog = ProgressDialog.show(MainActivity.this, "Activating Jarvis", "Please be patient");
+            WakeUpJarvis();
         });
+    }
 
+    private void showLogoutConfirmation() {
+        new AlertDialog.Builder(this)
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
+                    prefs.edit().remove("UserId").remove("ProfileImageUri").apply();
 
+                    SharedPreferences appPrefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+                    appPrefs.edit().putBoolean("isProfileUpdated", false).apply();
 
-        wakeJarvis.setOnClickListener(new View.OnClickListener() {
+                    Intent logoutIntent = new Intent(this, MainActivity.class);
+                    logoutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(logoutIntent);
+                    finish();
+                })
+                .setNegativeButton("No", null)
+                .show();
+    }
+
+    private void handleQuery(String text) {
+        jarvisEngine.ask(text, new JarvisCallback() {
             @Override
-            public void onClick(View view) {
-                if (isServiceisRunning(MyForegroundServices.class)) {
-                    Toast.makeText(MainActivity.this, "Jarvis already running", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if(!isInternetAvailable(MainActivity.this)){
-                    showNoInternetDialog();
-                    return;
-                }
-                    progressDialog = ProgressDialog.show(MainActivity.this, "Activating Jarvis", "Please be patient");
+            public void onResponse(String response) {
+                addChatMessage(response, true);
+            }
 
-                    WakeUpJarvis();
-                }
-
+            @Override
+            public void onError(String error) {
+                addChatMessage("System Error: " + error, true);
+            }
         });
     }
 
 
 
+
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateProfileBanner();
+        if (particleBackground != null) particleBackground.startAnimation();
+    }
+
+    private void updateProfileBanner() {
+        TextView txtMenuName = findViewById(R.id.txtMenuName);
+        TextView txtMenuUserId = findViewById(R.id.txtMenuUserId);
+        TextView txtMenuMobile = findViewById(R.id.txtMenuMobile);
+
+        SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
+        String name = prefs.getString("UserName", FetchUser.getInstance().getName());
+        String mobile = prefs.getString("Mobile", FetchUser.getInstance().getMobile());
+        String systemId = prefs.getString("UserId", FetchUser.getInstance().getUserId());
+
+        if (txtMenuName != null) {
+            txtMenuName.setText("Username: " + name);
+            txtMenuUserId.setText("User ID: " + systemId);
+            txtMenuMobile.setText("Mobile: " + mobile);
+        }
+
+        String savedUri = prefs.getString("ProfileImageUri", null);
+        if (savedUri != null) {
+            Uri profileUri = Uri.parse(savedUri);
+            if (imgProfileMenu != null) {
+                try {
+                    imgProfileMenu.setImageURI(profileUri);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            if (imgMainProfile != null) {
+                try {
+                    imgMainProfile.setImageURI(profileUri);
+                    imgMainProfile.setImageTintList(null);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     private void chechProfile() {
         SharedPreferences preferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
@@ -329,7 +491,8 @@ public class MainActivity extends AppCompatActivity {
     private void updateprofile() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle("Update Your Profile")
-                .setMessage("Update your profile for jarvis to know who are you!")
+                .setMessage("Update your profile for jarvis to know who you are!")
+                .setCancelable(false)
                 .setPositiveButton("Update", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -341,66 +504,41 @@ public class MainActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-    public boolean onCreatePanelMenu(int featureId, @NonNull Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.EnterKey) {
-
-                getAccessKey();
-
-        }
-
-        if(id==R.id.contact){
-            String url="https://steve-dev-l7.github.io/Jarvis_support/";
-
-            Intent intent2=new Intent(Intent.ACTION_VIEW);
-            intent2. setData(Uri.parse(url));
-            startActivity(intent2);
-        }
-        return true;
-    }
+    // Removed onCreatePanelMenu and onOptionsItemSelected as they are now handled by Profile Menu
 
     private void getAccessKey() {
-        AlertDialog.Builder builder=new AlertDialog.Builder(this);
-        builder.setTitle("Paste Your AccessKey");
-        final EditText input = new EditText(getApplicationContext());
-        input.setHint("Type here...");
-        input.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        input.setPadding(50, 40, 50, 40);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_access_key, null);
+        builder.setView(dialogView);
 
-        builder.setView(input);
-        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (isServiceisRunning(MyForegroundServices.class)) {
-                    Toast.makeText(MainActivity.this, "Deactivate Jarvis and change your key", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                String userAccessKey = input.getText().toString();
-                SharedPreferences saveKey=getSharedPreferences("AccessKey",MODE_PRIVATE);
-                SharedPreferences.Editor editor=saveKey.edit();
-                editor.putString("Key",userAccessKey);
-                editor.apply();
-                Toast.makeText(MainActivity.this, "Key saved, Activate Jarvis to check your access key is valid", Toast.LENGTH_SHORT).show();
-                Log.d("Access key",userAccessKey);
+        final EditText input = dialogView.findViewById(R.id.etDialogKey);
+        
+        SharedPreferences saveKey = getSharedPreferences("AccessKey", MODE_PRIVATE);
+        String currentKey = saveKey.getString("Key", "");
+        input.setText(currentKey);
+
+        AlertDialog alertDialog = builder.create();
+
+        dialogView.findViewById(R.id.btnDialogSave).setOnClickListener(v -> {
+            if (isServiceisRunning(MyForegroundServices.class)) {
+                Toast.makeText(MainActivity.this, "Deactivate Jarvis and change your key", Toast.LENGTH_SHORT).show();
+                return;
             }
-        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
+            String userAccessKey = input.getText().toString();
+            SharedPreferences.Editor editor = saveKey.edit();
+            editor.putString("Key", userAccessKey);
+            editor.apply();
+            Toast.makeText(MainActivity.this, "Key saved, Activate Jarvis to check your access key is valid", Toast.LENGTH_SHORT).show();
+            Log.d("Access key", userAccessKey);
+            alertDialog.dismiss();
         });
-        builder.show();
+
+        dialogView.findViewById(R.id.btnDialogCancel).setOnClickListener(v -> {
+            alertDialog.dismiss();
+        });
+
+        alertDialog.show();
     }
-
-
 
     private void WakeUpJarvis() {
 
@@ -439,19 +577,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-
-
-
-
-
-
     protected void onStart() {
         super.onStart();
 
-
     }
-
     private boolean isServiceisRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (manager != null) {
@@ -549,5 +678,48 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    private void animateWakeButton() {
+        if (wakeJarvis != null) {
+            android.view.animation.Animation wave = new android.view.animation.ScaleAnimation(
+                    1.0f, 1.15f, 1.0f, 1.15f,
+                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
+                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f);
+            wave.setDuration(1500);
+            wave.setRepeatCount(android.view.animation.Animation.INFINITE);
+            wave.setRepeatMode(android.view.animation.Animation.REVERSE);
+            wave.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+            wakeJarvis.startAnimation(wave);
+        }
+    }
 
+    // Removed showProfileMenu as it is handled via DrawerLayout now
+
+
+    public void addChatMessage(String message, boolean isJarvis) {
+        runOnUiThread(() -> {
+            if (chatContainer == null) return;
+
+            View chatView;
+            if (isJarvis) {
+                chatView = getLayoutInflater().inflate(R.layout.item_chat_jarvis, chatContainer, false);
+                TextView txtMessage = chatView.findViewById(R.id.txtJarvisMessage);
+                txtMessage.setText(message);
+            } else {
+                chatView = getLayoutInflater().inflate(R.layout.item_chat_user, chatContainer, false);
+                TextView txtMessage = chatView.findViewById(R.id.txtUserMessage);
+                txtMessage.setText(message);
+            }
+
+            chatContainer.addView(chatView);
+
+            // Auto-scroll to bottom
+            chatScroll.post(() -> chatScroll.fullScroll(ScrollView.FOCUS_DOWN));
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (particleBackground != null) particleBackground.stopAnimation();
+    }
 }

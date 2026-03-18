@@ -28,9 +28,9 @@ android {
         }
     }
 
-    packaging {
+    packagingOptions {
         resources {
-            pickFirsts += setOf("**/*.so")
+            pickFirsts.add("**/*.so")
         }
     }
 
@@ -53,7 +53,6 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-    implementation(libs.firebase.storage)
     implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
@@ -62,10 +61,6 @@ dependencies {
     implementation(libs.translate)
     implementation(libs.firebase.database)
     implementation(libs.porcupine.android)
-    implementation(libs.converter.gson)
-    implementation(libs.guava)
-    implementation(libs.reactive.streams)
-    implementation(libs.firebase.auth)
     implementation(libs.play.services.auth)
     implementation(libs.biometric)
     implementation(libs.porcupine.android.v302)
@@ -74,10 +69,6 @@ dependencies {
     implementation(libs.play.services.nearby)
     implementation(libs.lottie.v640)
     implementation(libs.localbroadcastmanager)
-    //noinspection UseTomlInstead
-    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
-    //noinspection UseTomlInstead
-    implementation("com.google.mediapipe:tasks-genai:0.10.32")
     //noinspection UseTomlInstead
     implementation("com.squareup.okhttp3:okhttp:5.3.2")
 }
