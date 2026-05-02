@@ -4,44 +4,56 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:layout_marginBottom="16dp">
+    android:layout_marginBottom="16dp"
+    android:paddingStart="8dp">
 
-    <FrameLayout
+    <com.google.android.material.imageview.ShapeableImageView
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:background="@drawable/bg_active_session_outline">
-        <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_jarvis_j"
-            app:tint="@color/jarvis_cyan" />
-    </FrameLayout>
+        android:layout_marginTop="4dp"
+        android:background="#1A00F0FF"
+        android:padding="6dp"
+        android:src="@drawable/ic_jarvis_j"
+        app:shapeAppearanceOverlay="@style/CircleImage"
+        app:strokeColor="#4D00F0FF"
+        app:strokeWidth="1dp"
+        app:tint="@color/primary_container" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:layout_marginStart="12dp"
-        android:background="@drawable/bg_jarvis_card"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/txtJarvisMessage"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:lineSpacingExtra="4dp"
-            android:text="Jarvis Message"
-            android:textColor="@color/jarvis_text_primary"
-            android:textSize="14sp" />
+            android:background="@drawable/bg_chat_bubble_ai"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="16dp"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/txtJarvisTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="JARVIS v4.2.0"
-            android:textColor="@color/jarvis_text_secondary"
-            android:textSize="10sp" />
+            <TextView
+                android:id="@+id/txtJarvisMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Good morning, Commander. Global networks are stable."
+                android:textColor="@color/on_surface"
+                android:textSize="14sp"
+                android:lineSpacingMultiplier="1.4"
+                android:fontFamily="sans-serif" />
+
+            <!-- Sub-metrics if needed, or dynamic status -->
+            <LinearLayout
+                android:id="@+id/jarvisMetrics"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:visibility="visible"/>
+
+        </LinearLayout>
     </LinearLayout>
+
 </LinearLayout>

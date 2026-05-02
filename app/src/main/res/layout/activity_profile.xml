@@ -1,296 +1,264 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.constraintlayout.widget.ConstraintLayout 
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Profile"
-    tools:ignore="HardcodedText">
+    android:background="@drawable/bg_main_gradient"
+    tools:context=".Profile">
 
-    <com.example.translateanywhere.ParticleView
-        android:id="@+id/profileParticleBackground"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <!-- Top bar -->
+    <!-- Top Navigation Bar -->
     <LinearLayout
         android:id="@+id/my_toolbar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="28dp"
-        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_top_bar"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="24dp"
         app:layout_constraintTop_toTopOf="parent">
 
-
+        <ImageButton
+            android:id="@+id/btnProfileBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/primary_container"
+            android:contentDescription="Go Back" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.12"
-            android:text="Jarvis"
-            android:textAllCaps="true"
-            android:textColor="@color/jarvis_amber"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:fontFamily="sans-serif-black"
+            android:text="NEURAL_OS"
+            android:textColor="@color/primary_container"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_robot"
+            app:tint="@color/primary_container" />
     </LinearLayout>
 
-    <!-- Scrollable Form content -->
     <ScrollView
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
-        android:scrollbars="none"
+        android:clipToPadding="false"
+        android:paddingBottom="40dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/my_toolbar">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:paddingHorizontal="24dp"
+            android:paddingTop="32dp">
 
-            <!-- Avatar Animation -->
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/ProfileAnimation"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                app:lottie_autoPlay="true"
-                android:layout_gravity="center"
-                app:lottie_enableMergePathsForKitKatAndAbove="true"
-                android:background="@color/jarvis_amber_glow"
-                app:lottie_loop="true"
-                app:lottie_rawRes="@raw/login" />
-
-            <!-- Page title -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="sans-serif-medium"
-                android:text="Your Profile"
-                android:textColor="@color/jarvis_cyan"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="24dp"
-                android:fontFamily="sans-serif"
-                android:text="Jarvis needs to know you better"
-                android:textColor="@color/jarvis_amber_glow"
-                android:textSize="13sp" />
-
-            <!-- Form Card -->
+            <!-- Hero Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
-
-                <!-- Name -->
+                android:gravity="center">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="User Name"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:letterSpacing="0.05" />
+                    android:fontFamily="sans-serif-black"
+                    android:text="INITIALIZE ENTITY"
+                    android:textColor="@color/white"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="PROVIDE IDENTIFICATION PARAMETERS"
+                    android:textColor="#66FFFFFF"
+                    android:textSize="10sp"
+                    android:letterSpacing="0.2" />
+            </LinearLayout>
+
+            <!-- Glass Form Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:background="@drawable/bg_help_card"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <!-- User Name -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="USER NAME"
+                    android:textColor="@color/primary_container"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
                 <EditText
                     android:id="@+id/name"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:background="@drawable/input_bg_golden"
-                    android:textAlignment="center"
-                    android:hint="User name"
-                    android:inputType="textPersonName"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="Enter designated alias"
+                    android:textColor="@color/white"
+                    android:textColorHint="#4DFFFFFF"
                     android:textSize="15sp"
-                    android:autofillHints="name"
-                    style="@style/FormInput" />
+                    android:paddingVertical="12dp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#1AFFFFFF" />
 
                 <!-- Age -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="6dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="Age"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:letterSpacing="0.05" />
-
+                    android:layout_marginTop="20dp"
+                    android:text="AGE"
+                    android:textColor="@color/primary_container"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
                 <EditText
                     android:id="@+id/age"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:background="@drawable/input_bg_golden"
-                    android:textAlignment="center"
-                    android:hint="Your age"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="00"
                     android:inputType="number"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/white"
+                    android:textColorHint="#4DFFFFFF"
                     android:textSize="15sp"
-                    android:autofillHints="none"
-                    style="@style/FormInput" />
+                    android:paddingVertical="12dp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#1AFFFFFF" />
 
                 <!-- User ID -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="6dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="User ID"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:letterSpacing="0.05" />
-
+                    android:layout_marginTop="20dp"
+                    android:text="USER ID"
+                    android:textColor="@color/primary_container"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
                 <EditText
                     android:id="@+id/UserId"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:background="@drawable/input_bg_golden"
-                    android:textAlignment="center"
-                    android:hint="Set a unique ID"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="SYS-XXXX-XXXX"
                     android:inputType="number"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/white"
+                    android:textColorHint="#4DFFFFFF"
                     android:textSize="15sp"
-                    android:autofillHints="none"
-                    style="@style/FormInput" />
+                    android:paddingVertical="12dp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#1AFFFFFF" />
 
-                <!-- DOB -->
+                <!-- Date of Birth -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="6dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="Date of Birth"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:letterSpacing="0.05" />
-
+                    android:layout_marginTop="20dp"
+                    android:text="DATE OF BIRTH"
+                    android:textColor="@color/primary_container"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
                 <EditText
                     android:id="@+id/dob"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:background="@drawable/input_bg_golden"
-                    android:textAlignment="center"
-                    android:hint="DD-MM-YYYY"
-                    android:inputType="text"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="YYYY-MM-DD"
+                    android:textColor="@color/white"
+                    android:textColorHint="#4DFFFFFF"
                     android:textSize="15sp"
-                    android:autofillHints="birthDateFull"
-                    style="@style/FormInput" />
+                    android:paddingVertical="12dp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#1AFFFFFF" />
 
-                <!-- Mobile -->
+                <!-- Mobile Number -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="6dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="Mobile Number"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:letterSpacing="0.05" />
-
+                    android:layout_marginTop="20dp"
+                    android:text="MOBILE NUMBER"
+                    android:textColor="@color/primary_container"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
                 <EditText
                     android:id="@+id/mobile"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:background="@drawable/input_bg_golden"
-                    android:textAlignment="center"
-                    android:hint="+91 00000 00000"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="+00 (000) 000-0000"
                     android:inputType="phone"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/white"
+                    android:textColorHint="#4DFFFFFF"
                     android:textSize="15sp"
-                    android:autofillHints="phoneNumber"
-                    style="@style/FormInput" />
+                    android:paddingVertical="12dp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#1AFFFFFF" />
 
-                <!-- Location -->
+                <!-- City -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="6dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="City"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:letterSpacing="0.05" />
-
+                    android:layout_marginTop="20dp"
+                    android:text="CITY / LOCATION NODE"
+                    android:textColor="@color/primary_container"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
                 <EditText
                     android:id="@+id/location"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:background="@drawable/input_bg_golden"
-                    android:textAlignment="center"
-                    android:hint="Your city"
-                    android:inputType="text"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="Enter geographic node"
+                    android:textColor="@color/white"
+                    android:textColorHint="#4DFFFFFF"
                     android:textSize="15sp"
-                    android:autofillHints="postalAddress"
-                    style="@style/FormInput" />
+                    android:paddingVertical="12dp" />
 
-                <!-- Blood Group -->
-
-
-
-
-                <!-- Blood Donate Checkbox -->
             </LinearLayout>
 
             <!-- Save Button -->
             <Button
                 android:id="@+id/save"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/btnshape"
-                android:elevation="4dp"
-                android:fontFamily="sans-serif-medium"
-                android:letterSpacing="0.04"
-                android:text="Save Profile"
-                android:textColor="@color/white"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-
+                android:layout_height="56dp"
+                android:layout_marginTop="32dp"
+                android:backgroundTint="@color/primary_container"
+                android:text="ESTABLISH CONNECTION"
+                android:textColor="@color/on_primary"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:stateListAnimator="@null" />
 
             <!-- Login link -->
             <TextView
                 android:id="@+id/gologin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="24dp"
                 android:layout_marginBottom="32dp"
-                android:fontFamily="sans-serif"
                 android:text="Already have an account? Log in"
-                android:textColor="@color/jarvis_cyan"
-                android:textSize="14sp" />
+                android:textColor="#66FFFFFF"
+                android:textSize="13sp" />
 
         </LinearLayout>
     </ScrollView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

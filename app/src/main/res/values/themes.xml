@@ -1,8 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.TranslateAnyWhere" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Base.Theme.TranslateAnyWhere" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/bg_primary</item>
+        <item name="android:windowBackground">@color/bg_primary</item>
+        <item name="android:statusBarColor">@color/bg_primary</item>
+        <item name="android:navigationBarColor">@color/bg_primary</item>
+        <item name="colorAccent">@color/accent_gold</item>
     </style>
 
     <style name="Theme.TranslateAnyWhere" parent="Base.Theme.TranslateAnyWhere" />

@@ -3,44 +3,71 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Professional Design System (Refined Black) -->
-    <color name="bg_primary">#050505</color>
-    <color name="bg_surface">#0A0A0A</color>
-    <color name="bg_elevated">#121212</color>
+    <!-- JARVIS NEW THEME COLORS -->
+    <color name="primary">#DBFCFF</color>
+    <color name="primary_container">#00F0FF</color>
+    <color name="on_primary">#00363A</color>
+    
+    <color name="background">#131315</color>
+    <color name="surface">#131315</color>
+    <color name="surface_bright">#39393B</color>
+    <color name="surface_container">#201F21</color>
+    <color name="surface_container_high">#2A2A2C</color>
+    <color name="surface_container_highest">#353437</color>
+    <color name="surface_dim">#131315</color>
+    
+    <color name="on_surface">#E5E1E4</color>
+    <color name="on_surface_variant">#B9CACB</color>
+    <color name="inverse_surface">#E5E1E4</color>
+    <color name="inverse_on_surface">#313032</color>
+    
+    <color name="outline">#849495</color>
+    <color name="outline_variant">#3B494B</color>
 
-    <color name="accent_violet">#6D28D9</color>
-    <color name="accent_violet_light">#7C3AED</color>
-    <color name="accent_sky">#0284C7</color>
-    <color name="accent_sky_light">#0EA5E9</color>
-    <color name="accent_purple">#B026FF</color>
+    <color name="error">#FFB4AB</color>
+    <color name="on_error">#690005</color>
+    <color name="error_container">#93000A</color>
+    <color name="on_error_container">#FFDAD6</color>
 
-    <color name="text_primary">#F1F5F9</color>
-    <color name="text_secondary">#94A3B8</color>
-    <color name="text_hint">#64748B</color>
+    <!-- Gradient Colors -->
+    <color name="bg_start">#0A0A0C</color>
+    <color name="bg_end">#131315</color>
+    <color name="chat_bg_semi">#CC0E0E10</color>
 
-    <color name="border_subtle">#2E3A5C</color>
-    <color name="divider">#1E293B</color>
-
-    <!-- Jarvis Brain Redesign Colors (Golden/Orange) -->
-    <color name="jarvis_bg_dark">#080808</color>
-    <color name="jarvis_card_bg">#121212</color>
-    <color name="jarvis_border">#1a2d3e</color>
-    <color name="jarvis_amber">#FFCC44</color>
-    <color name="jarvis_amber_glow">#40FFCC44</color>
-    <color name="jarvis_amber_muted">#4D432E</color>
-    <color name="jarvis_text_primary">#ffffff</color>
-    <color name="jarvis_text_secondary">#8a99a8</color>
-    <color name="jarvis_text_highlight">#FFAB40</color>
-
-    <!-- Keep old names but point to new colors for minimal friction -->
-    <color name="jarvis_cyan">@color/jarvis_amber</color>
-    <color name="jarvis_cyan_glow">@color/jarvis_amber_glow</color>
-    <color name="jarvis_cyan_muted">@color/jarvis_amber_muted</color>
-    <color name="accent_cyan">@color/jarvis_amber</color>
-
-    <!-- Legacy (kept for backward compat) -->
+    <!-- Legacy Compatibility (Aliased to new colors) -->
+    <color name="accent_gold">@color/primary_container</color>
+    <color name="accent_gold_bright">@color/primary</color>
+    <color name="accent_gold_glow">#3300F0FF</color>
+    <color name="accent_cyan">@color/primary_container</color>
+    <color name="accent_amber">@color/primary_container</color>
+    <color name="accent_yellow_premium">@color/primary</color>
+    
+    <color name="text_primary">@color/on_surface</color>
+    <color name="text_premium_white">@color/white</color>
+    <color name="text_secondary">@color/on_surface_variant</color>
+    <color name="text_hint">@color/outline</color>
+    
+    <color name="jarvis_border">@color/outline_variant</color>
+    <color name="jarvis_bg_dark">@color/background</color>
+    <color name="jarvis_card_bg">@color/surface_container</color>
+    <color name="jarvis_cyan">@color/primary_container</color>
+    <color name="jarvis_text_primary">@color/on_surface</color>
+    <color name="jarvis_text_secondary">@color/on_surface_variant</color>
+    <color name="jarvis_text_highlight">@color/primary_container</color>
+    <color name="jarvis_amber">@color/primary_container</color>
+    <color name="jarvis_amber_glow">#3300F0FF</color>
+    <color name="jarvis_cyan_glow">#3300F0FF</color>
+    <color name="jarvis_cyan_muted">#1A00F0FF</color>
+    
     <color name="glass_bg">#1AFFFFFF</color>
     <color name="glass_border">#33FFFFFF</color>
-    <color name="bg_deep_slate">#0F172A</color>
-    <color name="bg_midnight">#020617</color>
+    <color name="border_glass">#33FFFFFF</color>
+    <color name="divider_dark">@color/outline_variant</color>
+    <color name="bg_deep_slate">@color/surface_dim</color>
+    <color name="bg_midnight">@color/background</color>
+
+    <!-- Theme Compatibility -->
+    <color name="bg_primary">@color/background</color>
+    <color name="bg_surface">@color/surface</color>
+    <color name="bg_elevated">@color/surface_container</color>
 </resources>

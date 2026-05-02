@@ -9,7 +9,7 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.example.translateanywhere" />
+                  <option name="appId" value="com.example.jarvis" />
                   <option name="mobileSdkAppId" value="1:600499890236:android:c2419aca8dfb4857adbb39" />
                   <option name="projectId" value="translateanywhere-7614e" />
                   <option name="projectNumber" value="600499890236" />

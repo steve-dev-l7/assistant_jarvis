@@ -23,6 +23,7 @@
         <package android:name="com.google.android.apps.maps" />
         <package android:name="com.google.android.gm" />
         <package android:name="com.google.android.apps.nbu.files" />
+        <package android:name="com.google.android.googlequicksearchbox" />
 
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -39,6 +40,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_CALL_LOG"
+        tools:ignore="SmsAndCallLogPolicy" />
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE"
         tools:ignore="ForegroundServicesPolicy" />
@@ -85,6 +88,7 @@
     <uses-permission
         android:name="android.permission.MODIFY_PHONE_STATE"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:allowBackup="true"
@@ -97,18 +101,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TranslateAnyWhere"
         tools:targetApi="31">
-        <activity
-            android:name=".layout_jarvis_menu"
-            android:exported="false" />
-        <activity
-            android:name=".GlowActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:launchMode="singleInstance"
-            android:showWhenLocked="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.Transparent"
-            android:turnScreenOn="true" />
+
+
         <activity
             android:name=".Login"
             android:exported="false" />
@@ -122,38 +116,58 @@
             android:name=".HelpActivity"
             android:exported="false" />
         <activity
-            android:name=".JarvisBrainActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
+            android:name=".LockScreenOverlayActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:screenOrientation="portrait"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true">
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VOICE_COMMAND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.VOICE" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:showWhenLocked="true"    android:turnScreenOn="true"
+            android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.DIAL" />
-                <action android:name="android.intent.action.CALL_BUTTON" />
+            <action android:name="android.intent.action.DIAL" />
+            <action android:name="android.intent.action.CALL_BUTTON" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="tel" />
+        </intent-filter>
 
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="tel" />
-            </intent-filter>
+            <!-- ASSIST intent removed from here — now handled by LockScreenOverlayActivity -->
 
             <meta-data
                 android:name="com.google.mlkit.vision.DEPENDENCIES"
                 android:value="langid" />
         </activity>
 
+        <activity android:name=".WorkbenchActivity"
+            android:theme="@style/Theme.TranslateAnyWhere"
+            android:exported="false" />
+
         <service
             android:name=".MyForegroundServices"
             android:exported="false"
             android:foregroundServiceType="microphone" />
-        <service
+        <!-- Voice Interaction Services removed as per user request -->
 
+        <service
             android:name=".NotificationReader"
             android:exported="true"
             android:label="Notification Listener"
@@ -162,6 +176,9 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <!-- JarvisRecognitionService removed as per user request -->
+
     </application>
 
 </manifest>

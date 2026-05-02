@@ -1,32 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Dark glass fill -->
+    <!-- Soft Slate Fill -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#E6000000"/>
-            <corners android:radius="24dp"/>
+            <solid android:color="#E8EEF2"/><!-- C9D6DF with more opacity -->
+            <corners android:radius="20dp"/>
         </shape>
     </item>
-
-    <!-- Glowing border layer (offset inward to simulate glow) -->
-    <item
-        android:top="1dp"
-        android:left="1dp"
-        android:right="1dp"
-        android:bottom="1dp">
-        <shape android:shape="rectangle">
-            <solid android:color="#00FFAA00"/>
-            <stroke android:width="1dp" android:color="#80FFAA00"/>
-            <corners android:radius="23dp"/>
-        </shape>
-    </item>
-
-    <!-- Bright inner amber stroke -->
+    <!-- Subtle Border using 52616B -->
     <item>
         <shape android:shape="rectangle">
             <solid android:color="#00000000"/>
-            <stroke android:width="1.5dp" android:color="#B3FFCC44"/>
-            <corners android:radius="24dp"/>
+            <stroke android:width="1dp" android:color="#3352616B"/><!-- 20% of 52616B -->
+            <corners android:radius="20dp"/>
         </shape>
     </item>
 </layer-list>

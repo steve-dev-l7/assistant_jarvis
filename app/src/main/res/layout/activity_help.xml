@@ -1,36 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_main_gradient"
     tools:context=".HelpActivity">
-
-    <com.example.translateanywhere.ParticleView
-        android:id="@+id/helpParticleBackground"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
     <!-- Top Navigation Bar -->
     <LinearLayout
         android:id="@+id/helpTopBar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="20dp"
-        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_top_bar"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="24dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
             android:id="@+id/btnHelpBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/bg_active_session_outline"
-            android:src="@drawable/abc_ic_ab_back_material"
-            app:tint="@color/jarvis_cyan"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/primary_container"
             android:contentDescription="Go Back" />
 
         <TextView
@@ -38,185 +33,281 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="16dp"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.1"
+            android:fontFamily="sans-serif-black"
             android:text="HELP CENTER"
-            android:textColor="@color/jarvis_cyan"
+            android:textColor="@color/primary_container"
             android:textSize="18sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
 
-    <View
-        android:id="@+id/helpDivider"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginTop="20dp"
-        android:background="@color/jarvis_border"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/helpTopBar" />
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_robot"
+            app:tint="@color/primary_container" />
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:paddingHorizontal="20dp"
         android:clipToPadding="false"
         android:paddingBottom="40dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/helpDivider">
+        app:layout_constraintTop_toBottomOf="@id/helpTopBar">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="24dp">
+            android:paddingHorizontal="24dp"
+            android:paddingTop="32dp">
 
-            <!-- Section: System Description -->
+            <!-- Hero Section -->
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="SYSTEM OVERVIEW"
-                android:textColor="@color/jarvis_text_highlight"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.15" />
+                android:fontFamily="sans-serif-black"
+                android:text="How can I assist you,\nCommander?"
+                android:textColor="@color/white"
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/bg_jarvis_card"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:text="Access operational protocols, troubleshoot system anomalies, or review neural link configurations."
+                android:textColor="#99FFFFFF"
+                android:textSize="14sp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="JARVIS (Just A Rather Very Intelligent System)"
-                    android:textColor="@color/jarvis_cyan"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:lineSpacingExtra="4dp"
-                    android:text="Jarvis is a premium AI assistant designed for seamless interaction. It combines advanced intent extraction with local system control to provide a high-security, responsive automation experience."
-                    android:textColor="@color/jarvis_text_primary"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <!-- Section: How to Use -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:text="OPERATIONAL GUIDE"
-                android:textColor="@color/jarvis_text_highlight"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.15" />
-
-            <LinearLayout
+            <!-- Search Bar -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_jarvis_card"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:layout_height="56dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_help_card">
 
-                <TextView
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="16dp"
+                    android:src="@drawable/ic_signal"
+                    app:tint="#66FFFFFF" />
+
+                <EditText
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="1. Wake Up Activation"
-                    android:textColor="@color/jarvis_cyan"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:hint="Query intelligence databanks..."
+                    android:paddingStart="56dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/white"
+                    android:textColorHint="#4DFFFFFF"
+                    android:textSize="14sp" />
+            </FrameLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Tap the central mic button to activate Jarvis voice listener. Ensure the 'Wakeword Key' is set in System Controls for full encryption."
-                    android:textColor="@color/jarvis_text_primary"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="2. Profile Integrity"
-                    android:textColor="@color/jarvis_cyan"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Maintain an updated profile to enable personal identity features and secure access logs."
-                    android:textColor="@color/jarvis_text_primary"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <!-- Section: Offline Commands -->
+            <!-- Bento Grid Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="SECURE OFFLINE PROTOCOLS"
-                android:textColor="@color/jarvis_text_highlight"
+                android:text="OPERATIONAL CATEGORIES"
+                android:textColor="@color/primary_container"
                 android:textSize="11sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.15" />
+                android:letterSpacing="0.1" />
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:columnCount="2"
+                android:alignmentMode="alignMargins"
+                android:columnOrderPreserved="false">
+
+                <!-- Voice Card (Double Width) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_columnSpan="2"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/bg_help_card"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_signal"
+                        app:tint="@color/primary_container" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Voice Activation"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Configure vocal recognition matrices and custom wake words."
+                        android:textColor="#99FFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Privacy Card -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginEnd="6dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/bg_help_card"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_robot"
+                        app:tint="@color/primary_container" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Privacy"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Manage encryption and telemetry."
+                        android:textColor="#99FFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- Support Card -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/bg_help_card"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_jarvis_j"
+                        app:tint="@color/primary_container" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Support"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Direct link to Tier 3 engineering."
+                        android:textColor="#99FFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </GridLayout>
+
+            <!-- FAQ Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="HIGH-FREQUENCY QUERIES"
+                android:textColor="@color/primary_container"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_jarvis_card"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_help_card"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:divider="#1AFFFFFF"
+                android:showDividers="middle">
 
-                <TextView
+                <!-- Q1 -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Manual Extraction Commands"
-                    android:textColor="@color/jarvis_cyan"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="How do I reset vocal biometrics?"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Navigate to System Settings > Biometrics > Vocal Calibration."
+                        android:textColor="#99FFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
 
-                <TextView
+                <!-- Q2 -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="If the server is offline, use these direct manual commands for zero-latency execution:"
-                    android:textColor="@color/jarvis_text_primary"
-                    android:textSize="13sp" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Why is there a delay in execution?"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Check your local grid connection or run a diagnostic in the Vault."
+                        android:textColor="#99FFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:lineSpacingExtra="4dp"
-                    android:paddingStart="8dp"
-                    android:text="• 'call to [name]' - Direct dial\n• 'open [app]' - Launch any installed app\n• 'play song [name]' - Media control\n• 'clear memory' - Cache optimization\n• 'go to sleep' - Deactivate Jarvis\n• 'enable/disable auto reply' - SMS automation"
-                    android:textColor="@color/jarvis_cyan"
-                    android:textSize="12sp"
-                    android:fontFamily="monospace" />
             </LinearLayout>
 
             <!-- Footer -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="40dp"
+                android:layout_marginTop="48dp"
                 android:gravity="center"
-                android:text="JARVIS OS CORE v1.0\nAll protocols are encrypted."
-                android:textColor="@color/jarvis_text_secondary"
+                android:text="JARVIS OS CORE v9.4.2\nALL PROTOCOLS ENCRYPTED"
+                android:textColor="#4DFFFFFF"
                 android:textSize="10sp"
-                android:alpha="0.5" />
+                android:fontFamily="monospace"
+                android:letterSpacing="0.1" />
 
         </LinearLayout>
     </ScrollView>

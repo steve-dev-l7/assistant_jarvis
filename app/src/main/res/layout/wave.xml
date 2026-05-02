@@ -9,7 +9,7 @@
     android:layout_height="wrap_content"
     android:minHeight="150dp"
     android:orientation="vertical"
-    android:background="@drawable/livebg"
+    android:background="@drawable/bg_glow_golden"
     android:elevation="10dp"
     android:padding="20dp">
 
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:text="Hey Jarvis >"
         android:textSize="15sp"
-        android:textColor="#FFFFFF"
+        android:textColor="#FFFFD700" 
         android:shadowColor="#000000"
         android:shadowDx="0"
         android:shadowDy="0"
@@ -30,22 +30,12 @@
         android:gravity="start|center_vertical"
         android:layout_marginBottom="12dp" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginBottom="8dp"
-        android:background="#40FFFFFF" />
 
-    <com.airbnb.lottie.LottieAnimationView
+    <com.example.jarvis.GoldenSphereView
         android:id="@+id/jarvisSpeakings"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_gravity="center_horizontal"
-        app:lottie_autoPlay="true"
-        app:lottie_enableMergePathsForKitKatAndAbove="true"
-        app:lottie_loop="true"
-        app:lottie_renderMode="hardware"
-        app:lottie_rawRes="@raw/jarvisani11" />
+        android:layout_height="100dp"
+        android:layout_gravity="center_horizontal" />
 
 </LinearLayout>
 
